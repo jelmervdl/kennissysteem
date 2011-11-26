@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+<knowledge>
+	<rule infers="regels_van_toepassing">
+		<description>De regels zijn van toepassing</description>
+		<when_all>
+			<fact>is_gebouw</fact>
+			<fact>heeft_brandcompartiment</fact>
+		</when_all>
+		<then>
+			<fact>regels_van_toepassing</fact>
+		</then>
+	</rule>
+
+	<rule infers="is_gebouw">
+		<description>Het gaat om een gebouw</description>
+		<when_any>
+			<fact>woonfunctie</fact>
+			<not>
+				<fact>bijeenkomstfunctie</fact>
+			</not>
+			<fact>industriefunctie</fact>
+			<fact>kantoorfunctie</fact>
+			<fact>winkelfunctie</fact>
+		</when_any>
+		<then>
+			<fact>is_gebouw</fact>
+		</then>
+	</rule>
+
+	<question infers="heeft_brandcompartiment">
+		<description>Heeft de bouwconstructie een brandcompartiment?</description>
+		<option>
+			<description>De bouwconstructie heeft een brandcompartiment</description>
+			<then>
+				<fact>heeft_brandcompartiment</fact>
+			</then>
+		</option>
+		<option>
+			<description>De bouwgconstructie heeft geen brandcompartiment</description>
+			<then>
+				<fact value="false">heeft_brandcompartiment</fact>
+			</then>
+		</option>
+	</question>
+
+	<question infers="woonfunctie bijeenkomstfunctie industriefunctie kantoorfunctie winkelfunctie" multiple="true">
+		<description>Wat zijn de gebruiksfuncties voor het gebouw?</description>
+		<option>
+			<description>Woonfunctie</description>
+			<then>
+				<fact>woonfunctie</fact>
+			</then>
+		</option>
+		<option>
+			<description>Bijeenkomstfunctie</description>
+			<then>
+				<fact>bijeenkomstfunctie</fact>
+			</then>
+		</option>
+		<option>
+			<description>Industriefunctie</description>
+			<then>
+				<fact>industriefunctie</fact>
+			</then>
+		</option>
+		<option>
+			<description>Kantoorfunctie</description>
+			<then>
+				<fact>kantoorfunctie</fact>
+			</then>
+		</option>
+		<option>
+			<description>Winkelfunctie</description>
+			<then>
+				<fact>winkelfunctie</fact>
+			</then>
+		</option>
+	</question>
+</knowledge>

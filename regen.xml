@@ -1,0 +1,89 @@
+<?xml version="1.0"?>
+<knowledge>
+	<rule infers="straat_is_nat">
+		<description>Als het regent, is de straat nat.</description>
+		<when>
+			<fact>het_regent</fact>
+		</when>
+		<then>
+			<fact>straat_is_nat</fact>
+		</then>
+	</rule>
+
+	<rule infers="het_regent">
+		<description>Als de luchtdruk laag is, regent het.</description>
+		<when>
+			<fact>lage_luchtdruk</fact>
+		</when>
+		<then>
+			<fact>het_regent</fact>
+		</then>
+	</rule>
+
+	<rule infers="het_regent">
+		<description>Als de luchtdruk niet laag is, regent het niet.</description>
+		<when>
+			<not>
+				<fact>lage_luchtdruk</fact>
+			</not>
+		</when>
+		<then>
+			<fact value="false">het_regent</fact>
+		</then>
+	</rule>
+
+	<rule infers="straat_is_nat">
+		<description>Als de zon schijnt en het niet regent, zijn de straten niet nat.</description>
+		<when_all>
+			<fact>de_zon_schijnt</fact>
+			<not>
+				<fact>het_regent</fact>
+			</not>
+		</when_all>
+		<then>
+			<fact value="false">straat_is_nat</fact>
+		</then>
+	</rule>
+
+	<question infers="lage_luchtdruk">
+		<description>Hoe is het met de luchtdruk vandaag?</description>
+		<option>
+			<description>De luchtdruk is laag</description>
+			<then>
+				<fact>lage_luchtdruk</fact>
+			</then>
+		</option>
+		<option>
+			<description>De luchtdruk is hoog</description>
+			<then>
+				<fact value="false">lage_luchtdruk</fact>
+			</then>
+		</option>
+	</question>
+
+	<question infers="de_zon_schijnt">
+		<description>Schijnt de zon vandaag?</description>
+		<option>
+			<description>De zon schijnt</description>
+			<then>
+				<fact>de_zon_schijnt</fact>
+			</then>
+		</option>
+		<option>
+			<description>De zon schijnt niet</description>
+			<then>
+				<fact value="false">de_zon_schijnt</fact>
+			</then>
+		</option>
+	</question>
+
+	<goal>
+		<description>Zijn de straten nat?</description>
+		<proof>straat_is_nat</proof>
+	</goal>
+
+	<!--
+		<fact>lage_luchtdruk</fact>
+		<fact>de_zon_schijnt</fact>
+	-->
+</knowledge>
