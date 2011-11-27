@@ -77,6 +77,22 @@
 		</option>
 	</question>
 
+	<question infers="het_regent">
+		<description>Regent het?</description>
+		<option>
+			<description>Het regent</description>
+			<then>
+				<fact>het_regent</fact>
+			</then>
+		</option>
+		<option>
+			<description>Het is droog</description>
+			<then>
+				<fact value="false">het_regent</fact>
+			</then>
+		</option>
+	</question>
+
 	<goal>
 		<description>Zijn de straten nat?</description>
 		<proof>straat_is_nat</proof>

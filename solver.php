@@ -164,7 +164,7 @@ class NegationCondition implements Condition
 
 	public function evaluate(KnowledgeState $state)
 	{
-		return $this->condition->evaluate($state)->inverse();
+		return $this->condition->evaluate($state)->negate();
 	}
 }
 
@@ -204,6 +204,7 @@ class Goal
 	public $proof;
 }
 
+
 abstract class TruthState
 {
 	public $factors;
@@ -220,6 +221,8 @@ abstract class TruthState
 			implode(' and ', array_map('strval', $this->factors)));
 	}
 
+	abstract public function negate();
+
 	static public function because($factors)
 	{
 		$called_class = get_called_class();
@@ -229,7 +232,7 @@ abstract class TruthState
 
 class Yes extends TruthState
 {
-	public function inverse()
+	public function negate()
 	{
 		return new No($this->factors);
 	}
@@ -237,7 +240,7 @@ class Yes extends TruthState
 
 class No extends TruthState
 {
-	public function inverse()
+	public function negate()
 	{
 		return new Yes($this->factors);
 	}
@@ -245,9 +248,44 @@ class No extends TruthState
 
 class Maybe extends TruthState 
 {
-	public function inverse()
+	public function negate()
 	{
 		return new Maybe($this->factors);
+	}
+
+	public function causes()
+	{
+		$causes = $this->divideAmong(1.0, $this->factors)->data();
+
+		// grootst verantwoordelijk ontbrekend fact op top.
+		arsort($causes);
+
+		return $causes;
+	}
+
+	private function divideAmong($percentage, array $factors)
+	{
+		$effects = new Map(0.0);
+
+		// als er geen factors zijn, dan heeft het ook geen zin
+		// de verantwoordelijkheid per uit te rekenen.
+		if (count($factors) == 0)
+			return $effects;
+		
+		// iedere factor op hetzelfde niveau heeft evenveel invloed.
+		$percentage_per_factor = $percentage / count($factors);
+
+		foreach ($factors as $factor)
+		{
+			// recursief de hoeveelheid invloed doorverdelen en optellen bij het totaal per factor.
+			if ($factor instanceof TruthState)
+				foreach ($this->divideAmong($percentage_per_factor, $factor->factors) as $factor_name => $effect)
+					$effects[$factor_name] += $effect;
+			else
+				$effects[$factor] += $percentage_per_factor;
+		}
+
+		return $effects;
 	}
 }
 
@@ -266,127 +304,243 @@ class KnowledgeState
 
 	public $goals = array();
 
-	/**
-	 * Leidt de truth-value van een fact af indien mogelijk.
-	 * (de implementatie nu stelt ook vragen indien hij het 
-	 * niet alleen met regels kan afleiden.)
-	 *
-	 * @param string $fact naam van het feitje
-	 * @return bool|null waarheidswaarde van het feitje.
-	 */
 	public function infer($fact)
 	{
-		debug("Inferring $fact");
+		assert(is_string($fact));
 
-		// als het stapje al eens is afgeleid, dan kunnen we het antwoord
-		// zo uit de kb halen. Geen opnieuw afleiden nodig.
-		if (isset($this->facts[$fact]))
-			return $this->facts[$fact];
-
-		$maybes = array();
-		$nos = array();
-
-		// fact is nog niet bekend, probeer regels:
-		foreach ($this->rules as $rule)
-		{
-			if (!$rule->infers($fact))
-				continue;
-			
-			$result = $rule->condition->evaluate($this);
-
-			if ($result instanceof Yes)
-			{
-
-				debug("$fact is waar want {$rule->description}");
-				
-				$this->apply($rule->consequences, $result);
-
-				// nu nemen we aan dat de regels consequenties inderdaad
-				// iets zegt over het feit dat we zochten.
-				assert(isset($this->facts[$fact]));
-
-				return $this->facts[$fact];
-			}
-			elseif ($result instanceof Maybe)
-			{
-				// Deze regel heeft potentie, maar het is nog niet helemaal zeker
-				// of hij ook van toepassing is.
-				$maybes[] = $result;
-			}
-			else 
-			{
-				// Deze regel levert geen nieuwe facts op. Laat maar schieten.
-				assert($result instanceof No);
-				$nos[] = $result;
-			}
-		}
-
-		if ($maybes)
-			return Maybe::because($maybes);
-		
-		// Geen regels die ook maar de potentie hebben om dit fact waar
-		// te maken: Definitief een No.
-
-		elseif ($nos)
-			return No::because($nos);
-		
-		else
-			return No::because("no rules to infer {$fact}");
-			
-
-		/*
-		// Geen van de regels gaf een duidelijk TRUE terug, dan maar proberen te vragen?
-		foreach ($this->questions as $question)
-		{
-			if (!$question->infers($fact))
-				continue;
-			
-			// stel de vraag, en we krijgen een keuze terug.
-			$option = cli_ask($question);
-
-			// stop de gevolgen van de gekozen optie in de knowledge base
-			$this->apply($option->consequences);
-
-			// aanname: een van de consequenties zegt tenminste iets over het
-			// fact waar we naar op zoek waren.
-			assert(isset($this->facts[$fact]));
-
-			return $this->facts[$fact];
-		}
-		*/
-		debug("Could not infer {$fact}");
-
-		// als we het echt niet weten, return NULL.
-		return new Maybe;
+		return isset($this->facts[$fact])
+			? $this->facts[$fact] // feit bestaat, geef het terug
+			: Maybe::because($fact); // feit bestaat nog niet, geen "Misschien" terug met als reden dat $fact nog niet bekend is.
 	}
 
 	/**
-	 * Pas $consequences toe op de $facts die we al hebben.
-	 *
-	 * @param array $consequences key-value paren met facts en hun truth-value.
+	 * Past $consequences toe op de huidige $state, en geeft dat als nieuwe state terug.
+	 * Alle $consequences krijgen $reason als reden mee.
+	 * 
+	 * @return KnowledgeState
 	 */
-	public function apply(array $consequences, TruthState $factor)
+	public function apply(array $consequences, TruthState $reason)
 	{
-		foreach ($consequences as $fact => $value)
+		$new_state = clone $this;
+		
+		foreach ($consequences as $name => $value)
 		{
-			// assumptie: consequenties zijn alleen facts, geen twijfels.
-			assert($value instanceof Yes or $value instanceof No);
-
-			// assumptie: regels spreken elkaar niet tegen
-			assert(
-				!isset($this->facts[$fact])
-				or $this->facts[$fact] instanceof $value);
-
-			$value = clone $value;
-			$value->factors[] = $factor;
-
-			$this->facts[$fact] = $value;
+			$value_type = get_class($value);
+			$consequences[$name] = $value_type::because($reason);
 		}
+
+		$new_state->facts = array_merge($this->facts, $consequences);
+
+		return $new_state;
 	}
 }
 
-// print geen debug gedoe
-function debug($msg) {}
+class Solver
+{
+
+	/**
+	 * Probeer gegeven een initiële $knowledge state en een lijst van $goals
+	 * zo veel mogelijk $goals op te lossen. Dit doet hij door een stack met
+	 * goals op te lossen. Als een goal niet op te lossen is, kijkt hij naar
+	 * de meest primaire reden waarom (Maybe::$factors) en voegt hij die factor
+	 * op top van de goal stack.
+	 * Als een goal niet op te lossen is omdat er geen vragen/regels meer voor 
+	 * zijn geeft hij een Notice en gaat hij verder met de andere goals op de
+	 * stack.
+	 *
+	 * @param KnowledgeState $knowledge begin-state
+	 * @param Goal[] $goals lijst met op te lossen goals
+	 * @return KnowledgeState eind-state
+	 */
+	public function solveAll(KnowledgeState $knowledge, array $goals)
+	{
+		$goal_stack = new SplStack;
+
+		foreach ($goals as $goal)
+			$goal_stack->push($goal->proof);
+
+		// herhaal zo lang er goals op de goal stack zitten
+		while (count($goal_stack) > 0)
+		{
+			// probeer het eerste goal op te lossen
+			list($knowledge, $result) = $this->solve($knowledge, $goal_stack->top());
+
+			// meh, niet gelukt.
+			if ($result instanceof Maybe)
+			{
+				// waarom niet?
+				$causes = $result->causes();
+
+				// er zijn facts die nog niet zijn afgeleid
+				if (count($causes) > 0)
+				{
+					// neem het meest invloedrijke fact, leidt dat af
+					$main_cause = key($causes);
+
+					// aanname: de oorzaak van dat dit goal niet afgeleid kon worden
+					// is niet het goal zelf. Zou dat wel zo zijn, dan leidt het zichzelf af?!
+					assert($goal_stack->top() != $main_cause);
+
+					$goal_stack->push($main_cause);
+				}
+
+				// Er zijn geen redenen waarom het goal niet afgeleid kon worden? Ojee!
+				if (count($causes) == 0)
+				{
+					trigger_error(
+						"Could not solve " . $goal_stack->top() . " because there are no "
+						. "missing facts? Maybe there are no rules or questions to infer "
+						. $goal_stack->top() . "?", E_USER_NOTICE);
+					
+					// Haal het goal van de stack voor nu, probeer eerst de anderen maar
+					// eens op te lossen.
+					$goal_stack->pop();
+				}
+			}
+			// Yes, het is gelukt om een Yes of No antwoord te vinden voor dit goal.
+			// Mooi, dan kan dat van de te bewijzen stack af.
+			else
+			{
+				// aanname: als het goal kon worden afgeleid, dan is het nu deel van
+				// de afgeleide kennis.
+				assert($knowledge->infer($goal_stack->top()) instanceof Yes
+					or $knowledge->infer($goal_stack->top()) instanceof No);
+
+				// op naar het volgende goal.
+				$goal_stack->pop();
+			}
+		}
+
+		return $knowledge;
+	}
+
+	/**
+	 * Solve probeert één $goal op te lossen door regels toe te passen of
+	 * relevante vragen te stellen. Als het lukt een regel toe te passen of
+	 * een vraag te stellen geeft hij een nieuwe $state terug. Ook geeft hij
+	 * de TruthState voor $goal terug. In het geval van Maybe kan dat gebruikt
+	 * worden om af te leiden welk $goal als volgende moet worden afgeleid om
+	 * verder te komen.
+	 *
+	 * @param KnowledgeState $state huidige knowledge state
+	 * @param string goal naam van het fact dat wordt afgeleid
+	 * @return array(KnowledgeState, TruthState)
+	 */
+	public function solve(KnowledgeState $state, $goal)
+	{
+		if (verbose())
+			printf("Af te leiden: %s\n", $goal);
+		
+		// Kijk of het feit al afgeleid is en in de $facts lijst staat
+		$result = $state->infer($goal);
+
+		// Is het een gegeven feit (of al eerder afgeleid)?
+		if ($result instanceof Yes or $result instanceof No)
+			return array($state, $result);
+		
+		// Is er misschien een regel die we kunnen toepassen
+		$relevant_rules = array_filter($state->rules,
+			function($rule) use ($goal) { return $rule->infers($goal); });
+		
+		// Is er misschien een directe vraag die we kunnen stellen?
+		$relevant_questions = array_filter($state->questions,
+			function($question) use ($goal) { return $question->infers($goal); });
+		
+		if (verbose())
+			printf("%d regels en %d vragen gevonden\n",
+				count($relevant_rules), count($relevant_questions));
+
+		// Sla ook alle resultaten op van de Maybe rules. Hier kunnen we later
+		// misschien uit afleiden welk goal we vervolgens moeten afleiden om ze
+		// te laten beslissen.
+		$maybes = array();
+
+		// Probeer alle mogelijk (relevante) regels, en zie of er eentje
+		// nieuwe kennis afleidt.
+		$n = 0;
+		foreach ($relevant_rules as $rule)
+		{
+			// evalueer of de regel waar is (of het when-gedeelte Yes oplevert)
+			$rule_result = $rule->condition->evaluate($state);
+
+			if (verbose())
+				printf("Regel %d (%s) levert %s op.\n",
+					$n++, $rule->description, $rule_result);
+
+			// regel heeft nieuwe kennis opgeleverd, update de $state, en we hebben
+			// onze solve-stap voltooid.
+			if ($rule_result instanceof Yes)
+			{
+				// als het antwoord ja was, bereken dan de gevolgen door in $state
+				$state = $state->apply($rule->consequences, $rule_result);
+				
+				return array($state, $rule_result);
+			}
+
+			// De regel is nog niet Yes, maar zou het wel kunnen worden zodra we
+			// meer feitjes weten. Onthoud even dat het een maybe was, maar probeer
+			// ook eerst even de andere regels.
+			elseif ($rule_result instanceof Maybe)
+			{
+				$maybes[] = $rule_result;
+			}
+		}
+
+		// $relevant_rules is leeg of leverde alleen maar Maybes op.
+
+		// Vraag gevonden!
+		$n = 1;
+		foreach ($relevant_questions as $question)
+		{
+			// deze vraag is alleen over te slaan als er nog regels open staan om dit feit
+			// af te leiden of als er alternatieve vragen naast deze (of eerder gestelde,
+			// vandaar $n++) zijn.
+			$skippable = (count($relevant_questions) - $n++) + count($maybes);
+
+			$answer = $this->ask($question, $skippable);
+			
+			// haal de vraag hoe dan ook uit de mogelijk te stellen vragen. Het heeft geen zin
+			// om hem twee keer te stellen.
+			$state->questions = array_filter($state->questions, curry('unequals', $question));
+
+			// vraag geeft nuttig antwoord. Neem gevolgen mee, en probeer een antwoord te vinden
+			if ($answer instanceof Option)
+			{
+				$state = $state->apply($answer->consequences,
+					Yes::because("User answered '{$answer->description}' to '{$question->description}'"));
+
+				// aanname: de vraag had beslissende gevolgen voor het $goal dat we proberen op te lossen.
+				assert(!$state->infer($goal) instanceof Maybe);
+
+				return array($state, $state->infer($goal));
+			}
+			
+			// vraag was niet nuttig (overgeslagen), helaas.
+		}
+
+		// Geen enkele regel of vraag leverde direct een antwoord op $fact
+		// Dus geven we de nieuwe state (zonder de al gestelde vragen) terug
+		// en Maybe met alle redenen waarom de niet-volledig-afgeleide regels
+		// niet konden worden afgeleid. Diegene die solve aanroept kan dan 
+		return array($state, Maybe::because($maybes));
+	}
+
+	/**
+	 * Vraag een Question. Eventueel met oversla-optie.
+	 *
+	 * @param Question $question de vraag
+	 * @param bool $skipable of de vraag over te slaan is
+	 * @return Option|Maybe
+	 */
+	public function ask(Question $question, $skippable)
+	{
+		$answer = cli_ask($question, $skippable);
+
+		return $answer instanceof Option
+			? $answer
+			: Maybe::because("User skipped {$question->description}");
+	}	
+}
 
 /**
  * Stelt een vraag op de terminal, en blijf net zo lang wachten totdat
@@ -394,12 +548,15 @@ function debug($msg) {}
  * 
  * @return Option
  */
-function cli_ask(Question $question)
+function cli_ask(Question $question, $skippable = false)
 {
 	echo $question->description . "\n";
 
 	for ($i = 0; $i < count($question->options); ++$i)
 		printf("%2d) %s\n", $i + 1, $question->options[$i]->description);
+	
+	if ($skippable)
+		printf("%2d) weet ik niet\n", ++$i);
 	
 	do {
 		$response = fgetc(STDIN);
@@ -408,6 +565,9 @@ function cli_ask(Question $question)
 
 		if ($choice > 0 && $choice <= count($question->options))
 			return $question->options[$choice - 1];
+		
+		if ($skippable && $choice == $i)
+			return null;
 
 	} while (true);
 }

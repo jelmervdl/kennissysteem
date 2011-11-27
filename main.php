@@ -19,9 +19,13 @@ function main($argc, $argv)
 	if ($argc < 2 || $argc > 3)
 		usage($argv[0]);
 	
+	verbose(false);
+
 	$reader = new KnowledgeBaseReader;
 
 	$knowledge = $reader->parse($argv[1]);
+
+	$solver = new Solver;
 
 	// Indien er nog een 2e argument is meegegeven, gebruik
 	// dat als goal om af te leiden.
@@ -39,14 +43,19 @@ function main($argc, $argv)
 		$goals = $knowledge->goals;
 	}
 
-	proof($goals, $knowledge);
+	proof($goals, $knowledge, $solver);
 }
 
-function proof($goals, $knowledge)
-{
+function proof($goals, $knowledge, $solver)
+{	
+	$knowledge = $solver->solveAll($knowledge, $goals);
+	
+	// Print the results!
 	foreach ($goals as $goal)
 	{
 		$result = $knowledge->infer($goal->proof);
+
+		var_dump($result);
 
 		printf("%s: %s\n",
 			$goal->description,
