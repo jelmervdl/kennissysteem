@@ -385,7 +385,7 @@ class Solver
 				}
 
 				// Er zijn geen redenen waarom het goal niet afgeleid kon worden? Ojee!
-				if (count($causes) == 0)
+				elseif (count($causes) == 0)
 				{
 					trigger_error(
 						"Could not solve " . $goal_stack->top() . " because there are no "

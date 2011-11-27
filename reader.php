@@ -63,7 +63,7 @@ class KnowledgeBaseReader
 					$kb->constraints[] = $constraint;
 					break;
 				*/
-				
+
 				case 'fact':
 					list($name, $value) = $this->parseFact($childNode);
 					$kb->facts[$name] = $value;
@@ -81,8 +81,6 @@ class KnowledgeBaseReader
 	private function parseRule($node)
 	{
 		$rule = new Rule;
-
-		$rule->inferred_facts = explode(' ', $node->getAttribute('infers'));
 
 		foreach ($this->childElements($node) as $childNode)
 		{
@@ -110,14 +108,14 @@ class KnowledgeBaseReader
 			}
 		}
 
+		$rule->inferred_facts = array_keys($rule->consequences);
+
 		return $rule;
 	}
 
 	private function parseQuestion($node)
 	{
 		$question = new Question;
-
-		$question->inferred_facts = explode(' ', $node->getAttribute('infers'));
 
 		foreach ($this->childElements($node) as $childNode)
 		{
@@ -138,7 +136,14 @@ class KnowledgeBaseReader
 					continue;
 			}
 		}
+
+		$inferred_facts = array();
+		foreach ($question->options as $option)
+			foreach (array_keys($option->consequences) as $inferred_fact)
+				$inferred_facts[] = $inferred_fact;
 		
+		$question->inferred_facts = array_unique($inferred_facts);
+
 		return $question;
 	}
 
