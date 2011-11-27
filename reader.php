@@ -57,6 +57,13 @@ class KnowledgeBaseReader
 					$kb->goals[] = $goal;
 					break;
 				
+				/*
+				case 'constraint':
+					$constraint = $this->parseConstraint($childNode);
+					$kb->constraints[] = $constraint;
+					break;
+				*/
+				
 				case 'fact':
 					list($name, $value) = $this->parseFact($childNode);
 					$kb->facts[$name] = $value;
@@ -160,6 +167,11 @@ class KnowledgeBaseReader
 		}
 
 		return $goal;
+	}
+
+	private function parseConstraint($node)
+	{
+		//
 	}
 
 	private function parseConditionSet($node)

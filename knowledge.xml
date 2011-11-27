@@ -27,6 +27,17 @@
 		</then>
 	</rule>
 
+	<constraint>
+		<description>Een gebouw kan maar één functie hebben</description>
+		<only_one>
+			<fact>woonfunctie</fact>
+			<fact>bijeenkomstfunctie</fact>
+			<fact>industriefunctie</fact>
+			<fact>kantoorfunctie</fact>
+			<fact>winkelfunctie</fact>
+		</only_one>
+	</constraint>
+
 	<question infers="heeft_brandcompartiment">
 		<description>Heeft de bouwconstructie een brandcompartiment?</description>
 		<option>
@@ -43,7 +54,7 @@
 		</option>
 	</question>
 
-	<question infers="woonfunctie bijeenkomstfunctie industriefunctie kantoorfunctie winkelfunctie" multiple="true">
+	<question infers="woonfunctie bijeenkomstfunctie industriefunctie kantoorfunctie winkelfunctie">
 		<description>Wat zijn de gebruiksfuncties voor het gebouw?</description>
 		<option>
 			<description>Woonfunctie</description>
