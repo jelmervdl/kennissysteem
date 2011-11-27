@@ -4,6 +4,7 @@
 error_reporting(E_ALL);
 ini_set('display_errors', true);
 
+include 'util.php';
 include 'solver.php';
 include 'reader.php';
 
@@ -43,17 +44,13 @@ function main($argc, $argv)
 
 function proof($goals, $knowledge)
 {
-	// deze reader wordt alleen maar gebruikt om
-	// true|false|null om te zetten in een string.
-	$reader = new KnowledgeBaseReader;
-
 	foreach ($goals as $goal)
 	{
 		$result = $knowledge->infer($goal->proof);
 
 		printf("%s: %s\n",
 			$goal->description,
-			$reader->stringifyTruthValue($result));
+			$result);
 	}
 }
 

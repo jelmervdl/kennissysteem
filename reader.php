@@ -253,7 +253,9 @@ class KnowledgeBaseReader
 				
 				$name = $this->parseText($node);
 
-				return array($name, $this->parseTruthValue($value));
+				$truth_value_type = $this->parseTruthValueType($value);
+
+				return array($name, new $truth_value_type(array($name)));
 				break;
 			
 			default:
@@ -296,21 +298,21 @@ class KnowledgeBaseReader
 		return trim($node->firstChild->data);
 	}
 
-	private function parseTruthValue($value)
+	private function parseTruthValueType($value)
 	{
 		switch ($value)
 		{
 			case 'true':
-				return true;
+				return 'Yes';
 			
 			case 'false':
-				return false;
+				return 'No';
 			
 			case 'null':
-				return null;
+				return 'Maybe';
 
 			default:
-				trigger_error("KnowledgeBaseReader::parseTruthValue: "
+				trigger_error("KnowledgeBaseReader::parseTruthValueType: "
 					. "Unknown value: {$value}",
 					E_USER_NOTICE);
 				break;
@@ -319,14 +321,14 @@ class KnowledgeBaseReader
 
 	public function stringifyTruthValue($value)
 	{
-		if ($value === true)
-			return 'true';
+		if ($value instanceof Yes)
+			return 'yes';
 		
-		if ($value === false)
-			return 'false';
+		if ($value instanceof No)
+			return 'no';
 		
-		if ($value === null)
-			return 'null';
+		if ($value instanceof Maybe)
+			return 'maybe';
 		
 		else
 			return '[invalid value]';

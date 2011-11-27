@@ -92,18 +92,21 @@ class WhenAllCondition implements Condition
 		// assumptie: er moet ten minste één conditie zijn
 		assert(count($this->conditions) > 0);
 
+		$values = array();
 		foreach ($this->conditions as $condition)
-		{
-			$result = $condition->evaluate($state);
-			
-			if ($result === false)
-				return false;
-			
-			if ($result === null)
-				return null;
-		}
+			$values[] = $condition->evaluate($state);
 
-		return true;
+		// Als er minstens één Nee bij zit, dan iig niet.
+		$nos = array_filter_type('No', $values);
+		if (count($nos) > 0)
+			return No::because($nos);
+
+		// Als er een maybe in zit, dan nog steeds onzeker.
+		$maybes = array_filter_type('Maybe', $values);
+		if (count($maybes) > 0)
+			return Maybe::because($maybes);
+
+		return Yes::because($values);
 	}
 }
 
@@ -126,27 +129,22 @@ class WhenAnyCondition implements Condition
 		// assumptie: er moet ten minste één conditie zijn
 		assert(count($this->conditions) > 0);
 
-		$n_undetermined_conditions = 0;
-
+		$values = array();
 		foreach ($this->conditions as $condition)
-		{
-			$result = $condition->evaluate($state);
-			
-			if ($result === true)
-				return true;
-			
-			if ($result === null)
-				$n_undetermined_conditions++;
+			$values[] = $condition->evaluate($state);
+		
+		// Is er een ja, dan is dit zeker goed.
+		$yesses = array_filter_type('Yes', $values);
+		if ($yesses)
+			return Yes::because($yesses);
+		
+		// Is er een misschien, dan zou dit ook goed kunnen zijn
+		$maybes = array_filter_type('Maybe', $values);
+		if ($maybes)
+			return Maybe::because($maybes);
 
-			else
-				// assumptie: als de conditie niet "waar" en ook niet
-				// "onbekend" is dan moet hij wel "niet waar" zijn.
-				assert($result === false);
-		}
-
-		return $n_undetermined_conditions > 0
-			? null
-			: false;
+		// Geen ja's, geen misschien's, dus alle condities gaven No terug.
+		return No::because($values);
 	}
 }
 
@@ -166,11 +164,7 @@ class NegationCondition implements Condition
 
 	public function evaluate(KnowledgeState $state)
 	{
-		$result = $this->condition->evaluate($state);
-
-		return $result === null
-			? null
-			: !$result;
+		return $this->condition->evaluate($state)->inverse();
 	}
 }
 
@@ -210,6 +204,53 @@ class Goal
 	public $proof;
 }
 
+abstract class TruthState
+{
+	public $factors;
+
+	public function __construct(array $factors = array())
+	{
+		$this->factors = $factors;
+	}
+
+	public function __toString()
+	{
+		return sprintf("[%s because %s]",
+			get_class($this),
+			implode(' and ', array_map('strval', $this->factors)));
+	}
+
+	static public function because($factors)
+	{
+		$called_class = get_called_class();
+		return new $called_class((array) $factors);
+	}
+}
+
+class Yes extends TruthState
+{
+	public function inverse()
+	{
+		return new No($this->factors);
+	}
+}
+
+class No extends TruthState
+{
+	public function inverse()
+	{
+		return new Yes($this->factors);
+	}
+}
+
+class Maybe extends TruthState 
+{
+	public function inverse()
+	{
+		return new Maybe($this->factors);
+	}
+}
+
 /**
  * Een knowledge base op een bepaald moment. De huidige implementatie
  * werkt maar op basis van één state, maar uiteindelijk moet ieder
@@ -241,7 +282,10 @@ class KnowledgeState
 		// zo uit de kb halen. Geen opnieuw afleiden nodig.
 		if (isset($this->facts[$fact]))
 			return $this->facts[$fact];
-		
+
+		$maybes = array();
+		$nos = array();
+
 		// fact is nog niet bekend, probeer regels:
 		foreach ($this->rules as $rule)
 		{
@@ -250,12 +294,12 @@ class KnowledgeState
 			
 			$result = $rule->condition->evaluate($this);
 
-			if ($result === true)
+			if ($result instanceof Yes)
 			{
 
-				debug("$fact is" . ($rule->consequences[$fact] ? ' ' : ' niet ') . "waar want {$rule->description}");
+				debug("$fact is waar want {$rule->description}");
 				
-				$this->apply($rule->consequences);
+				$this->apply($rule->consequences, $result);
 
 				// nu nemen we aan dat de regels consequenties inderdaad
 				// iets zegt over het feit dat we zochten.
@@ -263,13 +307,34 @@ class KnowledgeState
 
 				return $this->facts[$fact];
 			}
-			else
+			elseif ($result instanceof Maybe)
 			{
-				// probeer een goeie vraag te vinden of een andere regel?
-				continue;
+				// Deze regel heeft potentie, maar het is nog niet helemaal zeker
+				// of hij ook van toepassing is.
+				$maybes[] = $result;
+			}
+			else 
+			{
+				// Deze regel levert geen nieuwe facts op. Laat maar schieten.
+				assert($result instanceof No);
+				$nos[] = $result;
 			}
 		}
 
+		if ($maybes)
+			return Maybe::because($maybes);
+		
+		// Geen regels die ook maar de potentie hebben om dit fact waar
+		// te maken: Definitief een No.
+
+		elseif ($nos)
+			return No::because($nos);
+		
+		else
+			return No::because("no rules to infer {$fact}");
+			
+
+		/*
 		// Geen van de regels gaf een duidelijk TRUE terug, dan maar proberen te vragen?
 		foreach ($this->questions as $question)
 		{
@@ -288,11 +353,11 @@ class KnowledgeState
 
 			return $this->facts[$fact];
 		}
-
+		*/
 		debug("Could not infer {$fact}");
 
 		// als we het echt niet weten, return NULL.
-		return null;
+		return new Maybe;
 	}
 
 	/**
@@ -300,15 +365,20 @@ class KnowledgeState
 	 *
 	 * @param array $consequences key-value paren met facts en hun truth-value.
 	 */
-	public function apply(array $consequences)
+	public function apply(array $consequences, TruthState $factor)
 	{
 		foreach ($consequences as $fact => $value)
 		{
 			// assumptie: consequenties zijn alleen facts, geen twijfels.
-			assert($value === true || $value === false);
+			assert($value instanceof Yes or $value instanceof No);
 
 			// assumptie: regels spreken elkaar niet tegen
-			assert(!isset($this->facts[$fact]) || $this->facts[$fact] === $value);
+			assert(
+				!isset($this->facts[$fact])
+				or $this->facts[$fact] instanceof $value);
+
+			$value = clone $value;
+			$value->factors[] = $factor;
 
 			$this->facts[$fact] = $value;
 		}

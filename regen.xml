@@ -82,8 +82,8 @@
 		<proof>straat_is_nat</proof>
 	</goal>
 
-	<!--
-		<fact>lage_luchtdruk</fact>
+	
+		<!--<fact>lage_luchtdruk</fact>-->
 		<fact>de_zon_schijnt</fact>
-	-->
+	
 </knowledge>
