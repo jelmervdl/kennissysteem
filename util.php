@@ -35,6 +35,15 @@ function array_filter_type($type, $array)
 	return $hits;
 }
 
+function iterator_contains(Iterator $it, $needle)
+{
+	foreach ($it as $el)
+		if ($el == $needle)
+			return true;
+	
+	return false;
+}
+
 function unequals($a, $b)
 {
 	return $a != $b;

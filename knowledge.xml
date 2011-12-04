@@ -1,89 +1,75 @@
 <?xml version="1.0"?>
 <knowledge>
-	<rule infers="regels_van_toepassing">
+	<rule>
 		<description>De regels zijn van toepassing</description>
 		<when_all>
-			<fact>is_gebouw</fact>
-			<fact>heeft_brandcompartiment</fact>
+			<fact name="is_gebouw">yes</fact>
+			<fact name="heeft_brandcompartiment">yes</fact>
 		</when_all>
 		<then>
-			<fact>regels_van_toepassing</fact>
+			<fact name="regels_van_toepassing">yes</fact>
 		</then>
 	</rule>
 
-	<rule infers="is_gebouw">
+	<rule>
 		<description>Het gaat om een gebouw</description>
 		<when_any>
-			<fact>woonfunctie</fact>
-			<not>
-				<fact>bijeenkomstfunctie</fact>
-			</not>
-			<fact>industriefunctie</fact>
-			<fact>kantoorfunctie</fact>
-			<fact>winkelfunctie</fact>
+			<fact name="gebruiksfunctie">woonfunctie</fact>
+			<fact name="gebruiksfunctie">industriefunctie</fact>
+			<fact name="gebruiksfunctie">kantoorfunctie</fact>
+			<fact name="gebruiksfunctie">winkelfunctie</fact>
 		</when_any>
 		<then>
-			<fact>is_gebouw</fact>
+			<fact name="is_gebouw">yes</fact>
 		</then>
 	</rule>
 
-	<constraint>
-		<description>Een gebouw kan maar één functie hebben</description>
-		<only_one>
-			<fact>woonfunctie</fact>
-			<fact>bijeenkomstfunctie</fact>
-			<fact>industriefunctie</fact>
-			<fact>kantoorfunctie</fact>
-			<fact>winkelfunctie</fact>
-		</only_one>
-	</constraint>
-
-	<question infers="heeft_brandcompartiment">
+	<question>
 		<description>Heeft de bouwconstructie een brandcompartiment?</description>
 		<option>
 			<description>De bouwconstructie heeft een brandcompartiment</description>
 			<then>
-				<fact>heeft_brandcompartiment</fact>
+				<fact name="heeft_brandcompartiment">yes</fact>
 			</then>
 		</option>
 		<option>
 			<description>De bouwgconstructie heeft geen brandcompartiment</description>
 			<then>
-				<fact value="false">heeft_brandcompartiment</fact>
+				<fact name="heeft_brandcompartiment">no</fact>
 			</then>
 		</option>
 	</question>
 
-	<question infers="woonfunctie bijeenkomstfunctie industriefunctie kantoorfunctie winkelfunctie">
+	<question>
 		<description>Wat zijn de gebruiksfuncties voor het gebouw?</description>
 		<option>
 			<description>Woonfunctie</description>
 			<then>
-				<fact>woonfunctie</fact>
+				<fact name="gebruiksfunctie">woonfunctie</fact>
 			</then>
 		</option>
 		<option>
 			<description>Bijeenkomstfunctie</description>
 			<then>
-				<fact>bijeenkomstfunctie</fact>
+				<fact name="gebruiksfunctie">bijeenkomstfunctie</fact>
 			</then>
 		</option>
 		<option>
 			<description>Industriefunctie</description>
 			<then>
-				<fact>industriefunctie</fact>
+				<fact name="gebruiksfunctie">industriefunctie</fact>
 			</then>
 		</option>
 		<option>
 			<description>Kantoorfunctie</description>
 			<then>
-				<fact>kantoorfunctie</fact>
+				<fact name="gebruiksfunctie">kantoorfunctie</fact>
 			</then>
 		</option>
 		<option>
 			<description>Winkelfunctie</description>
 			<then>
-				<fact>winkelfunctie</fact>
+				<fact name="gebruiksfunctie">winkelfunctie</fact>
 			</then>
 		</option>
 	</question>

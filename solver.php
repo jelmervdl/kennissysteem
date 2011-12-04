@@ -173,17 +173,25 @@ class NegationCondition implements Condition
  */
 class FactCondition implements Condition
 {
-	private $fact_name;
+	private $name;
 
-	public function __construct($fact_name)
+	private $value;
+
+	public function __construct($name, $value)
 	{
-		$this->fact_name = $fact_name;
+		$this->name = trim($name);
+		$this->value = trim($value);
 	}
 
 	public function evaluate(KnowledgeState $state)
 	{
-		// vraag de knowledge base om de status van dit feitje.
-		return $state->infer($this->fact_name);
+		if (isset($state->facts[$this->name]))
+			return $state->facts[$this->name] == $this->value
+				? Yes::because($this->name)
+				: No::because($this->name);
+		
+		else
+			return Maybe::because($this->name);
 	}
 }
 
@@ -304,31 +312,16 @@ class KnowledgeState
 
 	public $goals = array();
 
-	public function infer($fact)
-	{
-		assert(is_string($fact));
-
-		return isset($this->facts[$fact])
-			? $this->facts[$fact] // feit bestaat, geef het terug
-			: Maybe::because($fact); // feit bestaat nog niet, geen "Misschien" terug met als reden dat $fact nog niet bekend is.
-	}
-
 	/**
 	 * Past $consequences toe op de huidige $state, en geeft dat als nieuwe state terug.
 	 * Alle $consequences krijgen $reason als reden mee.
 	 * 
 	 * @return KnowledgeState
 	 */
-	public function apply(array $consequences, TruthState $reason)
+	public function apply(array $consequences)
 	{
 		$new_state = clone $this;
 		
-		foreach ($consequences as $name => $value)
-		{
-			$value_type = get_class($value);
-			$consequences[$name] = $value_type::because($reason);
-		}
-
 		$new_state->facts = array_merge($this->facts, $consequences);
 
 		return $new_state;
@@ -356,6 +349,8 @@ class Solver
 	{
 		$goal_stack = new SplStack;
 
+		$solved_goals = array();
+
 		foreach ($goals as $goal)
 			$goal_stack->push($goal->proof);
 
@@ -372,29 +367,46 @@ class Solver
 				$causes = $result->causes();
 
 				// er zijn facts die nog niet zijn afgeleid
-				if (count($causes) > 0)
+				while (count($causes) > 0)
 				{
 					// neem het meest invloedrijke fact, leidt dat af
 					$main_cause = key($causes);
+					array_shift($causes);
 
-					// aanname: de oorzaak van dat dit goal niet afgeleid kon worden
-					// is niet het goal zelf. Zou dat wel zo zijn, dan leidt het zichzelf af?!
-					assert($goal_stack->top() != $main_cause);
+					// meest invloedrijke fact staat al op todo-lijst?
+					// sla het over.
+					// TODO: misschien beter om juist naar de top te halen?
+					// en dan dat opnieuw proberen te bewijzen?
+					if (iterator_contains($goal_stack, $main_cause))
+						continue;
+					
+					// Het kan niet zijn dat het al eens is opgelost. Dan zou hij
+					// in facts moeten zitten.
+					assert(!in_array($main_cause, $solved_goals));
 
+					// zet het te bewijzen fact bovenaan op de todo-lijst.
 					$goal_stack->push($main_cause);
+
+					// .. en spring terug naar volgende goal op goal-stack!
+					continue 2; 
 				}
 
 				// Er zijn geen redenen waarom het goal niet afgeleid kon worden? Ojee!
-				elseif (count($causes) == 0)
+				if (count($causes) == 0)
 				{
-					trigger_error(
-						"Could not solve " . $goal_stack->top() . " because there are no "
-						. "missing facts? Maybe there are no rules or questions to infer "
-						. $goal_stack->top() . "?", E_USER_NOTICE);
+					if (verbose())
+						echo "Could not solve " . $goal_stack->top() . " because there "
+						. "are no missing facts? Maybe there are no rules or questions "
+						. "to infer " . $goal_stack->top() . ". Assuming the fact is "
+						. "false.";
 					
-					// Haal het goal van de stack voor nu, probeer eerst de anderen maar
-					// eens op te lossen.
-					$goal_stack->pop();
+					// Haal het onbewezen fact van de todo-lijst
+					$unsatisfied_goal = $goal_stack->pop();
+
+					// en markeer hem dan maar als niet waar (closed-world assumption?)
+					$knowledge = $knowledge->apply(array($unsatisfied_goal => 'no'));
+					
+					$solved_goals[] = $unsatisfied_goal;
 				}
 			}
 			// Yes, het is gelukt om een Yes of No antwoord te vinden voor dit goal.
@@ -403,11 +415,10 @@ class Solver
 			{
 				// aanname: als het goal kon worden afgeleid, dan is het nu deel van
 				// de afgeleide kennis.
-				assert($knowledge->infer($goal_stack->top()) instanceof Yes
-					or $knowledge->infer($goal_stack->top()) instanceof No);
+				assert(isset($knowledge->facts[$goal_stack->top()]));
 
 				// op naar het volgende goal.
-				$goal_stack->pop();
+				$solved_goals[] = $goal_stack->pop();
 			}
 		}
 
@@ -432,11 +443,8 @@ class Solver
 			printf("Af te leiden: %s\n", $goal);
 		
 		// Kijk of het feit al afgeleid is en in de $facts lijst staat
-		$result = $state->infer($goal);
-
-		// Is het een gegeven feit (of al eerder afgeleid)?
-		if ($result instanceof Yes or $result instanceof No)
-			return array($state, $result);
+		if (isset($state->facts[$goal]))
+			return array($state, $state->facts[$goal]);
 		
 		// Is er misschien een regel die we kunnen toepassen
 		$relevant_rules = array_filter($state->rules,
@@ -467,12 +475,17 @@ class Solver
 				printf("Regel %d (%s) levert %s op.\n",
 					$n++, $rule->description, $rule_result);
 
+			// als de regel kon worden toegepast, haal hem dan maar uit de
+			// set van regels. Meerdere malen toepassen is niet logisch.
+			if ($rule_result instanceof Yes or $rule_result instanceof No)
+				$state->rules = array_filter($state->rules, curry('unequals', $rule));
+
 			// regel heeft nieuwe kennis opgeleverd, update de $state, en we hebben
 			// onze solve-stap voltooid.
 			if ($rule_result instanceof Yes)
 			{
 				// als het antwoord ja was, bereken dan de gevolgen door in $state
-				$state = $state->apply($rule->consequences, $rule_result);
+				$state = $state->apply($rule->consequences);
 				
 				return array($state, $rule_result);
 			}
@@ -510,9 +523,7 @@ class Solver
 					Yes::because("User answered '{$answer->description}' to '{$question->description}'"));
 
 				// aanname: de vraag had beslissende gevolgen voor het $goal dat we proberen op te lossen.
-				assert(!$state->infer($goal) instanceof Maybe);
-
-				return array($state, $state->infer($goal));
+				return array($state, new Yes);
 			}
 			
 			// vraag was niet nuttig (overgeslagen), helaas.

@@ -16,10 +16,17 @@ function usage($path)
 
 function main($argc, $argv)
 {
-	if ($argc < 2 || $argc > 3)
+	if ($argc < 2 || $argc > 4)
 		usage($argv[0]);
 	
-	verbose(false);
+	if ($argv[1] == '-v')
+	{
+		verbose(true);
+		$argc--;
+		array_shift($argv);
+	}
+	else
+		verbose(false);
 
 	$reader = new KnowledgeBaseReader;
 
@@ -53,7 +60,7 @@ function proof($goals, $knowledge, $solver)
 	// Print the results!
 	foreach ($goals as $goal)
 	{
-		$result = $knowledge->infer($goal->proof);
+		$result = $knowledge->facts[$goal->proof];
 
 		var_dump($result);
 

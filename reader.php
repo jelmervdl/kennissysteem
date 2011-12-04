@@ -236,8 +236,9 @@ class KnowledgeBaseReader
 
 	private function parseFactCondition($node)
 	{
-		$fact_name = trim($node->firstChild->data);
-		return new FactCondition($fact_name);
+		$name = $node->getAttribute('name');
+		$value = $this->parseText($node);
+		return new FactCondition($name, $value);
 	}
 
 	private function parseNegationCondition($node)
@@ -264,17 +265,10 @@ class KnowledgeBaseReader
 		switch ($node->nodeName)
 		{
 			case 'fact':
-				$value = $node->hasAttribute('value')
-					? $node->getAttribute('value')
-					: 'true';
-				
-				$name = $this->parseText($node);
-
-				$truth_value_type = $this->parseTruthValueType($value);
-
-				return array($name, new $truth_value_type(array($name)));
-				break;
-			
+				$name = $node->getAttribute('name');
+				$value = $this->parseText($node);
+				return array($name, $value);
+							
 			default:
 				trigger_error("KnowledgeBaseReader::parseFact: "
 					. "Skipping unknown element {$node->nodeName}",
@@ -310,45 +304,9 @@ class KnowledgeBaseReader
 		return $option;
 	}
 
-	private function parseText($node)
+	private function parseText(DOMNode $node)
 	{
 		return trim($node->firstChild->data);
-	}
-
-	private function parseTruthValueType($value)
-	{
-		switch ($value)
-		{
-			case 'true':
-				return 'Yes';
-			
-			case 'false':
-				return 'No';
-			
-			case 'null':
-				return 'Maybe';
-
-			default:
-				trigger_error("KnowledgeBaseReader::parseTruthValueType: "
-					. "Unknown value: {$value}",
-					E_USER_NOTICE);
-				break;
-		}
-	}
-
-	public function stringifyTruthValue($value)
-	{
-		if ($value instanceof Yes)
-			return 'yes';
-		
-		if ($value instanceof No)
-			return 'no';
-		
-		if ($value instanceof Maybe)
-			return 'maybe';
-		
-		else
-			return '[invalid value]';
 	}
 
 	private function firstElement($node)
