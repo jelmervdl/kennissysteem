@@ -1,5 +1,42 @@
 <?php
 
+function get_error_enum($errno)
+{
+	$enums = explode(' ', 'E_ERROR E_WARNING E_PARSE E_NOTICE E_CORE_ERROR E_CORE_WARNING E_WARNING E_COMPILE_ERROR E_COMPILE_WARNING E_USER_ERROR E_USER_WARNING E_USER_NOTICE E_STRICT E_RECOVERABLE_ERROR E_DEPRECATED E_USER_DEPRECATED E_ALL');
+
+	foreach ($enums as $enum)
+		if (constant($enum) == $errno)
+			return $enum;
+	
+	return $errno;
+}
+
+set_error_handler(function($errno, $errstr, $errfile, $errline) {
+	// text colour
+	echo chr(27) . "[1;37;";
+	// background colour
+	echo ($errno == E_NOTICE || $errno == E_WARNING ? "43" : "41") . "m";
+
+	// show error message and line
+	$errenum = get_error_enum($errno);
+	echo "\n$errenum: $errstr\n $errfile:$errline\n";
+
+	$trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+	array_shift($trace); // remove the reference to this callback
+
+	// print the backtrace
+	foreach ($trace as $i => $step)
+		printf("#%2d %s%s%s() called at [%s:%d]\n", $i,
+			isset($step['class']) ? $step['class'] : '',
+			isset($step['type']) ? $step['type'] : '',
+			$step['function'],
+			basename($step['file']), // should be relative path to $errfile
+			$step['line']);
+	
+	// stop colours
+	echo chr(27) . "[00m;\n";
+});
+
 /**
  * Een rule waarmee een fact gevonden kan worden.
  *
