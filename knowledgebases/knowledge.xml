@@ -74,8 +74,7 @@
 		</option>
 	</question>
 
-	<goal>
-		<proof>regels_van_toepassing</proof>
+	<goal name="regels_van_toepassing">
 		<description>Zijn de regels van toepassing?</description>
 	</goal>
 </knowledge>

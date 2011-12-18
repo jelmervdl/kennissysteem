@@ -4,19 +4,28 @@
 		<title>Kennissysteem!</title>
 	</head>
 	<body>
-		<section>
+		<div>
 			<form method="post">
 				<input type="hidden" name="state" value="<?=_encode($this->state) ?>">
 				<?=$this->content?>
 			</form>
-		</section>
-		<aside>
+		</div>
+		<aside id="fact-state" class="state-info">
+			<h3>Feiten</h3>
 			<dl>
 				<?php foreach($this->state->facts as $name => $value): ?>
 				<dt><?=$name?></dt>
 				<dd><?=$value?></dt>
 				<?php endforeach ?>
 			</dl>
+		</aside>
+		<aside id="goal-stack" class="state-info">
+			<h3>Goal stack</h3>
+			<ol>
+				<?php foreach ($this->state->goalStack as $goal): ?>
+				<li><?=$goal?></li>
+				<?php endforeach ?>
+			</ol>
 		</aside>
 	</body>
 </html>

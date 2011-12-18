@@ -29,9 +29,33 @@ class KnowledgeBaseReader
 
 		$doc->load($file, LIBXML_NOCDATA & LIBXML_NOBLANKS);
 
+		if (!$doc->firstChild)
+			return $this->logError('Could not parse xml document', E_USER_WARNING);
+
 		$this->parseKnowledgeBase($doc->firstChild, $kb);
 
 		return $kb;
+	}
+
+	/**
+	 * Kijk of een knowledge base klopt en ingeladen kan worden.
+	 *
+	 * @param string file bestandsnaam van knowledge.xml
+	 * @return object[]
+	 */
+	public function lint($file)
+	{
+		$errors = array();
+
+		$old_handler = set_error_handler(function($number, $message, $file, $line) use (&$errors) {
+			$errors[] = (object) compact('number', 'message', 'file', 'line');
+		});
+
+		$this->parse($file);
+		
+		set_error_handler($old_handler);
+
+		return $errors;
 	}
 
 	private function parseKnowledgeBase($node, $kb)
@@ -70,7 +94,7 @@ class KnowledgeBaseReader
 					break;
 
 				default:
-					trigger_error("KnowledgeBaseReader::parseKnowledgeBase: "
+					$this->logError("KnowledgeBaseReader::parseKnowledgeBase: "
 						. "Skipping unknown element {$childNode->nodeName}",
 						E_USER_NOTICE);
 					continue;
@@ -101,7 +125,7 @@ class KnowledgeBaseReader
 					break;
 				
 				default:
-					trigger_error("KnowledgeBaseReader::parseRule: "
+					$this->logError("KnowledgeBaseReader::parseRule: "
 						. "Skipping unknown element {$childNode->nodeName}",
 						E_USER_NOTICE);
 					continue;
@@ -130,7 +154,7 @@ class KnowledgeBaseReader
 					break;
 				
 				default:
-					trigger_error("KnowledgeBaseReader::parseQuestion: "
+					$this->logError("KnowledgeBaseReader::parseQuestion: "
 						. "Skipping unknown element {$childNode->nodeName}",
 						E_USER_NOTICE);
 					continue;
@@ -151,6 +175,8 @@ class KnowledgeBaseReader
 	{
 		$goal = new Goal;
 
+		$goal->name = $node->getAttribute('name');
+
 		foreach ($this->childElements($node) as $childNode)
 		{
 			switch ($childNode->nodeName)
@@ -159,12 +185,8 @@ class KnowledgeBaseReader
 					$goal->description = $this->parseText($childNode);
 					break;
 				
-				case 'proof':
-					$goal->proof = $this->parseText($childNode);
-					break;
-				
 				default:
-					trigger_error("KnowledgeBaseReader::parseGoal: "
+					$this->logError("KnowledgeBaseReader::parseGoal: "
 						. "Skipping unknown element {$childNode->nodeName}",
 						E_USER_NOTICE);
 					continue;
@@ -192,8 +214,6 @@ class KnowledgeBaseReader
 				$condition = new WhenAnyCondition;
 				break;
 		}
-
-		assert($condition instanceof Condition);
 
 		foreach ($this->childElements($node) as $childNode)
 		{
@@ -225,9 +245,10 @@ class KnowledgeBaseReader
 				break;
 
 			default:
-				trigger_error("KnowledgeBaseReader::parseCondition: "
-					. "Skipping unknown element {$childNode->nodeName}",
+				$this->logError("KnowledgeBaseReader::parseCondition: "
+					. "Skipping unknown element {$node->nodeName}",
 					E_USER_NOTICE);
+				$condition = null;
 				continue;
 		}
 
@@ -270,7 +291,7 @@ class KnowledgeBaseReader
 				return array($name, $value);
 							
 			default:
-				trigger_error("KnowledgeBaseReader::parseFact: "
+				$this->logError("KnowledgeBaseReader::parseFact: "
 					. "Skipping unknown element {$node->nodeName}",
 					E_USER_NOTICE);
 				continue;
@@ -294,7 +315,7 @@ class KnowledgeBaseReader
 					break;
 				
 				default:
-					trigger_error("KnowledgeBaseReader::parseOption: "
+					$this->logError("KnowledgeBaseReader::parseOption: "
 						. "Skipping unknown element {$childNode->nodeName}",
 						E_USER_NOTICE);
 					continue;
@@ -320,6 +341,11 @@ class KnowledgeBaseReader
 	private function childElements($node)
 	{
 		return new DOMElementIterator(new DOMNodeIterator($node->childNodes));
+	}
+
+	private function logError($message, $error_level)
+	{
+		trigger_error($message, $error_level);
 	}
 }
 

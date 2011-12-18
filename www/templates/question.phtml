@@ -1,0 +1,24 @@
+<section class="question">
+	<p><?=$this->question->description?></p>
+
+	<ol class="options">
+		<?php foreach ($this->question->options as $option): ?>
+		<li>
+			<label>
+				<input type="radio" name="answer" value="<?=_encode($option->consequences)?>">
+				<?=$option->description?>
+			</label>
+		</li>
+		<?php endforeach ?>
+		<?php if($this->question->skippable): ?>
+		<li class="skip-option">
+			<label>
+				<input type="radio" name="answer" value="<?=_encode(null)?>">
+				Weet ik niet
+			</label>
+		</li>
+		<?php endif ?>
+	</ol>
+
+	<button type="submit">Verder…</button>
+</section>

@@ -214,16 +214,15 @@ class FactCondition implements Condition
  * Als je dan main.php zonder te bewijzen goal aanroept gaat hij al deze
  * goals proberen af te leiden.
  *
- * <goal>
+ * <goal name="">
  *     <description/>
- *     <proof/>
  * </goal>
  */
 class Goal
 {
+	public $name;
+	
 	public $description;
-
-	public $proof;
 }
 
 

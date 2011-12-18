@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!ELEMENT knowledge (rule*, question*, goal*) >
+
+<!ELEMENT rule (description?, (when_all|when_any)?, then) >
+<!ELEMENT question (description, option+) >
+<!ELEMENT goal (description) >
+
+<!ELEMENT description (#PCDATA) >
+<!ELEMENT fact (#PCDATA) >
+<!ELEMENT when_all ((fact|when_any|not)+) >
+<!ELEMENT when_any ((fact|when_all|not)+) >
+<!ELEMENT not ((fact|when_all|when_any)+) >
+
+<!ELEMENT then (fact+) >
+
+<!ELEMENT option (description, then) >
+
+<!ATTLIST fact name CDATA #REQUIRED>

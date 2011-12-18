@@ -1,8 +1,8 @@
 <?php
 
-include 'util.php';
-include 'solver.php';
-include 'reader.php';
+include '../util.php';
+include '../solver.php';
+include '../reader.php';
 
 function _encode($data)
 {
@@ -37,6 +37,13 @@ class WebFrontend
 
 	private $state;
 
+	private $kb_file;
+
+	public function __construct($kb_file)
+	{
+		$this->kb_file = $kb_file;
+	}
+
 	public function main()
 	{
 		$this->solver = new Solver;
@@ -48,7 +55,7 @@ class WebFrontend
 
 		$step = $this->solver->solveAll($this->state);
 
-		$page = new Template('page.phtml');
+		$page = new Template('templates/layout.phtml');
 
 		$page->state = $this->state;
 
@@ -62,29 +69,20 @@ class WebFrontend
 
 	private function displayQuestion(AskedQuestion $question)
 	{
-		$out = sprintf('<p>%s</p>', $question->description);
+		$template = new Template('templates/question.phtml');
 
-		$out .= '<ol>';
+		$template->question = $question;
 
-		foreach ($question->options as $i => $option)
-			$out .= sprintf("\t".'<li><label><input type="radio" name="answer" value="%s">%s</label></li>' . "\n",
-				_encode($option->consequences),
-				$option->description);
-		
-		if ($question->skippable)
-			$out .= sprintf("\t" . '<li><label><input type="radio" name="answer" value="%s">Weet ik niet</label></li>' . "\n",
-				_encode(null));
-
-		$out .= '</ol>';
-
-		$out .= '<button type="submit">Verder…</button>';
-
-		return $out;
+		return $template->render();
 	}
 
 	private function displayConclusions()
 	{
-		return "Done!";
+		$template = new Template('templates/completed.phtml');
+
+		$template->state = $this->state;
+
+		return $template->render();
 	}
 
 	private function getState()
@@ -92,7 +90,7 @@ class WebFrontend
 		if (isset($_POST['state']))
 			return _decode($_POST['state']);
 		else
-			return $this->readState('knowledge.xml');
+			return $this->readState($this->kb_file);
 	}
 
 	private function readState($file)
@@ -101,11 +99,14 @@ class WebFrontend
 		$state = $reader->parse($file);
 
 		foreach($state->goals as $goal)
-			$state->goalStack->push($goal->proof);
+			$state->goalStack->push($goal->name);
 		
 		return $state;
 	}
 }
 
-$website = new WebFrontend();
-$website->main();
+if (!isset($_GET['kb']) || !preg_match('/^[a-zA-Z0-9_\-\.]+\.xml$/i', $_GET['kb']))
+	redirect('index.php');
+
+$frontend = new WebFrontend('../knowledgebases/' . $_GET['kb']);
+$frontend->main();
