@@ -349,6 +349,15 @@ class KnowledgeState
 
 	public $goals = array();
 
+	public $solved = array();
+
+	public $goalStack;
+
+	public function __construct()
+	{
+		$this->goalStack = new SplStack();
+	}
+
 	/**
 	 * Past $consequences toe op de huidige $state, en geeft dat als nieuwe state terug.
 	 * Alle $consequences krijgen $reason als reden mee.
@@ -357,11 +366,7 @@ class KnowledgeState
 	 */
 	public function apply(array $consequences)
 	{
-		$new_state = clone $this;
-		
-		$new_state->facts = array_merge($this->facts, $consequences);
-
-		return $new_state;
+		$this->facts = array_merge($this->facts, $consequences);
 	}
 }
 
@@ -382,20 +387,13 @@ class Solver
 	 * @param Goal[] $goals lijst met op te lossen goals
 	 * @return KnowledgeState eind-state
 	 */
-	public function solveAll(KnowledgeState $knowledge, array $goals)
+	public function solveAll(KnowledgeState $state)
 	{
-		$goal_stack = new SplStack;
-
-		$solved_goals = array();
-
-		foreach ($goals as $goal)
-			$goal_stack->push($goal->proof);
-
 		// herhaal zo lang er goals op de goal stack zitten
-		while (count($goal_stack) > 0)
+		while (!$state->goalStack->isEmpty())
 		{
 			// probeer het eerste goal op te lossen
-			list($knowledge, $result) = $this->solve($knowledge, $goal_stack->top());
+			$result = $this->solve($state, $state->goalStack->top());
 
 			// meh, niet gelukt.
 			if ($result instanceof Maybe)
@@ -414,15 +412,15 @@ class Solver
 					// sla het over.
 					// TODO: misschien beter om juist naar de top te halen?
 					// en dan dat opnieuw proberen te bewijzen?
-					if (iterator_contains($goal_stack, $main_cause))
+					if (iterator_contains($state->goalStack, $main_cause))
 						continue;
 					
 					// Het kan niet zijn dat het al eens is opgelost. Dan zou hij
 					// in facts moeten zitten.
-					assert(!in_array($main_cause, $solved_goals));
+					assert(!in_array($main_cause, $state->solved));
 
 					// zet het te bewijzen fact bovenaan op de todo-lijst.
-					$goal_stack->push($main_cause);
+					$state->goalStack->push($main_cause);
 
 					// .. en spring terug naar volgende goal op goal-stack!
 					continue 2; 
@@ -432,18 +430,18 @@ class Solver
 				if (count($causes) == 0)
 				{
 					if (verbose())
-						echo "Could not solve " . $goal_stack->top() . " because there "
-						. "are no missing facts? Maybe there are no rules or questions "
-						. "to infer " . $goal_stack->top() . ". Assuming the fact is "
+						echo "Could not solve " . $state->goalStack->top() . " because "
+						. "there are no missing facts? Maybe there are no rules or questions "
+						. "to infer " . $state->goalStack->top() . ". Assuming the fact is "
 						. "false.";
 					
 					// Haal het onbewezen fact van de todo-lijst
-					$unsatisfied_goal = $goal_stack->pop();
+					$unsatisfied_goal = $state->goalStack->pop();
 
 					// en markeer hem dan maar als niet waar (closed-world assumption?)
-					$knowledge = $knowledge->apply(array($unsatisfied_goal => 'no'));
+					$state->apply(array($unsatisfied_goal => 'no'));
 					
-					$solved_goals[] = $unsatisfied_goal;
+					$solved[] = $unsatisfied_goal;
 				}
 			}
 			// Yes, het is gelukt om een Yes of No antwoord te vinden voor dit goal.
@@ -452,14 +450,12 @@ class Solver
 			{
 				// aanname: als het goal kon worden afgeleid, dan is het nu deel van
 				// de afgeleide kennis.
-				assert(isset($knowledge->facts[$goal_stack->top()]));
+				assert(isset($state->facts[$state->goalStack->top()]));
 
 				// op naar het volgende goal.
-				$solved_goals[] = $goal_stack->pop();
+				$state->solved[] = $state->goalStack->pop();
 			}
 		}
-
-		return $knowledge;
 	}
 
 	/**
@@ -481,7 +477,7 @@ class Solver
 		
 		// Kijk of het feit al afgeleid is en in de $facts lijst staat
 		if (isset($state->facts[$goal]))
-			return array($state, $state->facts[$goal]);
+			return $state->facts[$goal];
 		
 		// Is er misschien een regel die we kunnen toepassen
 		$relevant_rules = array_filter($state->rules,
@@ -522,9 +518,9 @@ class Solver
 			if ($rule_result instanceof Yes)
 			{
 				// als het antwoord ja was, bereken dan de gevolgen door in $state
-				$state = $state->apply($rule->consequences);
+				$state->apply($rule->consequences);
 				
-				return array($state, $rule_result);
+				return $rule_result;
 			}
 
 			// De regel is nog niet Yes, maar zou het wel kunnen worden zodra we
@@ -556,11 +552,11 @@ class Solver
 			// vraag geeft nuttig antwoord. Neem gevolgen mee, en probeer een antwoord te vinden
 			if ($answer instanceof Option)
 			{
-				$state = $state->apply($answer->consequences,
+				$state->apply($answer->consequences,
 					Yes::because("User answered '{$answer->description}' to '{$question->description}'"));
 
 				// aanname: de vraag had beslissende gevolgen voor het $goal dat we proberen op te lossen.
-				return array($state, new Yes);
+				return new Yes;
 			}
 			
 			// vraag was niet nuttig (overgeslagen), helaas.
@@ -570,7 +566,7 @@ class Solver
 		// Dus geven we de nieuwe state (zonder de al gestelde vragen) terug
 		// en Maybe met alle redenen waarom de niet-volledig-afgeleide regels
 		// niet konden worden afgeleid. Diegene die solve aanroept kan dan 
-		return array($state, Maybe::because($maybes));
+		return Maybe::because($maybes);
 	}
 
 	/**

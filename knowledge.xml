@@ -73,4 +73,9 @@
 			</then>
 		</option>
 	</question>
+
+	<goal>
+		<proof>regels_van_toepassing</proof>
+		<description>Zijn de regels van toepassing?</description>
+	</goal>
 </knowledge>

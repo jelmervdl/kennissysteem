@@ -53,14 +53,17 @@ function main($argc, $argv)
 	proof($goals, $knowledge, $solver);
 }
 
-function proof($goals, $knowledge, $solver)
+function proof($goals, $state, $solver)
 {	
-	$knowledge = $solver->solveAll($knowledge, $goals);
+	foreach($goals as $goal)
+		$state->goalStack->push($goal->proof);
+	
+	$solver->solveAll($state);
 	
 	// Print the results!
 	foreach ($goals as $goal)
 	{
-		$result = $knowledge->facts[$goal->proof];
+		$result = $state->facts[$goal->proof];
 
 		var_dump($result);
 
