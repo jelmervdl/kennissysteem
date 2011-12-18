@@ -58,7 +58,14 @@ function proof($goals, $state, $solver)
 	foreach($goals as $goal)
 		$state->goalStack->push($goal->proof);
 	
-	$solver->solveAll($state);
+	while (($question = $solver->solveAll($state)) instanceof AskedQuestion)
+	{
+		$answer = cli_ask($question);
+
+		if ($answer instanceof Option)
+			$state->apply($answer->consequences,
+				Yes::because("User answered '{$answer->description}' to '{$question->description}'"));
+	}
 	
 	// Print the results!
 	foreach ($goals as $goal)
@@ -71,6 +78,36 @@ function proof($goals, $state, $solver)
 			$goal->description,
 			$result);
 	}
+}
+
+/**
+ * Stelt een vraag op de terminal, en blijf net zo lang wachten totdat
+ * we een zinnig antwoord krijgen.
+ * 
+ * @return Option
+ */
+function cli_ask(Question $question, $skippable = false)
+{
+	echo $question->description . "\n";
+
+	for ($i = 0; $i < count($question->options); ++$i)
+		printf("%2d) %s\n", $i + 1, $question->options[$i]->description);
+	
+	if ($skippable)
+		printf("%2d) weet ik niet\n", ++$i);
+	
+	do {
+		$response = fgetc(STDIN);
+
+		$choice = @intval(trim($response));
+
+		if ($choice > 0 && $choice <= count($question->options))
+			return $question->options[$choice - 1];
+		
+		if ($skippable && $choice == $i)
+			return null;
+
+	} while (true);
 }
 
 main($argc, $argv);

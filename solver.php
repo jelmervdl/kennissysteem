@@ -47,6 +47,20 @@ class Question
 	}
 }
 
+class AskedQuestion extends Question
+{
+	public $skippable;
+
+	public function __construct(Question $question, $skippable)
+	{
+		$this->description = $question->description;
+
+		$this->options = $question->options;
+
+		$this->skippable = $skippable;
+	}
+}
+
 /**
  * Een mogelijk antwoord op een Question.
  *
@@ -358,8 +372,12 @@ class Solver
 			// probeer het eerste goal op te lossen
 			$result = $this->solve($state, $state->goalStack->top());
 
+			if ($result instanceof AskedQuestion)
+			{
+				return $result;
+			}
 			// meh, niet gelukt.
-			if ($result instanceof Maybe)
+			elseif ($result instanceof Maybe)
 			{
 				// waarom niet?
 				$causes = $result->causes();
@@ -373,7 +391,7 @@ class Solver
 
 					// meest invloedrijke fact staat al op todo-lijst?
 					// sla het over.
-					// TODO: misschien beter om juist naar de top te halen?
+					// TODO: misschien be ter om juist naar de top te halen?
 					// en dan dat opnieuw proberen te bewijzen?
 					if (iterator_contains($state->goalStack, $main_cause))
 						continue;
@@ -498,31 +516,20 @@ class Solver
 		// $relevant_rules is leeg of leverde alleen maar Maybes op.
 
 		// Vraag gevonden!
-		$n = 1;
-		foreach ($relevant_questions as $question)
+		if (count($relevant_questions))
 		{
+			$question = current($relevant_questions);
+
 			// deze vraag is alleen over te slaan als er nog regels open staan om dit feit
 			// af te leiden of als er alternatieve vragen naast deze (of eerder gestelde,
 			// vandaar $n++) zijn.
-			$skippable = (count($relevant_questions) - $n++) + count($maybes);
+			$skippable = (count($relevant_questions) - 1) + count($maybes);
 
-			$answer = $this->ask($question, $skippable);
-			
 			// haal de vraag hoe dan ook uit de mogelijk te stellen vragen. Het heeft geen zin
 			// om hem twee keer te stellen.
 			$state->questions = array_filter($state->questions, curry('unequals', $question));
 
-			// vraag geeft nuttig antwoord. Neem gevolgen mee, en probeer een antwoord te vinden
-			if ($answer instanceof Option)
-			{
-				$state->apply($answer->consequences,
-					Yes::because("User answered '{$answer->description}' to '{$question->description}'"));
-
-				// aanname: de vraag had beslissende gevolgen voor het $goal dat we proberen op te lossen.
-				return new Yes;
-			}
-			
-			// vraag was niet nuttig (overgeslagen), helaas.
+			return new AskedQuestion($question, $skippable);
 		}
 
 		// Geen enkele regel of vraag leverde direct een antwoord op $fact
@@ -531,50 +538,4 @@ class Solver
 		// niet konden worden afgeleid. Diegene die solve aanroept kan dan 
 		return Maybe::because($maybes);
 	}
-
-	/**
-	 * Vraag een Question. Eventueel met oversla-optie.
-	 *
-	 * @param Question $question de vraag
-	 * @param bool $skipable of de vraag over te slaan is
-	 * @return Option|Maybe
-	 */
-	public function ask(Question $question, $skippable)
-	{
-		$answer = cli_ask($question, $skippable);
-
-		return $answer instanceof Option
-			? $answer
-			: Maybe::because("User skipped {$question->description}");
-	}	
-}
-
-/**
- * Stelt een vraag op de terminal, en blijf net zo lang wachten totdat
- * we een zinnig antwoord krijgen.
- * 
- * @return Option
- */
-function cli_ask(Question $question, $skippable = false)
-{
-	echo $question->description . "\n";
-
-	for ($i = 0; $i < count($question->options); ++$i)
-		printf("%2d) %s\n", $i + 1, $question->options[$i]->description);
-	
-	if ($skippable)
-		printf("%2d) weet ik niet\n", ++$i);
-	
-	do {
-		$response = fgetc(STDIN);
-
-		$choice = @intval(trim($response));
-
-		if ($choice > 0 && $choice <= count($question->options))
-			return $question->options[$choice - 1];
-		
-		if ($skippable && $choice == $i)
-			return null;
-
-	} while (true);
 }
