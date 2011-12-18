@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Kennissysteem!</title>
+	</head>
+	<body>
+		<section>
+			<form method="post">
+				<input type="hidden" name="state" value="<?=_encode($this->state) ?>">
+				<?=$this->content?>
+			</form>
+		</section>
+		<aside>
+			<dl>
+				<?php foreach($this->state->facts as $name => $value): ?>
+				<dt><?=$name?></dt>
+				<dd><?=$value?></dt>
+				<?php endforeach ?>
+			</dl>
+		</aside>
+	</body>
+</html>
