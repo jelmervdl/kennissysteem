@@ -1,42 +1,5 @@
 <?php
 
-function get_error_enum($errno)
-{
-	$enums = explode(' ', 'E_ERROR E_WARNING E_PARSE E_NOTICE E_CORE_ERROR E_CORE_WARNING E_WARNING E_COMPILE_ERROR E_COMPILE_WARNING E_USER_ERROR E_USER_WARNING E_USER_NOTICE E_STRICT E_RECOVERABLE_ERROR E_DEPRECATED E_USER_DEPRECATED E_ALL');
-
-	foreach ($enums as $enum)
-		if (constant($enum) == $errno)
-			return $enum;
-	
-	return $errno;
-}
-
-set_error_handler(function($errno, $errstr, $errfile, $errline) {
-	// text colour
-	echo chr(27) . "[1;37;";
-	// background colour
-	echo ($errno == E_NOTICE || $errno == E_WARNING ? "43" : "41") . "m";
-
-	// show error message and line
-	$errenum = get_error_enum($errno);
-	echo "\n$errenum: $errstr\n $errfile:$errline\n";
-
-	$trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-	array_shift($trace); // remove the reference to this callback
-
-	// print the backtrace
-	foreach ($trace as $i => $step)
-		printf("#%2d %s%s%s() called at [%s:%d]\n", $i,
-			isset($step['class']) ? $step['class'] : '',
-			isset($step['type']) ? $step['type'] : '',
-			$step['function'],
-			basename($step['file']), // should be relative path to $errfile
-			$step['line']);
-	
-	// stop colours
-	echo chr(27) . "[00m;\n";
-});
-
 /**
  * Een rule waarmee een fact gevonden kan worden.
  *
@@ -615,52 +578,3 @@ function cli_ask(Question $question, $skippable = false)
 
 	} while (true);
 }
-
-/*
-function test_solver()
-{
-	$state = new KnowledgeState();
-
-	// regel: als het regent, zijn de straten nat.
-	$r = new Rule;
-	$r->description = 'als het regent, zijn de straten nat.';
-	$r->inferred_facts[] = 'straat_is_nat';
-	$r->consequences['straat_is_nat'] = true;
-	$r->condition = new FactCondition('het_regent');
-	$state->rules[] = $r;
-
-	// regel: als de luchtdruk laag is, regent het
-	$r = new Rule;
-	$r->description = 'als de luchtdruk laag is, regent het';
-	$r->inferred_facts[] = 'het_regent';
-	$r->consequences['het_regent'] = true;
-	$r->condition = new FactCondition('lage_luchtdruk');
-	$state->rules[] = $r;
-
-	// regel: als de luchtdruk niet laag is, dan regent het niet.
-	$r = new Rule;
-	$r->description = 'als de luchtdruk niet laag is, dan regent het niet';
-	$r->inferred_facts[] = 'het_regent';
-	$r->consequences['het_regent'] = false;
-	$r->condition = new NegationCondition(new FactCondition('lage_luchtdruk'));
-	$state->rules[] = $r;
-
-	// regel: als de zon schijnt en het regent niet, zijn de straten niet nat
-	$r = new Rule;
-	$r->description = 'als de zon schijnt en het regent niet, zijn de straten niet nat';
-	$r->inferred_facts[] = 'straat_is_nat';
-	$r->consequences['straat_is_nat'] = false;
-	$r->condition = new WhenAllCondition;
-	$r->condition->addCondition(new FactCondition('de_zon_schijnt'));
-	$r->condition->addCondition(new NegationCondition(new FactCondition('het_regent')));
-	$state->rules[] = $r;
-
-	$state->facts['lage_luchtdruk'] = true;
-	$state->facts['de_zon_schijnt'] = true;
-
-	return $state->infer('straat_is_nat');
-}
-
-test_solver();
-
-*/
