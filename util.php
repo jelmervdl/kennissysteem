@@ -130,6 +130,25 @@ class Map implements ArrayAccess, IteratorAggregate
 	}
 }
 
+/**
+ * In oudere versies van PHP is het serializen van SplStack niet goed
+ * geïmplementeerd. Dus dan maar zelf implementeren :)
+ */
+class Stack extends SplStack implements Serializable
+{
+	public function serialize()
+	{
+		$items = iterator_to_array($this);
+		return serialize($items);
+	}
+
+	public function unserialize($data)
+	{
+		foreach (unserialize($data) as $item)
+			$this->unshift($item);
+	}
+}
+
 function verbose($state = null)
 {
 	static $verbose;

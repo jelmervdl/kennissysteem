@@ -331,7 +331,7 @@ class KnowledgeState
 
 	public function __construct()
 	{
-		$this->goalStack = new SplStack();
+		$this->goalStack = new Stack();
 	}
 
 	/**
