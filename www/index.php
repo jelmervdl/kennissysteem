@@ -33,7 +33,7 @@ function process_file($file)
 		foreach ($errors as $error)
 			$out .= sprintf("\n<li title=\"%s\">%s</li>\n",
 				attr($error->file . ':' . $error->line),
-				html($error->message));
+				$error->message);
 		
 		return $out .= "</ul>\n";
 	}

@@ -60,7 +60,7 @@ class KnowledgeBaseReader
 
 	private function parseKnowledgeBase($node, $kb)
 	{
-		assert($node->nodeName == 'knowledge');
+		assert('$node->nodeName == "knowledge"');
 
 		foreach ($this->childElements($node) as $childNode)
 		{
@@ -340,6 +340,8 @@ class KnowledgeBaseReader
 
 	private function childElements($node)
 	{
+		assert('$node instanceof DOMElement');
+
 		return new DOMElementIterator(new DOMNodeIterator($node->childNodes));
 	}
 
