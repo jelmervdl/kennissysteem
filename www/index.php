@@ -67,27 +67,32 @@ function html($text) {
 <html>
 	<head>
 		<title>Kennisbanken</title>
+		<link rel="stylesheet" href="webfrontend.css">
 	</head>
 	<body>
 		<?php if ($message): ?>
-		<p><?=$message?></p>
+		<p class="status-update"><?=$message?></p>
 		<?php endif ?>
 
-		<ul>
-			<?php foreach (glob('../knowledgebases/*.xml') as $file):
-				$file = basename($file); ?>
-			<li>
-				<a href="webfrontend.php?kb=<?=$file?>"><?=$file?></a>
-				<form method="post">
-					<input type="hidden" name="delete-file" value="<?=attr($file)?>">
-					<button type="submit">Verwijder</button>
-				</form>
-			</li>
-			<?php endforeach ?>
-		</ul>
-		<form method="post" enctype="multipart/form-data">
-			<input type="file" name="knowledgebase">
-			<button type="submit">Voeg toe</button>
-		</form>
+		<section>
+			<h2>Kennisbanken</h2>
+			<ul>
+				<?php foreach (glob('../knowledgebases/*.xml') as $file):
+					$file = basename($file); ?>
+				<li>
+					<a href="webfrontend.php?kb=<?=$file?>" class="run">Start <?=$file?></a>
+					<a href="download.php?kb=<?=$file?>" class="download">download</a>
+					<form method="post">
+						<input type="hidden" name="delete-file" value="<?=attr($file)?>">
+						<button type="submit" class="delete">Verwijder</button>
+					</form>
+				</li>
+				<?php endforeach ?>
+			</ul>
+			<form method="post" enctype="multipart/form-data">
+				<input type="file" name="knowledgebase">
+				<button type="submit">Voeg toe</button>
+			</form>
+		</section>
 	</body>
 </html>
