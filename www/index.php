@@ -82,6 +82,8 @@ function html($text) {
 				<li>
 					<a href="webfrontend.php?kb=<?=$file?>" class="run">Start <?=$file?></a>
 					<a href="download.php?kb=<?=$file?>" class="download">download</a>
+					<a href="analyse.php?kb=<?=$file?>" class="analyse">
+					analyseer</a>
 					<form method="post">
 						<input type="hidden" name="delete-file" value="<?=attr($file)?>">
 						<button type="submit" class="delete">Verwijder</button>

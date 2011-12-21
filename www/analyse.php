@@ -16,8 +16,10 @@ class FactStatistics
 
 	public $values;
 
-	public function __construct()
+	public function __construct($name)
 	{
+		$this->name = $name;
+
 		$this->values = new Map(function() {
 			return new FactValueStatistics;
 		});
@@ -75,7 +77,7 @@ foreach ($state->questions as $question)
 foreach ($stats as $fact)
 {
 	printf('
-		<h2>%s</h2>
+		<h3>%s</h3>
 		<table>
 			<thead>
 				<tr>
