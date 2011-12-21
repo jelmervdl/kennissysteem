@@ -79,6 +79,8 @@ class Option
 interface Condition
 {
 	public function evaluate(KnowledgeState $state);
+
+	public function asArray();
 }
 
 /**
@@ -122,6 +124,11 @@ class WhenAllCondition implements Condition
 
 		return Yes::because($values);
 	}
+
+	public function asArray()
+	{
+		return array($this, array_map_method('asArray', $this->conditions));
+	}
 }
 
 /**
@@ -160,6 +167,11 @@ class WhenAnyCondition implements Condition
 		// Geen ja's, geen misschien's, dus alle condities gaven No terug.
 		return No::because($values);
 	}
+
+	public function asArray()
+	{
+		return array($this, array_map_method('asArray', $this->conditions));
+	}
 }
 
 /**
@@ -180,6 +192,11 @@ class NegationCondition implements Condition
 	{
 		return $this->condition->evaluate($state)->negate();
 	}
+
+	public function asArray()
+	{
+		return array($this, array_map_method('asArray', $this->conditions));
+	}
 }
 
 /**
@@ -187,9 +204,9 @@ class NegationCondition implements Condition
  */
 class FactCondition implements Condition
 {
-	private $name;
+	public $name;
 
-	private $value;
+	public $value;
 
 	public function __construct($name, $value)
 	{
@@ -206,6 +223,11 @@ class FactCondition implements Condition
 		
 		else
 			return Maybe::because($this->name);
+	}
+
+	public function asArray()
+	{
+		return array($this);
 	}
 }
 

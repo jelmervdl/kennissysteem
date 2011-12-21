@@ -72,6 +72,29 @@ function array_filter_type($type, $array)
 	return $hits;
 }
 
+function array_flatten($array)
+{
+	$values = array();
+
+	foreach ($array as $item)
+		if (is_array($item))
+			$values = array_merge($values, array_flatten($item));
+		else
+			$values[] = $item;
+	
+	return $values;
+}
+
+function array_map_method($method, $array)
+{
+	$values = array();
+	
+	foreach ($array as $key => $value)
+		$values[$key] = call_user_func(array($value, $method));
+	
+	return $values;
+}
+
 function iterator_contains(Iterator $it, $needle)
 {
 	foreach ($it as $el)
@@ -111,7 +134,7 @@ class Map implements ArrayAccess, IteratorAggregate
 	{
 		return isset($this->data[$key])
 			? $this->data[$key]
-			: $this->offsetSet($key, $this->default_value);
+			: $this->offsetSet($key, $this->makeDefaultValue($key));
 	}
 
 	public function offsetSet($key, $value)
@@ -127,6 +150,39 @@ class Map implements ArrayAccess, IteratorAggregate
 	public function data()
 	{
 		return $this->data;
+	}
+
+	protected function makeDefaultValue($key)
+	{
+		return is_callable($this->default_value)
+			? call_user_func($this->default_value, $key)
+			: $this->default_value;
+	}
+}
+
+class Set implements IteratorAggregate, Countable
+{
+	private $values;
+
+	public function __construct()
+	{
+		$this->values = array();
+	}
+
+	public function push($value)
+	{
+		if (!in_array($value, $this->values))
+			$this->values[] = $value;
+	}
+
+	public function getIterator()
+	{
+		return new ArrayIterator($this->values);
+	}
+
+	public function count()
+	{
+		return count($this->values);
 	}
 }
 
