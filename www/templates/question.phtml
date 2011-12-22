@@ -1,8 +1,8 @@
 <section class="question">
-	<p><?=$this->question->description?></p>
+	<p><?=$question->description?></p>
 
 	<ol class="options">
-		<?php foreach ($this->question->options as $option): ?>
+		<?php foreach ($question->options as $option): ?>
 		<li>
 			<label>
 				<input type="radio" name="answer" value="<?=_encode($option->consequences)?>">
@@ -10,7 +10,7 @@
 			</label>
 		</li>
 		<?php endforeach ?>
-		<?php if($this->question->skippable): ?>
+		<?php if($question->skippable): ?>
 		<li class="skip-option">
 			<label>
 				<input type="radio" name="answer" value="<?=_encode(null)?>">

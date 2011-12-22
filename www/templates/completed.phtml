@@ -1,9 +1,9 @@
 <section class="completed">
 	<h2>Klaar!</h2>
 	<dl>
-	<?php foreach ($this->state->goals as $goal): ?>
+	<?php foreach ($state->goals as $goal): ?>
 		<dt><?=$goal->description?></dt>
-		<dd><?=$this->state->facts[$goal->name]?></dd>
+		<dd><?=$state->facts[$goal->name]?></dd>
 	<?php endforeach ?>
 	</dl>
 </section>

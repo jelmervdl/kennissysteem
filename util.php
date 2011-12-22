@@ -88,7 +88,7 @@ function array_flatten($array)
 function array_map_method($method, $array)
 {
 	$values = array();
-	
+
 	foreach ($array as $key => $value)
 		$values[$key] = call_user_func(array($value, $method));
 	
@@ -204,6 +204,44 @@ class Stack extends SplStack implements Serializable
 			$this->unshift($item);
 	}
 }
+
+class Template
+{
+	private $__TEMPLATE__;
+
+	private $__DATA__;
+
+	public function __construct($file)
+	{
+		$this->__TEMPLATE__ = $file;
+
+		$this->__DATA__ = array();
+	}
+
+	public function __set($key, $value)
+	{
+		$this->__DATA__[$key] = $value;
+	}
+
+	public function render()
+	{
+		ob_start();
+		extract($this->__DATA__);
+		include $this->__TEMPLATE__;
+		return ob_get_clean();
+	}
+
+	protected function html($data)
+	{
+		return htmlspecialchars($data, ENT_COMPAT, 'utf-8');
+	}
+
+	protected function attr($data)
+	{
+		return htmlspecialchars($data, ENT_QUOTES, 'utf-8');
+	}
+}
+
 
 function verbose($state = null)
 {

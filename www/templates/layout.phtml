@@ -1,19 +1,27 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Kennissysteem!</title>
+		<title><?=$this->html($state->title) ?></title>
 	</head>
 	<body>
+		<nav>
+			<a href="index.php">Kennisbanken</a>
+			<a href="webfrontend.php?kb=<?=$_GET['kb']?>">Start overnieuw</a>
+		</nav>
+		<header>
+			<h1><?=$this->html($state->title)?></h1>
+			<p><?=$state->description?></p>
+		</header>
 		<div>
 			<form method="post">
-				<input type="hidden" name="state" value="<?=_encode($this->state) ?>">
-				<?=$this->content?>
+				<input type="hidden" name="state" value="<?=_encode($state) ?>">
+				<?=$content?>
 			</form>
 		</div>
 		<aside id="fact-state" class="state-info">
 			<h3>Feiten</h3>
 			<dl>
-				<?php foreach($this->state->facts as $name => $value): ?>
+				<?php foreach($state->facts as $name => $value): ?>
 				<dt><?=$name?></dt>
 				<dd><?=$value?></dt>
 				<?php endforeach ?>
@@ -22,7 +30,7 @@
 		<aside id="goal-stack" class="state-info">
 			<h3>Goal stack</h3>
 			<ol>
-				<?php foreach ($this->state->goalStack as $goal): ?>
+				<?php foreach ($state->goalStack as $goal): ?>
 				<li><?=$goal?></li>
 				<?php endforeach ?>
 			</ol>

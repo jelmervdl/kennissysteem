@@ -339,6 +339,10 @@ class Maybe extends TruthState
  */
 class KnowledgeState
 {
+	public $title;
+
+	public $description;
+
 	public $facts = array();
 
 	public $rules = array();

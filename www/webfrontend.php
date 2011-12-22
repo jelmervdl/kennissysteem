@@ -14,23 +14,6 @@ function _decode($data)
 	return unserialize(base64_decode($data));
 }
 
-class Template
-{
-	private $__TEMPLATE__;
-
-	public function __construct($file)
-	{
-		$this->__TEMPLATE__ = $file;
-	}
-
-	public function render()
-	{
-		ob_start();
-		include $this->__TEMPLATE__;
-		return ob_get_clean();
-	}
-}
-
 class WebFrontend
 {
 	private $solver;

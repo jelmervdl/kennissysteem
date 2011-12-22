@@ -1,5 +1,8 @@
 <?xml version="1.0"?>
 <knowledge>
+	<title>Brandveiligheid</title>
+	<description>Welke voorzieningen moeten er aanwezig zijn?</description>
+
 	<rule>
 		<description>De regels zijn van toepassing</description>
 		<when_all>

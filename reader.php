@@ -27,6 +27,9 @@ class KnowledgeBaseReader
 
 		$kb = new KnowledgeState;
 
+		// backup-titel, een <title/>-element in het bestand zal dit overschrijven.
+		$kb->title = basename($file, '.xml');
+
 		$doc->load($file, LIBXML_NOCDATA & LIBXML_NOBLANKS);
 
 		if (!$doc->firstChild)
@@ -91,6 +94,14 @@ class KnowledgeBaseReader
 				case 'fact':
 					list($name, $value) = $this->parseFact($childNode);
 					$kb->facts[$name] = $value;
+					break;
+
+				case 'title':
+					$kb->title = $this->parseText($childNode);
+					break;
+				
+				case 'description':
+					$kb->description = $this->parseText($childNode);
 					break;
 
 				default:

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Kennisbanken</title>
+		<link rel="stylesheet" href="webfrontend.css">
+	</head>
+	<body>
+		<?php if ($message): ?>
+		<p class="status-update"><?=$message?></p>
+		<?php endif ?>
+
+		<h2>Kennisbanken</h2>
+		<ul>
+			<?php foreach ($knowledge_bases as $file):
+				$file = basename($file); ?>
+			<li>
+				<a href="webfrontend.php?kb=<?=urlencode($file)?>" class="run">Start <?=$this->html($file)?></a>
+				<a href="download.php?kb=<?=urlencode($file)?>" class="download">download</a>
+				<a href="analyse.php?kb=<?=urlencode($file)?>" class="analyse">
+				analyseer</a>
+				<form method="post">
+					<input type="hidden" name="delete-file" value="<?=$this->attr($file)?>">
+					<button type="submit" class="delete">Verwijder</button>
+				</form>
+			</li>
+			<?php endforeach ?>
+		</ul>
+		<form method="post" enctype="multipart/form-data">
+			<input type="file" name="knowledgebase">
+			<button type="submit">Voeg toe</button>
+		</form>
+	</body>
+</html>

@@ -54,47 +54,9 @@ function delete_file($file)
 		: 'De knowledge-base kon niet verwijderd worden.';
 }
 
-function attr($text) {
-	return htmlspecialchars($text, ENT_QUOTES, 'utf-8');
-}
+$template = new Template('templates/index.phtml');
 
-function html($text) {
-	return htmlspecialchars($text, ENT_COMPAT, 'utf-8');
-}
+$template->message = $message;
+$template->knowledge_bases = glob('../knowledgebases/*.xml');
 
-?>
-<!DOCTYPE html>
-<html>
-	<head>
-		<title>Kennisbanken</title>
-		<link rel="stylesheet" href="webfrontend.css">
-	</head>
-	<body>
-		<?php if ($message): ?>
-		<p class="status-update"><?=$message?></p>
-		<?php endif ?>
-
-		<section>
-			<h2>Kennisbanken</h2>
-			<ul>
-				<?php foreach (glob('../knowledgebases/*.xml') as $file):
-					$file = basename($file); ?>
-				<li>
-					<a href="webfrontend.php?kb=<?=$file?>" class="run">Start <?=$file?></a>
-					<a href="download.php?kb=<?=$file?>" class="download">download</a>
-					<a href="analyse.php?kb=<?=$file?>" class="analyse">
-					analyseer</a>
-					<form method="post">
-						<input type="hidden" name="delete-file" value="<?=attr($file)?>">
-						<button type="submit" class="delete">Verwijder</button>
-					</form>
-				</li>
-				<?php endforeach ?>
-			</ul>
-			<form method="post" enctype="multipart/form-data">
-				<input type="file" name="knowledgebase">
-				<button type="submit">Voeg toe</button>
-			</form>
-		</section>
-	</body>
-</html>
+echo $template->render();
