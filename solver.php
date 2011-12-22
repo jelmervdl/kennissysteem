@@ -372,6 +372,8 @@ class KnowledgeState
 	}
 }
 
+define('STATE_UNDEFINED', 'undefined');
+
 class Solver
 {
 
@@ -445,7 +447,7 @@ class Solver
 					$unsatisfied_goal = $state->goalStack->pop();
 
 					// en markeer hem dan maar als niet waar (closed-world assumption?)
-					$state->apply(array($unsatisfied_goal => 'no'));
+					$state->apply(array($unsatisfied_goal => STATE_UNDEFINED));
 					
 					$solved[] = $unsatisfied_goal;
 				}
