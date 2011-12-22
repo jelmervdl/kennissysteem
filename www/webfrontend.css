@@ -1,3 +1,95 @@
+/* @override http://localhost.local/kennissysteem/www/webfrontend.css */
+
 form {
 	display: inline;
+}
+
+body {
+	font: 14px/24px "Lucida Grande", Lucida, Verdana, sans-serif;
+	margin-top: 36px;
+}
+
+nav {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 24px;
+	background: black;
+	box-shadow: 0 0 4px #333
+}
+
+nav a {
+	display: inline-block;
+	color: #eee;
+	text-shadow: 0 1px 0 #333;
+	text-decoration: none;
+	padding: 0 12px;
+}
+
+header > * {
+	display: none;
+}
+
+header > h1 {
+	display: inline-block;
+	position: fixed;
+	top: 0;
+	right: 12px;
+	font-size: 1em;
+	margin: 0;
+	padding: 0;
+	color: #eee;
+	font-weight: normal;
+}
+
+nav a:hover {
+	background: #eee;
+	color: #444;
+	text-shadow: 0 1px 0 white;
+}
+
+.question {
+	width: 600px;
+	margin: 0 auto;
+}
+
+.question p {
+	font-size: 1.2em;
+}
+
+.question .options {
+	padding: 0;
+	list-style: none;
+}
+
+.question .options li {
+	margin: 0;
+	padding: 0;
+}
+
+.question .options label {
+	display: block;
+	margin: 0.2em;
+	padding: 0.5em 1em;
+	color: #444;
+	text-shadow: 0 1px 0 white;
+	border: 1px solid #D8D8D8 !important;
+	background: #F2F2F2;
+	background: -webkit-linear-gradient(top, whiteSmoke, #F1F1F1);
+	border-radius: 2px;
+}
+
+.question .options label:hover {
+	border: 1px solid #C6C6C6 !important;
+	background: #F3F3F3;
+	background: -webkit-linear-gradient(top, #F8F8F8, #F1F1F1);
+}
+
+.question .options label {
+	cursor: pointer;
+}
+
+.question .options .single-click input[type=radio] {
+	display: none;
 }

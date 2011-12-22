@@ -6,8 +6,8 @@
 	</head>
 	<body id="webfrontend">
 		<nav>
-			<a href="index.php">Kennisbanken</a>
 			<a href="webfrontend.php?kb=<?=$_GET['kb']?>">Start overnieuw</a>
+			<a href="index.php">Kennisbanken</a>
 		</nav>
 		<header>
 			<h1><?=$this->html($state->title)?></h1>
@@ -53,6 +53,8 @@
 					radio.form.submit();
 				});
 			});
+		
+		document.querySelector('.question button[type=submit]').style.display = 'none';
 		</script>
 	</body>
 </html>
