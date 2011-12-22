@@ -36,5 +36,21 @@
 				<?php endforeach ?>
 			</ol>
 		</aside>
+		<script>
+		Array.prototype.forEach.call(
+			document.querySelectorAll('.question > .options > li'),
+			function(option) {
+				option.classList.add('single-click');
+				option.addEventListener('click', function(e) {
+					if (e.target.nodeName == 'A')
+						return;
+
+					var radio = option.querySelector('input[type=radio]');
+					radio.checked = true;
+					e.preventDefault();
+					radio.form.submit();
+				});
+			});
+		</script>
 	</body>
 </html>
