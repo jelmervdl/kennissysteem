@@ -46,7 +46,7 @@
 	<question>
 		<description>Wat zijn de gebruiksfuncties voor het gebouw?</description>
 		<option>
-			<description>Woonfunctie</description>
+			<description><![CDATA[Woonfunctie zoals beschreven in <a href="#">NEN1234</a>]]></description>
 			<then>
 				<fact name="gebruiksfunctie">woonfunctie</fact>
 			</then>
