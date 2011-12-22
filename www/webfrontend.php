@@ -6,12 +6,12 @@ include '../reader.php';
 
 function _encode($data)
 {
-	return base64_encode(serialize($data));
+	return base64_encode(gzcompress(serialize($data)));
 }
 
 function _decode($data)
 {
-	return unserialize(base64_decode($data));
+	return unserialize(gzuncompress(base64_decode($data)));
 }
 
 class WebFrontend
