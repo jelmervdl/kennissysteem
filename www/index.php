@@ -4,6 +4,8 @@ include '../util.php';
 include '../solver.php';
 include '../reader.php';
 
+date_default_timezone_set('Europe/Amsterdam');
+
 $message = null;
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST')

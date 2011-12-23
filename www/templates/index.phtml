@@ -18,10 +18,11 @@
 		<?php endif ?>
 
 		<ul class="kennisbanken">
-			<?php foreach ($knowledge_bases as $file):
-				$file = basename($file); ?>
+			<?php foreach ($knowledge_bases as $path):
+				$file = basename($path); ?>
 			<li>
 				<a href="webfrontend.php?kb=<?=urlencode($file)?>" class="run">Start <?=$this->html($file)?></a>
+				<span class="last-modified">Laatst bijgewerkt <time title="<?=date('c', filemtime($path))?>"><?=date('\o\p d-m, \o\m H:i', filemtime($path))?></time></span>
 				<a href="download.php?kb=<?=urlencode($file)?>" class="download">download</a>
 				<a href="analyse.php?kb=<?=urlencode($file)?>" class="analyse">
 				analyseer</a>
