@@ -3,7 +3,12 @@
 	<dl>
 	<?php foreach ($state->goals as $goal): ?>
 		<dt><?=$goal->description?></dt>
-		<dd><?=$state->facts[$goal->name]?></dd>
+		<dd><?
+			$answer = $goal->answer($state);
+			echo $answer
+				? $answer->description
+				: '<pre>' . $state->facts[$goal->name] . '</pre>';
+			?></dd>
 	<?php endforeach ?>
 	</dl>
 </section>

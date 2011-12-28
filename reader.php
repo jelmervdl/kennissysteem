@@ -196,6 +196,10 @@ class KnowledgeBaseReader
 					$goal->description = $this->parseText($childNode);
 					break;
 				
+				case 'answer':
+					$goal->answers[] = $this->parseAnswer($childNode);
+					break;
+				
 				default:
 					$this->logError("KnowledgeBaseReader::parseGoal: "
 						. "Skipping unknown element {$childNode->nodeName}",
@@ -334,6 +338,19 @@ class KnowledgeBaseReader
 		}
 
 		return $option;
+	}
+
+	private function parseAnswer($node)
+	{
+		$answer = new Answer;
+
+		$answer->value = $node->hasAttribute('value')
+			? $node->getAttribute('value')
+			: null;
+		
+		$answer->description = $this->parseText($node);
+
+		return $answer;
 	}
 
 	private function parseText(DOMNode $node)

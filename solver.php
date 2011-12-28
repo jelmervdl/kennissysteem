@@ -238,6 +238,7 @@ class FactCondition implements Condition
  *
  * <goal name="">
  *     <description/>
+ *	   <answer/>
  * </goal>
  */
 class Goal
@@ -245,8 +246,25 @@ class Goal
 	public $name;
 	
 	public $description;
+
+	public $answers = array();
+
+	public function answer(KnowledgeState $state)
+	{
+		$value = $state->facts[$this->name];
+
+		foreach ($this->answers as $answer)
+			if ($answer->value == $value || $answer->value === null)
+				return $answer;
+	}
 }
 
+class Answer
+{
+	public $value;
+
+	public $description;
+}
 
 abstract class TruthState
 {
@@ -408,6 +426,8 @@ class Solver
 			{
 				// waarom niet?
 				$causes = $result->causes();
+
+				//echo '<pre>', print_r($causes, true), '</pre>';
 
 				// er zijn facts die nog niet zijn afgeleid
 				while (count($causes) > 0)

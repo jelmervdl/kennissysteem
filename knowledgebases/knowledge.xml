@@ -79,5 +79,8 @@
 
 	<goal name="regels_van_toepassing">
 		<description>Zijn de regels van toepassing?</description>
+		<answer value="yes">Ja, de regels zijn van toepassing.</answer>
+		<answer value="no">Nee, deze situatie is niet specifiek beschreven in de regelgeving.</answer>
+		<answer>Geen idee</answer>
 	</goal>
 </knowledge>
