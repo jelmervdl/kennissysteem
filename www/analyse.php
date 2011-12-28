@@ -74,39 +74,7 @@ foreach ($state->questions as $question)
 				->inferringQuestions
 				->push($question);
 
-foreach ($stats as $fact)
-{
-	printf('
-		<h3>%s</h3>
-		<table>
-			<thead>
-				<tr>
-					<th>Waarde</th>
-					<th>Afleidende vragen</th>
-					<th>Afleindende regels</th>
-					<th>Afleidende regels + vragen</th>
-					<th>Testende regels</th>
-				</tr>
-			</thead>
-			<tbody>', $fact->name);
-	foreach ($fact->values as $value => $value_stats)
-	{
-		printf('
-			<tr>
-				<td>%s</td>
-				<td>%d</td>
-				<td>%d</td>
-				<td><strong>%d</strong></td>
-				<td><strong>%d</strong></td>
-			</tr>',
-				$value,
-				count($value_stats->inferringQuestions),
-				count($value_stats->inferringRules),
-				count($value_stats->inferringQuestions)
-				+ count($value_stats->inferringRules),
-				count($value_stats->dependingRules));
-	}
-	print('
-		</tbody>
-	</table>');
-}
+$template = new Template('templates/analyse.phtml');
+$template->stats = $stats;
+
+echo $template->render();

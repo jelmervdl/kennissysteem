@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Analyse <?=$this->html($_GET['kb'])?></title>
+		<style>
+			body {
+				font: 14px/24px "Lucida Grande", Lucida, Verdana, sans-serif;
+			}
+			th {
+				text-align: left;
+			}
+			td:nth-child(1) {
+				width: 200px;
+			}
+		</style>
+	</head>
+	<body>
+		<?php foreach ($stats as $fact): ?>
+		<h3><?=$this->html($fact->name)?></h3>
+		<table>
+			<thead>
+				<tr>
+					<th>Waarde</th>
+					<th>Afleidende vragen</th>
+					<th>Afleindende regels</th>
+					<th>Afleidende regels + vragen</th>
+					<th>Testende regels</th>
+				</tr>
+			</thead>
+			<tbody>
+			<?php foreach ($fact->values as $value => $value_stats): ?>
+				<tr>
+					<td><?=$this->html($value)?></td>
+					<td><?=count($value_stats->inferringQuestions)?></td>
+					<td><?=count($value_stats->inferringRules)?></td>
+					<td><strong><?=count($value_stats->inferringQuestions) + count($value_stats->inferringRules)?></strong></td>
+					<td><strong><?=count($value_stats->dependingRules)?></strong></td>
+				</tr>
+			<?php endforeach ?>
+			</tbody>
+		</table>
+		<?php endforeach ?>
+	</body>
+</html>
