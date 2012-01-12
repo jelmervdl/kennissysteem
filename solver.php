@@ -427,7 +427,7 @@ class Solver
 				// waarom niet?
 				$causes = $result->causes();
 
-				echo '<pre>', print_r($causes, true), '</pre>';
+				// echo '<pre>', print_r($causes, true), '</pre>';
 
 				// er zijn facts die nog niet zijn afgeleid
 				while (count($causes) > 0)
