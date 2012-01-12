@@ -319,9 +319,9 @@ class Maybe extends TruthState
 		$causes = $this->divideAmong(1.0, $this->factors)->data();
 
 		// grootst verantwoordelijk ontbrekend fact op top.
-		arsort($causes);
+		asort($causes);
 
-		return $causes;
+		return array_reverse($causes);
 	}
 
 	private function divideAmong($percentage, array $factors)
@@ -427,7 +427,7 @@ class Solver
 				// waarom niet?
 				$causes = $result->causes();
 
-				//echo '<pre>', print_r($causes, true), '</pre>';
+				echo '<pre>', print_r($causes, true), '</pre>';
 
 				// er zijn facts die nog niet zijn afgeleid
 				while (count($causes) > 0)
