@@ -50,13 +50,13 @@ class KnowledgeBaseReader
 	{
 		$errors = array();
 
-		$old_handler = set_error_handler(function($number, $message, $file, $line) use (&$errors) {
+		set_error_handler(function($number, $message, $file, $line) use (&$errors) {
 			$errors[] = (object) compact('number', 'message', 'file', 'line');
 		});
 
 		$this->parse($file);
 		
-		set_error_handler($old_handler);
+		restore_error_handler();
 
 		return $errors;
 	}
