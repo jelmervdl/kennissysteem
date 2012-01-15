@@ -6,11 +6,9 @@ function red_if_zero($value) {
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Analyse <?=$this->html($_GET['kb'])?></title>
+		<title>Analyse <?=$this->html($kb->title)?></title>
+		<link rel="stylesheet" href="webfrontend.css">
 		<style>
-			body {
-				font: 14px/24px "Lucida Grande", Lucida, Verdana, sans-serif;
-			}
 			th {
 				text-align: left;
 			}
@@ -30,12 +28,22 @@ function red_if_zero($value) {
 		</style>
 	</head>
 	<body>
+		<nav>
+			<a href="webfrontend.php?kb=<?=urlencode($_GET['kb'])?>">Start <?=$this->html($kb->title)?></a>
+        	<a href="index.php">Kennisbanken</a>
+		</nav>
+        
+        <header>
+                <h1>Analyse <?=$this->html($kb->title)?></h1>
+                <p>Uiteenzetting van alle vragen, regels en afhankelijkheden in deze kennisbank.</p>
+        </header>
+		
 		<dl class="stats">
-			<dt>Aantal regels</dt>
-			<dd><?=$numberOfRules?></dd>
+			<dt>Aantal regels:</dt>
+			<dd><?=count($kb->rules)?></dd>
 			
-			<dt>Aantal vragen</dt>
-			<dd><?=$numberOfQuestions?></dd>
+			<dt>Aantal vragen:</dt>
+			<dd><?=count($kb->questions)?></dd>
 		</dl>
 		<?php foreach ($stats as $fact): ?>
 		<h3><?=$this->html($fact->name)?></h3>
