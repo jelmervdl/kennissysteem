@@ -73,16 +73,27 @@ class WebFrontend
 		if (isset($_POST['state']))
 			return _decode($_POST['state']);
 		else
-			return $this->readState($this->kb_file);
+			return $this->createNewState();
+	}
+
+	private function createNewState()
+	{
+		$state = $this->readState($this->kb_file);
+
+		if (!empty($_GET['goals']))
+			foreach (explode(',', $_GET['goals']) as $goal)
+				$state->goalStack->push($goal);
+		else
+			foreach ($state->goals as $goal)
+				$state->goalStack->push($goal->name);
+
+		return $state;
 	}
 
 	private function readState($file)
 	{
 		$reader = new KnowledgeBaseReader;
 		$state = $reader->parse($file);
-
-		foreach($state->goals as $goal)
-			$state->goalStack->push($goal->name);
 		
 		return $state;
 	}

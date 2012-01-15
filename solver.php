@@ -251,7 +251,9 @@ class Goal
 
 	public function answer(KnowledgeState $state)
 	{
-		$value = $state->facts[$this->name];
+		$value = isset($state->facts[$this->name])
+			? $state->facts[$this->name]
+			: null;
 
 		foreach ($this->answers as $answer)
 			if ($answer->value == $value || $answer->value === null)
