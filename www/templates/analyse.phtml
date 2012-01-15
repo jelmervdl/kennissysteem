@@ -1,3 +1,8 @@
+<?php
+function red_if_zero($value) {
+	return sprintf($value > 0 ? '%d' : '<strong>%d</strong>', $value);
+}
+?>
 <!DOCTYPE html>
 <html>
 	<head>
@@ -12,6 +17,16 @@
 			td:nth-child(1) {
 				width: 200px;
 			}
+
+			td strong {
+				color: red;
+			}
+
+			h3 {
+				border-top: 1px solid silver;
+				padding: 1em 0;
+			}
+
 		</style>
 	</head>
 	<body>
@@ -40,8 +55,8 @@
 					<td><?=$this->html($value)?></td>
 					<td><?=count($value_stats->inferringQuestions)?></td>
 					<td><?=count($value_stats->inferringRules)?></td>
-					<td><strong><?=count($value_stats->inferringQuestions) + count($value_stats->inferringRules)?></strong></td>
-					<td><strong><?=count($value_stats->dependingRules)?></strong></td>
+					<td><?=red_if_zero(count($value_stats->inferringQuestions) + count($value_stats->inferringRules))?></strong></td>
+					<td><?=red_if_zero(count($value_stats->dependingRules))?></td>
 				</tr>
 			<?php endforeach ?>
 			</tbody>
