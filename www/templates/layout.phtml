@@ -6,7 +6,7 @@
 	</head>
 	<body id="webfrontend">
 		<nav>
-			<a href="webfrontend.php?kb=<?=$_GET['kb']?>">Start overnieuw</a>
+			<a href="<?=$this->attr($_SERVER['REQUEST_URI'])?>">Start overnieuw</a>
 			<a href="index.php">Kennisbanken</a>
 		</nav>
 		<header>
