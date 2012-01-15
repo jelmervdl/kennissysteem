@@ -117,6 +117,9 @@ class KnowledgeBaseReader
 	{
 		$rule = new Rule;
 
+		if ($node->hasAttribute('priority'))
+			$rule->priority = intval($node->getAttribute('priority'));
+
 		foreach ($this->childElements($node) as $childNode)
 		{
 			switch ($childNode->nodeName)
@@ -151,6 +154,9 @@ class KnowledgeBaseReader
 	private function parseQuestion($node)
 	{
 		$question = new Question;
+
+		if ($node->hasAttribute('priority'))
+			$question->priority = intval($node->getAttribute('priority'));
 
 		foreach ($this->childElements($node) as $childNode)
 		{

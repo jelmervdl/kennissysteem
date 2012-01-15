@@ -19,6 +19,8 @@ class Rule
 
 	public $consequences = array();
 
+	public $priority = 0;
+
 	public function infers($fact)
 	{
 		return in_array($fact, $this->inferred_facts);
@@ -40,6 +42,8 @@ class Question
 	public $description;
 
 	public $options = array();
+
+	public $priority = 0;
 
 	public function infers($fact)
 	{
