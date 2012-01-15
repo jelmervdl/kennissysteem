@@ -15,6 +15,13 @@
 		</style>
 	</head>
 	<body>
+		<dl class="stats">
+			<dt>Aantal regels</dt>
+			<dd><?=$numberOfRules?></dd>
+			
+			<dt>Aantal vragen</dt>
+			<dd><?=$numberOfQuestions?></dd>
+		</dl>
 		<?php foreach ($stats as $fact): ?>
 		<h3><?=$this->html($fact->name)?></h3>
 		<table>

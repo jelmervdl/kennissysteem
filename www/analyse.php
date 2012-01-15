@@ -75,6 +75,8 @@ foreach ($state->questions as $question)
 				->push($question);
 
 $template = new Template('templates/analyse.phtml');
+$template->numberOfRules = count($state->rules);
+$template->numberOfQuestions = count($state->questions);
 $template->stats = $stats;
 
 echo $template->render();
