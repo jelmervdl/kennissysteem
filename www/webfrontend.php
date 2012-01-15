@@ -14,7 +14,7 @@ function _decode($data)
 	return unserialize(gzuncompress(base64_decode($data)));
 }
 
-//verbose(true);
+verbose(true);
 
 class WebFrontend
 {

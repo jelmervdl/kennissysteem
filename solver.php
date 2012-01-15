@@ -538,23 +538,6 @@ class Solver
 		});
 
 
-		// Vraag gevonden!
-		if (count($relevant_questions))
-		{
-			$question = current($relevant_questions);
-
-			// deze vraag is alleen over te slaan als er nog regels open staan om dit feit
-			// af te leiden of als er alternatieve vragen naast deze (of eerder gestelde,
-			// vandaar $n++) zijn.
-			$skippable = (count($relevant_questions) - 1) + count($maybe_rules);
-
-			// haal de vraag hoe dan ook uit de mogelijk te stellen vragen. Het heeft geen zin
-			// om hem twee keer te stellen.
-			$state->questions = array_filter($state->questions, curry('unequals', $question));
-
-			return new AskedQuestion($question, $skippable);
-		}
-
 		// Probeer alle mogelijk (relevante) regels, en zie of er eentje
 		// nieuwe kennis afleidt.
 		$n = 0;
@@ -581,6 +564,26 @@ class Solver
 				return $rule_result;
 			}
 		}
+
+		// Vraag gevonden!
+		if (count($relevant_questions))
+		{
+			$question = current($relevant_questions);
+
+			// deze vraag is alleen over te slaan als er nog regels open staan om dit feit
+			// af te leiden of als er alternatieve vragen naast deze (of eerder gestelde,
+			// vandaar $n++) zijn.
+			$skippable = (count($relevant_questions) - 1) + count($maybe_rules);
+
+			// haal de vraag hoe dan ook uit de mogelijk te stellen vragen. Het heeft geen zin
+			// om hem twee keer te stellen.
+			$state->questions = array_filter($state->questions, curry('unequals', $question));
+
+			return new AskedQuestion($question, $skippable);
+		}
+
+		if (verbose())
+			print_r(Maybe::because(array_map(curry('pick', 'second'), $maybe_rules))->causes());
 
 		// $relevant_rules is leeg of leverde alleen maar Maybes op.
 
