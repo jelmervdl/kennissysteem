@@ -11,31 +11,34 @@ function get_error_enum($errno)
 	return $errno;
 }
 
-set_error_handler(function($errno, $errstr, $errfile, $errline) {
-	// text colour
-	echo chr(27) . "[1;37;";
-	// background colour
-	echo ($errno == E_NOTICE || $errno == E_WARNING ? "43" : "41") . "m";
+if (PHP_SAPI === 'cli')
+{
+	set_error_handler(function($errno, $errstr, $errfile, $errline) {
+		// text colour
+		echo chr(27) . "[1;37;";
+		// background colour
+		echo ($errno == E_NOTICE || $errno == E_WARNING ? "43" : "41") . "m";
 
-	// show error message and line
-	$errenum = get_error_enum($errno);
-	echo "\n$errenum: $errstr\n $errfile:$errline\n";
+		// show error message and line
+		$errenum = get_error_enum($errno);
+		echo "\n$errenum: $errstr\n $errfile:$errline\n";
 
-	$trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-	array_shift($trace); // remove the reference to this callback
+		$trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+		array_shift($trace); // remove the reference to this callback
 
-	// print the backtrace
-	foreach ($trace as $i => $step)
-		printf("#%2d %s%s%s() called at [%s:%d]\n", $i,
-			isset($step['class']) ? $step['class'] : '',
-			isset($step['type']) ? $step['type'] : '',
-			$step['function'],
-			basename($step['file']), // should be relative path to $errfile
-			$step['line']);
-	
-	// stop colours
-	echo chr(27) . "[00m;\n";
-});
+		// print the backtrace
+		foreach ($trace as $i => $step)
+			printf("#%2d %s%s%s() called at [%s:%d]\n", $i,
+				isset($step['class']) ? $step['class'] : '',
+				isset($step['type']) ? $step['type'] : '',
+				$step['function'],
+				basename($step['file']), // should be relative path to $errfile
+				$step['line']);
+		
+		// stop colours
+		echo chr(27) . "[00m;\n";
+	});
+}
 
 /**
  * Bind some arguments already to a function. The arguments which whom the function

@@ -14,6 +14,8 @@ function _decode($data)
 	return unserialize(gzuncompress(base64_decode($data)));
 }
 
+//verbose(true);
+
 class WebFrontend
 {
 	private $solver;
@@ -29,6 +31,9 @@ class WebFrontend
 
 	public function main()
 	{
+		if (verbose())
+			echo '<pre>';
+
 		$this->solver = new Solver;
 
 		$this->state = $this->getState();
@@ -47,6 +52,9 @@ class WebFrontend
 		else
 			$page->content = $this->displayConclusions();
 		
+		if (verbose())
+			echo '</pre>';
+
 		echo $page->render();
 	}
 
