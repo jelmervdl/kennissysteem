@@ -74,6 +74,12 @@ foreach ($state->questions as $question)
 				->inferringQuestions
 				->push($question);
 
+foreach ($state->goals as $goal)
+	foreach ($stats[$goal->name]->values as $possible_value)
+		$possible_value
+			->dependingRules
+			->push($goal);
+
 $template = new Template('templates/analyse.phtml');
 $template->kb = $state;
 $template->stats = $stats;
