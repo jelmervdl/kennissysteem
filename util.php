@@ -112,6 +112,11 @@ function unequals($a, $b)
 	return $a != $b;
 }
 
+function pick($property, $object)
+{
+	return $object->$property;
+}
+
 class Map implements ArrayAccess, IteratorAggregate
 {
 	private $default_value;
@@ -205,6 +210,66 @@ class Stack extends SplStack implements Serializable
 	{
 		foreach (unserialize($data) as $item)
 			$this->unshift($item);
+	}
+}
+
+/**
+ * Dit makeshift datatype lijkt nogal op C++'s pair class. Het is gewoon handig.
+ * ArrayAccess interface is geïmplementeerd zodat je hem in combinatie met list($a, $b)
+ * kan gebruiken.
+ */
+class Pair implements ArrayAccess
+{
+	public $first;
+
+	public $second;
+
+	public function __construct($first = null, $second = null)
+	{
+		$this->first = $first;
+
+		$this->second = $second;
+	}
+
+	public function offsetExists($n)
+	{
+		return $n == 0 || $n == 1;
+	}
+
+	public function offsetGet($n)
+	{
+		if ($n == 0)
+			return $this->first;
+		
+		elseif ($n == 1)
+			return $this->second;
+		
+		else
+			throw new Exception('Index out of bounds exception');
+	}
+
+	public function offsetSet($n, $value)
+	{
+		if ($n == 0)
+			$this->first = $value;
+		
+		elseif ($n == 1)
+			$this->second = $value;
+		
+		else
+			throw new Exception('Index out of bounds exception');
+	}
+
+	public function offsetUnset($n)
+	{
+		if ($n == 0)
+			$this->first = null;
+		
+		elseif ($n == 1)
+			$this->second = null;
+		
+		else
+			throw new Exception('Index out of bounds exception');
 	}
 }
 

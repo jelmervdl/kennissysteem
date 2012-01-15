@@ -517,10 +517,15 @@ class Solver
 		$relevant_rules = array_filter($state->rules,
 			function($rule) use ($goal) { return $rule->infers($goal); });
 		
+		// Sowieso even kijken of ze daadwerkelijk toegepast kunnen worden.
+		$relevant_rules = array_map(function($rule) use ($state) {
+			return new Pair($rule, $rule->condition->evaluate($state));
+		}, $relevant_rules);
+
 		// Is er misschien een directe vraag die we kunnen stellen?
 		$relevant_questions = array_filter($state->questions,
 			function($question) use ($goal) { return $question->infers($goal); });
-		
+
 		if (verbose())
 			printf("%d regels en %d vragen gevonden\n",
 				count($relevant_rules), count($relevant_questions));
@@ -528,15 +533,34 @@ class Solver
 		// Sla ook alle resultaten op van de Maybe rules. Hier kunnen we later
 		// misschien uit afleiden welk goal we vervolgens moeten afleiden om ze
 		// te laten beslissen.
-		$maybes = array();
+		$maybe_rules = array_filter($relevant_rules, function($pair) {
+			return $pair->second instanceof Maybe;
+		});
+
+
+		// Vraag gevonden!
+		if (count($relevant_questions))
+		{
+			$question = current($relevant_questions);
+
+			// deze vraag is alleen over te slaan als er nog regels open staan om dit feit
+			// af te leiden of als er alternatieve vragen naast deze (of eerder gestelde,
+			// vandaar $n++) zijn.
+			$skippable = (count($relevant_questions) - 1) + count($maybe_rules);
+
+			// haal de vraag hoe dan ook uit de mogelijk te stellen vragen. Het heeft geen zin
+			// om hem twee keer te stellen.
+			$state->questions = array_filter($state->questions, curry('unequals', $question));
+
+			return new AskedQuestion($question, $skippable);
+		}
 
 		// Probeer alle mogelijk (relevante) regels, en zie of er eentje
 		// nieuwe kennis afleidt.
 		$n = 0;
-		foreach ($relevant_rules as $rule)
+		foreach ($relevant_rules as $pair)
 		{
-			// evalueer of de regel waar is (of het when-gedeelte Yes oplevert)
-			$rule_result = $rule->condition->evaluate($state);
+			list($rule, $rule_result) = $pair;
 
 			if (verbose())
 				printf("Regel %d (%s) levert %s op.\n",
@@ -556,39 +580,14 @@ class Solver
 				
 				return $rule_result;
 			}
-
-			// De regel is nog niet Yes, maar zou het wel kunnen worden zodra we
-			// meer feitjes weten. Onthoud even dat het een maybe was, maar probeer
-			// ook eerst even de andere regels.
-			elseif ($rule_result instanceof Maybe)
-			{
-				$maybes[] = $rule_result;
-			}
 		}
 
 		// $relevant_rules is leeg of leverde alleen maar Maybes op.
-
-		// Vraag gevonden!
-		if (count($relevant_questions))
-		{
-			$question = current($relevant_questions);
-
-			// deze vraag is alleen over te slaan als er nog regels open staan om dit feit
-			// af te leiden of als er alternatieve vragen naast deze (of eerder gestelde,
-			// vandaar $n++) zijn.
-			$skippable = (count($relevant_questions) - 1) + count($maybes);
-
-			// haal de vraag hoe dan ook uit de mogelijk te stellen vragen. Het heeft geen zin
-			// om hem twee keer te stellen.
-			$state->questions = array_filter($state->questions, curry('unequals', $question));
-
-			return new AskedQuestion($question, $skippable);
-		}
 
 		// Geen enkele regel of vraag leverde direct een antwoord op $fact
 		// Dus geven we de nieuwe state (zonder de al gestelde vragen) terug
 		// en Maybe met alle redenen waarom de niet-volledig-afgeleide regels
 		// niet konden worden afgeleid. Diegene die solve aanroept kan dan 
-		return Maybe::because($maybes);
+		return Maybe::because(array_map(curry('pick', 'second'), $maybe_rules));
 	}
 }
