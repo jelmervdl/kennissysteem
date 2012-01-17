@@ -117,6 +117,8 @@ class KnowledgeBaseReader
 	{
 		$rule = new Rule;
 
+		$rule->line_number = $node->getLineNo();
+
 		if ($node->hasAttribute('priority'))
 			$rule->priority = intval($node->getAttribute('priority'));
 
@@ -154,6 +156,8 @@ class KnowledgeBaseReader
 	private function parseQuestion($node)
 	{
 		$question = new Question;
+
+		$question->line_number = $node->getLineNo();
 
 		if ($node->hasAttribute('priority'))
 			$question->priority = intval($node->getAttribute('priority'));

@@ -21,9 +21,18 @@ class Rule
 
 	public $priority = 0;
 
+	public $line_number;
+
 	public function infers($fact)
 	{
 		return in_array($fact, $this->inferred_facts);
+	}
+
+	public function __toString()
+	{
+		return sprintf('[Rule "%s" (line %d)]',
+			$this->description,
+			$this->line_number);
 	}
 }
 
@@ -44,6 +53,8 @@ class Question
 	public $options = array();
 
 	public $priority = 0;
+
+	public $line_number;
 
 	public function infers($fact)
 	{
@@ -537,6 +548,19 @@ class Solver
 			return $pair->second instanceof Maybe;
 		});
 
+		// Controle: er moeten niet meerdere regels tegelijk waar zijn, dat zou raar zijn.
+		// naja, tenzij ze dezelfde 
+		if (verbose())
+		{
+			$applicapable_rules = array_filter($relevant_rules, function($pair) {
+				return $pair->second instanceof Yes;
+			});
+
+			if (count($applicapable_rules) > 1)
+				printf("<strong>Warning:</strong> Er zijn %d regels die iets zeggen over %s: %s",
+					count($applicapable_rules), $goal,
+					implode("\n", array_map(curry('pick', 'second'), $applicapable_rules)));
+		}
 
 		// Probeer alle mogelijk (relevante) regels, en zie of er eentje
 		// nieuwe kennis afleidt.
