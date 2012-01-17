@@ -110,5 +110,6 @@ class WebFrontend
 if (!isset($_GET['kb']) || !preg_match('/^[a-zA-Z0-9_\-\.]+\.xml$/i', $_GET['kb']))
 	redirect('index.php');
 
+header('Content-Type: text/html; charset=UTF-8');
 $frontend = new WebFrontend('../knowledgebases/' . $_GET['kb']);
 $frontend->main();
