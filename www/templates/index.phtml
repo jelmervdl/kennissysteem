@@ -17,26 +17,37 @@
 		<p class="status-update"><?=$message?></p>
 		<?php endif ?>
 
-		<ul class="kennisbanken">
-			<?php foreach ($knowledge_bases as $path):
-				$file = basename($path); ?>
-			<li>
-				<a href="webfrontend.php?kb=<?=urlencode($file)?>" class="run">Start <?=$this->html($file)?></a>
-				<span class="last-modified">Laatst bijgewerkt <time title="<?=date('c', filemtime($path))?>"><?=date('\o\p d-m, \o\m H:i', filemtime($path))?></time></span>
-				<a href="download.php?kb=<?=urlencode($file)?>" class="download">download</a>
-				<a href="analyse.php?kb=<?=urlencode($file)?>" class="analyse">
-				analyseer</a>
-				<form method="post">
-					<input type="hidden" name="delete-file" value="<?=$this->attr($file)?>">
-					<button type="submit" class="delete">Verwijder</button>
-				</form>
-			</li>
-			<?php endforeach ?>
-		</ul>
-		
-		<form method="post" enctype="multipart/form-data">
-			<input type="file" name="knowledgebase">
-			<button type="submit">Voeg toe</button>
-		</form>
+		<section class="kennisbanken">
+			<table>
+				<thead>
+					<tr>
+						<th>Naam</th>
+						<th>Bijgewerk op</th>
+						<th colspan="3">Acties</th>
+					</tr>
+				</thead>
+				<tbody>
+				<?php foreach ($knowledge_bases as $path):
+					$file = basename($path); ?>
+					<tr>
+						<td><a href="webfrontend.php?kb=<?=urlencode($file)?>" class="run">Start <?=$this->html($file)?></a></td>
+						<td><time title="<?=date('c', filemtime($path))?>"><?=date('d-m, H:i', filemtime($path))?></time></td>
+						<td><a href="download.php?kb=<?=urlencode($file)?>" class="download">Download</a></td>
+						<td><a href="analyse.php?kb=<?=urlencode($file)?>" class="analyse">
+						Analyseer</a></td>
+						<td><form method="post">
+							<input type="hidden" name="delete-file" value="<?=$this->attr($file)?>">
+							<button type="submit" class="delete">Verwijder</button>
+						</form></td>
+					</tr>
+				<?php endforeach ?>
+				</tbody>
+			</table>
+			
+			<form method="post" enctype="multipart/form-data">
+				<input type="file" name="knowledgebase">
+				<button type="submit">Voeg toe</button>
+			</form>
+		</section>
 	</body>
 </html>

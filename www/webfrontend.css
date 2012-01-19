@@ -49,6 +49,30 @@ nav a:hover {
 	text-shadow: 0 1px 0 white;
 }
 
+table {
+	border-spacing: 0;
+}
+
+th {
+	text-align: left;
+	font-weight: normal;
+	border-bottom: 1px solid silver;
+}
+
+td, th {
+	padding: 0 1em;
+	border-left: 1px solid silver;
+}
+
+th:nth-child(1), td:nth-child(1) {
+	border-left: none;
+}
+
+.kennisbanken {
+	width: 800px;
+	margin: 0 auto;
+}
+
 .question {
 	width: 600px;
 	margin: 0 auto;
