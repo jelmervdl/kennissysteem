@@ -70,7 +70,7 @@ th:nth-child(1), td:nth-child(1) {
 
 .kennisbanken,
 .completed {
-	width: 800px;
+	width: 900px;
 	margin: 0 auto;
 }
 
@@ -131,4 +131,35 @@ th:nth-child(1), td:nth-child(1) {
 
 .state-info {
 	display: none;
+}
+
+.action a,
+.action button {
+	border: 1px solid silver;
+	background: #eee;
+	margin: 0.2em;
+	padding: 0.1em 1em;
+	border-radius: 2px;
+	cursor: pointer;
+	color: black;
+	font: inherit;
+	display: inline-block;
+	text-decoration: none;
+	text-shadow: white 0 1px 0;
+}
+
+.action a:hover,
+.action button:hover {
+	background: #ddd;
+}
+
+.delete button {
+	background: #e33;
+	border-color: #c33;
+	color: white;
+	text-shadow: black 0 1px 0;
+}
+
+.delete button:hover {
+	background: #d33;
 }
