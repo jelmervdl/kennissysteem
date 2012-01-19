@@ -79,7 +79,7 @@ th:nth-child(1), td:nth-child(1) {
 }
 
 .completed dd {
-	margin: 0 1em;
+	margin: 0 1em 2em 1em;
 	padding: 0 1em;
 	border-left: 1px solid silver;
 }
@@ -126,5 +126,9 @@ th:nth-child(1), td:nth-child(1) {
 }
 
 .question .options .single-click input[type=radio] {
+	display: none;
+}
+
+.state-info {
 	display: none;
 }
