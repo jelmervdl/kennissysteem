@@ -57,8 +57,13 @@ function delete_file($file)
 }
 
 $template = new Template('templates/index.phtml');
+$knowledge_bases = glob('../knowledgebases/*.xml');
+
+usort($knowledge_bases, function($a, $b) {
+	return -1 * compare(filemtime($a), filemtime($b));
+});
 
 $template->message = $message;
-$template->knowledge_bases = glob('../knowledgebases/*.xml');
+$template->knowledge_bases = $knowledge_bases;
 
 echo $template->render();
