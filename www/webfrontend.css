@@ -68,9 +68,20 @@ th:nth-child(1), td:nth-child(1) {
 	border-left: none;
 }
 
-.kennisbanken {
+.kennisbanken,
+.completed {
 	width: 800px;
 	margin: 0 auto;
+}
+
+.completed dt {
+	font-size: 1.2em;
+}
+
+.completed dd {
+	margin: 0 1em;
+	padding: 0 1em;
+	border-left: 1px solid silver;
 }
 
 .question {
