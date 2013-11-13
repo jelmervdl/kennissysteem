@@ -333,6 +333,11 @@ class Maybe extends TruthState
 
 	public function causes()
 	{
+		// Hier wordt de volgorde van de vragen effectief bepaald!
+		// We kijken naar alle factoren die ervoor zorgden dat de vraag niet
+		// beantwoord kon worden, welke het meest invloedrijk is, en sorteren
+		// daarop om te zien waar we verder mee moeten.
+		// (Deze implementatie is zeker voor verbetering vatbaar.)
 		$causes = $this->divideAmong(1.0, $this->factors)->data();
 
 		// grootst verantwoordelijk ontbrekend fact op top.
@@ -368,9 +373,9 @@ class Maybe extends TruthState
 }
 
 /**
- * Een knowledge base op een bepaald moment. De huidige implementatie
- * werkt maar op basis van één state, maar uiteindelijk moet ieder
- * antwoord op een vraag een nieuwe state opleveren.
+ * Een knowledge base op een bepaald moment. Via KnowledgeState::apply kunnen er
+ * nieuwe feiten aan de state toegevoegd worden (en wordt het stieken een nieuwe
+ * state).
  */
 class KnowledgeState
 {
@@ -409,6 +414,12 @@ class KnowledgeState
 
 define('STATE_UNDEFINED', 'undefined');
 
+/**
+ * Solver is een forward & backward chaining implementatie die op basis van
+ * een knowledge base (een berg regels, mogelijke vragen en gaandeweg feiten)
+ * blijft zoeken, regels toepassen en vragen kiezen totdat alle goals opgelost
+ * zijn. Gebruik Solver::solveAll(state) tot deze geen vragen meer teruggeeft.
+ */
 class Solver
 {
 
@@ -423,8 +434,7 @@ class Solver
 	 * stack.
 	 *
 	 * @param KnowledgeState $knowledge begin-state
-	 * @param Goal[] $goals lijst met op te lossen goals
-	 * @return KnowledgeState eind-state
+	 * @return AskedQuestion | null
 	 */
 	public function solveAll(KnowledgeState $state)
 	{
@@ -434,14 +444,18 @@ class Solver
 			// probeer het eerste goal op te lossen
 			$result = $this->solve($state, $state->goalStack->top());
 
+			// Oh, dat resulteerde in een vraag. Stel hem (of geef hem terug om 
+			// de interface hem te laten stellen eigenlijk.)
 			if ($result instanceof AskedQuestion)
 			{
 				return $result;
 			}
-			// meh, niet gelukt.
+
+			// Goal is niet opgelost, het antwoord is nog niet duidelijk.
 			elseif ($result instanceof Maybe)
 			{
-				// waarom niet?
+				// waarom niet? $causes bevat een lijst van facts die niet
+				// bekend zijn, dus die willen we proberen op te lossen.
 				$causes = $result->causes();
 
 				// echo '<pre>', print_r($causes, true), '</pre>';
@@ -455,14 +469,14 @@ class Solver
 
 					// meest invloedrijke fact staat al op todo-lijst?
 					// sla het over.
-					// TODO: misschien be ter om juist naar de top te halen?
+					// TODO: misschien beter om juist naar de top te halen?
 					// en dan dat opnieuw proberen te bewijzen?
 					if (iterator_contains($state->goalStack, $main_cause))
 						continue;
 					
 					// Het kan niet zijn dat het al eens is opgelost. Dan zou hij
 					// in facts moeten zitten.
-					assert(!in_array($main_cause, $state->solved));
+					assert('!in_array($main_cause, $state->solved)');
 
 					// zet het te bewijzen fact bovenaan op de todo-lijst.
 					$state->goalStack->push($main_cause);
@@ -513,7 +527,7 @@ class Solver
 	 *
 	 * @param KnowledgeState $state huidige knowledge state
 	 * @param string goal naam van het fact dat wordt afgeleid
-	 * @return array(KnowledgeState, TruthState)
+	 * @return TruthState | AskedQuestion
 	 */
 	public function solve(KnowledgeState $state, $goal)
 	{
@@ -561,6 +575,8 @@ class Solver
 					count($applicapable_rules), $goal,
 					implode("\n", array_map(curry('pick', 'second'), $applicapable_rules)));
 		}
+
+		// (Let hier op de volgorde: we leiden eerst regels af, dan pas mogelijke vragen.)
 
 		// Probeer alle mogelijk (relevante) regels, en zie of er eentje
 		// nieuwe kennis afleidt.

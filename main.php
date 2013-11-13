@@ -16,9 +16,10 @@ function usage($path)
 
 function main($argc, $argv)
 {
-	if ($argc < 2 || $argc > 4)
+	if ($argc < 2 || $argc > 3)
 		usage($argv[0]);
 	
+	// Als '-v' is meegegeven tijdens het starten, ga in verbose mode
 	if ($argv[1] == '-v')
 	{
 		verbose(true);
@@ -28,36 +29,23 @@ function main($argc, $argv)
 	else
 		verbose(false);
 
+	// Reader voor de XML-bestanden
 	$reader = new KnowledgeBaseReader;
 
+	// Parse een xml-bestand (het eerste argument) tot knowledge base
 	$knowledge = $reader->parse($argv[1]);
 
+	// Start de solver, dat ding dat kan infereren
 	$solver = new Solver;
 
-	// Indien er nog een 2e argument is meegegeven, gebruik
-	// dat als goal om af te leiden.
-	if ($argc == 3)
-	{
-		$goal = new Goal;
-		$goal->description = "Is {$argv[2]} waar?";
-		$goal->proof = trim($argv[2]);
-
-		$goals = array($goal);
-	}
-	// anders leid alle goals in de knowledge base af.
-	else
-	{
-		$goals = $knowledge->goals;
-	}
-
-	proof($goals, $knowledge, $solver);
-}
-
-function proof($goals, $state, $solver)
-{	
+	// leid alle goals in de knowledge base af.
+	$goals = $knowledge->goals;
+	
+	// Begin met de doelen die we hebben op de goal stack te zetten
 	foreach($goals as $goal)
 		$state->goalStack->push($goal->name);
 	
+	// Zo lang we nog vragen kunnen stellen, stel ze
 	while (($question = $solver->solveAll($state)) instanceof AskedQuestion)
 	{
 		$answer = cli_ask($question);
@@ -67,7 +55,7 @@ function proof($goals, $state, $solver)
 				Yes::because("User answered '{$answer->description}' to '{$question->description}'"));
 	}
 	
-	// Print the results!
+	// Geen vragen meer, print de gevonden oplossingen.
 	foreach ($goals as $goal)
 	{
 		printf("%s: %s\n",
