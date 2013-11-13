@@ -3,84 +3,41 @@
 	<title>Wereldkennis over regen</title>
 	<description>Een demonstratie van wat dit kennissysteem zou moeten kunnen.</description>
 
+	<!-- Demonstration of a rule with an OR-clause -->
 	<rule>
-		<description>Als het regent, is de straat nat.</description>
+		<description>Als het regent of iemand heeft zijn auto gewassen, is de straat nat.</description>
 		<when_any>
 			<fact name="het_regent">ja</fact>
-			<when_all>
-				<fact name="het_heeft_geregend">ja</fact>
-				<fact name="zon_schijnt">nee</fact>
-			</when_all>
+			<fact name="auto_gewassen">ja</fact>
 		</when_any>
 		<then>
 			<fact name="straat_is_nat">ja</fact>
 		</then>
 	</rule>
 
+	<!-- And a (bad) demonstration of a rule with an AND-clause -->
 	<rule>
-		<description>Als de luchtdruk laag is, regent het.</description>
+		<description>Als het zondag is, wast Harm zijn auto.</description>
 		<when_all>
-			<fact name="luchtdruk">laag</fact>
+			<fact name="dag">zondag</fact>
 		</when_all>
 		<then>
-			<fact name="het_heeft_geregend">ja</fact>
+			<fact name="auto_gewassen">ja</fact>
 		</then>
 	</rule>
 
+	<!-- <when> is equal to <when_all> -->
 	<rule>
-		<description>Als de luchtdruk niet laag is, regent het niet.</description>
-		<when_all>
-			<not>
-				<fact name="luchtdruk">laag</fact>
-			</not>
-		</when_all>
-		<then>
-			<fact value="het_heeft_geregend">nee</fact>
-		</then>
-	</rule>
-
-	<rule>
-		<description>Als de zon schijnt en het niet regent, zijn de straten niet nat.</description>
-		<when_all>
+		<description>Als de zon schijnt, zijn de straten droog.</description>
+		<when>
 			<fact name="zon_schijnt">ja</fact>
-		</when_all>
+		</when>
 		<then>
-			<fact value="straat_is_nat">nee</fact>
+			<fact name="straat_is_nat">nee</fact>
 		</then>
 	</rule>
 
-	<question>
-		<description>Hoe is het met de luchtdruk vandaag?</description>
-		<option>
-			<description>De luchtdruk is laag</description>
-			<then>
-				<fact name="luchtdruk">laag</fact>
-			</then>
-		</option>
-		<option>
-			<description>De luchtdruk is hoog</description>
-			<then>
-				<fact name="luchtdruk">hoog</fact>
-			</then>
-		</option>
-	</question>
-
-	<question>
-		<description>Schijnt de zon vandaag?</description>
-		<option>
-			<description>De zon schijnt</description>
-			<then>
-				<fact name="zon_schijnt">ja</fact>
-			</then>
-		</option>
-		<option>
-			<description>De zon schijnt niet</description>
-			<then>
-				<fact name="zon_schijnt">nee</fact>
-			</then>
-		</option>
-	</question>
-
+	<!-- A question that can be asked with all the available options -->
 	<question>
 		<description>Regent het?</description>
 		<option>
@@ -97,11 +54,68 @@
 		</option>
 	</question>
 
+	<!-- Extra question to demonstrate that you can use both rules and 
+		questions to infer facts. -->
+	<question>
+		<description>Is de straat nat?</description>
+		<option>
+			<description>Ja</description>
+			<then>
+				<fact name="straat_is_nat">ja</fact>
+			</then>
+		</option>
+		<option>
+			<description>Nee</description>
+			<then>
+				<fact name="straat_is_nat">nee</fact>
+			</then>
+		</option>
+	</question>
+
+	<question>
+		<description>Schijnt de zon?</description>
+		<option>
+			<description>Het zonnetje schijnt</description>
+			<then>
+				<fact name="zon_schijnt">ja</fact>
+			</then>
+		</option>
+		<option>
+			<description>Het is bewolkt</description>
+			<then>
+				<fact name="zon_schijnt">nee</fact>
+			</then>
+		</option>
+	</question>
+
+	<question>
+		<description>Welke dag is het vandaag?</description>
+		<option>
+			<description>Vrijdag</description>
+			<then>
+				<fact name="dag">vrijdag</fact>
+			</then>
+		</option>
+		<option>
+			<description>Zaterdag</description>
+			<then>
+				<fact name="dag">zaterdag</fact>
+			</then>
+		</option>
+		<option>
+			<description>Zondag</description>
+			<then>
+				<fact name="dag">zondag</fact>
+			</then>
+		</option>
+	</question>
+
+	<!-- A goal to infer with all possible answers for all the possible states -->
 	<goal name="straat_is_nat">
 		<description>Zijn de straten nat?</description>
 		<answer value="ja">De straten zijn nat.</answer>
 		<answer value="nee">De straten zijn droog.</answer>
-		<answer value="undefined">Ik heb werkelijk geen idee.</answer>
+		<answer value="undefined">Ik weet het niet.</answer>
 	</goal>
 		
 </knowledge>

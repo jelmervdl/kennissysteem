@@ -70,7 +70,6 @@ function proof($goals, $state, $solver)
 	// Print the results!
 	foreach ($goals as $goal)
 	{
-
 		printf("%s: %s\n",
 			$goal->description,
 			$goal->answer($state)->description);
@@ -83,14 +82,14 @@ function proof($goals, $state, $solver)
  * 
  * @return Option
  */
-function cli_ask(Question $question, $skippable = false)
+function cli_ask(Question $question)
 {
 	echo $question->description . "\n";
 
 	for ($i = 0; $i < count($question->options); ++$i)
 		printf("%2d) %s\n", $i + 1, $question->options[$i]->description);
 	
-	if ($skippable)
+	if ($question->skippable)
 		printf("%2d) weet ik niet\n", ++$i);
 	
 	do {
@@ -101,7 +100,7 @@ function cli_ask(Question $question, $skippable = false)
 		if ($choice > 0 && $choice <= count($question->options))
 			return $question->options[$choice - 1];
 		
-		if ($skippable && $choice == $i)
+		if ($question->skippable && $choice == $i)
 			return null;
 
 	} while (true);
