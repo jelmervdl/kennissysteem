@@ -316,6 +316,11 @@ class KnowledgeBaseReader
 		switch ($node->nodeName)
 		{
 			case 'fact':
+				if (!$node->hasAttribute('name'))
+					$this->logError("KnowledgeBaseReader::parseFact: "
+						. "Rule missing name attribute",
+						E_USER_WARNING);
+
 				$name = $node->getAttribute('name');
 				$value = $this->parseText($node);
 				return array($name, $value);
