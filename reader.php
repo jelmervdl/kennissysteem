@@ -282,6 +282,11 @@ class KnowledgeBaseReader
 
 	private function parseFactCondition($node)
 	{
+		if (!$node->hasAttribute('name'))
+			$this->logError("KnowledgeBaseReader::parseFactCondition: "
+				. "Rule missing name attribute",
+				E_USER_WARNING);
+
 		$name = $node->getAttribute('name');
 		$value = $this->parseText($node);
 		return new FactCondition($name, $value);

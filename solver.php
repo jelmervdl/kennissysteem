@@ -3,7 +3,7 @@
 /**
  * Een rule waarmee een fact gevonden kan worden.
  *
- * <rule infers="">
+ * <rule>
  *     [<description>]
  *     <when|when_all|when_any/>
  *     <then/>
@@ -39,7 +39,7 @@ class Rule
 /**
  * Een vraag waarmee een antwoord op $inferred_facts kan worden gevonden.
  *
- * <question infers="">
+ * <question>
  *     <description/>
  *     <option/>
  * </question>
@@ -100,7 +100,7 @@ interface Condition
 
 /**
  * <when>
- *     <fact/>
+ *     <fact name=""/>
  * </when>
  *
  * en

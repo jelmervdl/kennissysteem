@@ -56,7 +56,7 @@ function main($argc, $argv)
 function proof($goals, $state, $solver)
 {	
 	foreach($goals as $goal)
-		$state->goalStack->push($goal->proof);
+		$state->goalStack->push($goal->name);
 	
 	while (($question = $solver->solveAll($state)) instanceof AskedQuestion)
 	{
@@ -70,13 +70,10 @@ function proof($goals, $state, $solver)
 	// Print the results!
 	foreach ($goals as $goal)
 	{
-		$result = $state->facts[$goal->proof];
-
-		var_dump($result);
 
 		printf("%s: %s\n",
 			$goal->description,
-			$result);
+			$goal->answer($state)->description);
 	}
 }
 
