@@ -103,6 +103,7 @@ E.g. if something is not 'yes', it has to be 'no'. Currently it just becomes 'un
 
 ## More OWL-like domain modeling
 This is a bit of a more complicated implementation of the previous suggestion. For example, if you have to choose a body part that hurts, one could say 'nose'. And if something in the head hurts, we may need paracetamol. But in stead of naming all the parts of the head (ear, nose, mouth, tongue, etc.) we may want to just say 'head' and the system should infer that 'nose' is a part of 'head'. This could look something like this:
+
 	<fact name="place of pain">
 		<option value="head">
 			<option value="ear"/>
@@ -116,7 +117,8 @@ This is a bit of a more complicated implementation of the previous suggestion. F
 		</option>
 	</fact>
 
-Rules would need new operators, like 'part-of'
+Rules would need new operators, like 'part-of':
+
 	<rule>
 		<when>
 			<fact name="place of pain" operator="part-of">head</fact>
@@ -126,7 +128,8 @@ Rules would need new operators, like 'part-of'
 		</then>
 	</rule>
 
-Questions could have a negation in the consequence.
+Questions could have a negation in the consequence:
+
 	<question>
 		<description>Does your nose hurt?</description>
 		<option>
