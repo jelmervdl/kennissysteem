@@ -27,6 +27,11 @@ function red_if_zero($value) {
 
 			}
 
+			.hint {
+				cursor: help;
+				border-bottom: 1px dashed black;
+			}
+
 		</style>
 	</head>
 	<body>
@@ -50,7 +55,7 @@ function red_if_zero($value) {
 		<?php foreach ($stats as $fact): ?>
 		<h3>
 			<?=$this->html($fact->name)?>
-			<small>(<a href="webfrontend.php?kb=<?=urlencode($_GET['kb'])?>&goals=<?=urlencode($fact->name)?>">leidt alleen dit feit af</a>)</small>
+			<small>(<a href="webfrontend.php?kb=<?=urlencode($_GET['kb'])?>&goals=<?=urlencode($fact->name)?>">leid alleen dit feit af</a>)</small>
 		</h3>
 		<table>
 			<thead>
