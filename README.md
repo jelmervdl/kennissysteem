@@ -77,7 +77,8 @@ The knowledge base can contain rules, questions and goals to infer and is writte
 ## Goals
 	<goal name="alarm">
 		<description>Should the alarm be triggered?</description>
-		<answer value="yes">PANIC!</answer>
+		<!-- See, you can use HTML :) -->
+		<answer value="yes"><![CDATA[<span style="color:red">PANIC!</span>]]></answer>
 		<answer value="no">Keep calm and carry on</answer>
 		<answer value="undefined">... and you are asking me?!</answer>
 	</goal>
@@ -89,6 +90,61 @@ The knowledge base can contain rules, questions and goals to infer and is writte
 - Tool to analyse knowledge base which helps you find uncovered cases.
 
 # Suggested improvements
-- Better ordering of questions asked
-- Limited set of possible values for facts. E.g. *if A is not true, it has to be false*.
+This system works but is no where near feature-complete. The following improvements are things I thought of while trying to model certain problems.
 
+## Better ordering of questions asked
+Currently this is implemented by simply counting which fact is used most in the rules that can be applied to reach a goal, trying to take into account the nesting of that rule. This could be improved by also taking the operator into account (e.g. 'not') or adding more weight to asking questions.
+
+## Support for open ended questions
+In stead of asking someone his age using multiple choise, you could ask them to enter it in a number field. If you do this, you probably want to implement the operators greater-than and less-than as well.
+
+## Discrete set of possible values for facts
+E.g. if something is not 'yes', it has to be 'no'. Currently it just becomes 'undefined'.
+
+## More OWL-like domain modeling
+This is a bit of a more complicated implementation of the previous suggestion. For example, if you have to choose a body part that hurts, one could say 'nose'. And if something in the head hurts, we may need paracetamol. But in stead of naming all the parts of the head (ear, nose, mouth, tongue, etc.) we may want to just say 'head' and the system should infer that 'nose' is a part of 'head'. This could look something like this:
+	<fact name="place of pain">
+		<option value="head">
+			<option value="ear"/>
+			<option value="nose"/>
+		</option>
+		<option value="body">
+			<option value="stomach">
+				<option value="upper stomach"/>
+				<option value="lower stomach"/>
+			</option>
+		</option>
+	</fact>
+
+Rules would need new operators, like 'part-of'
+	<rule>
+		<when>
+			<fact name="place of pain" operator="part-of">head</fact>
+		</when>
+		<then>
+			<fact name="medicine">paracetamol</fact>
+		</then>
+	</rule>
+
+Questions could have a negation in the consequence.
+	<question>
+		<description>Does your nose hurt?</description>
+		<option>
+			<description>Yes</description>
+			<then>
+				<fact name="place of pain">nose</fact>
+			</then>
+		</option>
+		<option>
+			<description>No</description>
+			<then>
+				<not>
+					<fact name="place of pain">nose</fact>
+				</not>
+			</then>
+		</option>
+	</question>
+
+This can all be modeled with the current implementation, but it would need many more facts and rules and you would be polluting your knowledge base with basic human inference knowledge.
+	
+	
