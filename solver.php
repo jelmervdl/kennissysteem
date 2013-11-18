@@ -343,7 +343,9 @@ class Maybe extends TruthState
 		// grootst verantwoordelijk ontbrekend fact op top.
 		asort($causes);
 
-		return array_reverse($causes);
+		$causes = array_reverse($causes);
+
+		return array_keys($causes);
 	}
 
 	private function divideAmong($percentage, array $factors)
@@ -464,8 +466,7 @@ class Solver
 				while (count($causes) > 0)
 				{
 					// neem het meest invloedrijke fact, leidt dat af
-					$main_cause = key($causes);
-					array_shift($causes);
+					$main_cause = array_shift($causes);
 
 					// meest invloedrijke fact staat al op todo-lijst?
 					// sla het over.
