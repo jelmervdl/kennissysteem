@@ -543,11 +543,6 @@ class Solver
 		$relevant_rules = array_filter($state->rules,
 			function($rule) use ($goal) { return $rule->infers($goal); });
 		
-		// Sowieso even kijken of ze daadwerkelijk toegepast kunnen worden.
-		$relevant_rules = array_map(function($rule) use ($state) {
-			return new Pair($rule, $rule->condition->evaluate($state));
-		}, $relevant_rules);
-
 		// Is er misschien een directe vraag die we kunnen stellen?
 		$relevant_questions = array_filter($state->questions,
 			function($question) use ($goal) { return $question->infers($goal); });
@@ -559,32 +554,18 @@ class Solver
 		// Sla ook alle resultaten op van de Maybe rules. Hier kunnen we later
 		// misschien uit afleiden welk goal we vervolgens moeten afleiden om ze
 		// te laten beslissen.
-		$maybe_rules = array_filter($relevant_rules, function($pair) {
-			return $pair->second instanceof Maybe;
-		});
-
-		// Controle: er moeten niet meerdere regels tegelijk waar zijn, dat zou raar zijn.
-		// naja, tenzij ze dezelfde 
-		if (verbose())
-		{
-			$applicapable_rules = array_filter($relevant_rules, function($pair) {
-				return $pair->second instanceof Yes;
+		$maybe_rules = array_filter($relevant_rules, function($rule) use ($state) {
+				return $rule->condition->evaluate($state) instanceof Maybe;
 			});
-
-			if (count($applicapable_rules) > 1)
-				printf("<strong>Warning:</strong> Er zijn %d regels die iets zeggen over %s: %s",
-					count($applicapable_rules), $goal,
-					implode("\n", array_map(curry('pick', 'second'), $applicapable_rules)));
-		}
 
 		// (Let hier op de volgorde: we leiden eerst regels af, dan pas mogelijke vragen.)
 
 		// Probeer alle mogelijk (relevante) regels, en zie of er eentje
 		// nieuwe kennis afleidt.
 		$n = 0;
-		foreach ($relevant_rules as $pair)
+		foreach ($relevant_rules as $rule)
 		{
-			list($rule, $rule_result) = $pair;
+			$rule_result = $rule->condition->evaluate($state);
 
 			if (verbose())
 				printf("Regel %d (%s) levert %s op.\n",
@@ -623,15 +604,14 @@ class Solver
 			return new AskedQuestion($question, $skippable);
 		}
 
-		if (verbose())
-			print_r(Maybe::because(array_map(curry('pick', 'second'), $maybe_rules))->causes());
-
 		// $relevant_rules is leeg of leverde alleen maar Maybes op.
 
 		// Geen enkele regel of vraag leverde direct een antwoord op $fact
 		// Dus geven we de nieuwe state (zonder de al gestelde vragen) terug
 		// en Maybe met alle redenen waarom de niet-volledig-afgeleide regels
 		// niet konden worden afgeleid. Diegene die solve aanroept kan dan 
-		return Maybe::because(array_map(curry('pick', 'second'), $maybe_rules));
+		return Maybe::because(array_map(function($rule) use ($state) {
+				return $rule->condition->evaluate($state);
+			}, $maybe_rules));
 	}
 }
