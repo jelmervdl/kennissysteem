@@ -33,13 +33,13 @@ function main($argc, $argv)
 	$reader = new KnowledgeBaseReader;
 
 	// Parse een xml-bestand (het eerste argument) tot knowledge base
-	$knowledge = $reader->parse($argv[1]);
+	$state = $reader->parse($argv[1]);
 
 	// Start de solver, dat ding dat kan infereren
 	$solver = new Solver;
 
 	// leid alle goals in de knowledge base af.
-	$goals = $knowledge->goals;
+	$goals = $state->goals;
 	
 	// Begin met de doelen die we hebben op de goal stack te zetten
 	foreach($goals as $goal)
