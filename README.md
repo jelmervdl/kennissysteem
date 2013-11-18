@@ -84,13 +84,16 @@ The knowledge base can contain rules, questions and goals to infer and is writte
 	</goal>
 
 # Features
-- Simple rule inference using limited forward chaining and backward chaining.
+- Simple rule inference using backward chaining.
 - Use HTML to make your questions and answers pretty
 - Questions are optional: you can use both rules and questions to get to an answer. You can use this to ask complex questions to expert users and allow the less expert user to skip the question (to be bombarded with more but simpler questions.)
 - Tool to analyse knowledge base which helps you find uncovered cases.
 
 # Suggested improvements
 This system works but is no where near feature-complete. The following improvements are things I thought of while trying to model certain problems.
+
+## Forward chaining
+The current implementation relies solemnly on backward chaining, adding fact names to the goal stack while trying to find rules that can determine the value of a certain fact.
 
 ## Better ordering of questions asked
 Currently this is implemented by simply counting which fact is used most in the rules that can be applied to reach a goal, trying to take into account the nesting of that rule. This could be improved by also taking the operator into account (e.g. 'not') or adding more weight to asking questions.
