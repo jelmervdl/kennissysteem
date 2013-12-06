@@ -93,13 +93,13 @@ The knowledge base can contain rules, questions and goals to infer and is writte
 This system works but is no where near feature-complete. The following improvements are things I thought of while trying to model certain problems.
 
 ## Forward chaining
-The current implementation relies solemnly on backward chaining, adding fact names to the goal stack while trying to find rules that can determine the value of a certain fact.
+The current implementation relies solely on backward chaining, adding fact names to the goal stack while trying to find rules that can determine the value of a certain fact.
 
 ## Better ordering of questions asked
 Currently this is implemented by simply counting which fact is used most in the rules that can be applied to reach a goal, trying to take into account the nesting of that rule. This could be improved by also taking the operator into account (e.g. 'not') or adding more weight to asking questions.
 
 ## Support for open ended questions
-In stead of asking someone his age using multiple choise, you could ask them to enter it in a number field. If you do this, you probably want to implement the operators greater-than and less-than as well.
+In stead of asking someone his age using multiple choice, you could ask them to enter it in a number field. If you do this, you probably want to implement the operators greater-than and less-than as well.
 
 ## Discrete set of possible values for facts
 E.g. if something is not 'yes', it has to be 'no'. Currently it just becomes 'undefined'.
