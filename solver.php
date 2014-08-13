@@ -95,6 +95,8 @@ interface Condition
 {
 	public function evaluate(KnowledgeState $state);
 
+	public function negate(KnowledgeDomain $domain);
+
 	public function asArray();
 }
 
@@ -140,6 +142,16 @@ class WhenAllCondition implements Condition
 		return Yes::because($values);
 	}
 
+	public function negate(KnowledgeDomain $domain)
+	{
+		$negation = new WhenAnyCondition();
+
+		foreach ($this->conditions as $condition)
+			$negation->addCondition($condition->negate($domain));
+
+		return $negation;
+	}
+
 	public function asArray()
 	{
 		return array($this, array_map_method('asArray', $this->conditions));
@@ -183,6 +195,16 @@ class WhenAnyCondition implements Condition
 		return No::because($values);
 	}
 
+	public function negate(KnowledgeDomain $domain)
+	{
+		$negation = new WhenAllCondition();
+
+		foreach ($this->conditions as $condition)
+			$negation->addCondition($condition->negate($domain));
+
+		return $negation;
+	}
+
 	public function asArray()
 	{
 		return array($this, array_map_method('asArray', $this->conditions));
@@ -206,6 +228,11 @@ class NegationCondition implements Condition
 	public function evaluate(KnowledgeState $state)
 	{
 		return $this->condition->evaluate($state)->negate();
+	}
+
+	public function negate(KnowledgeDomain $domain)
+	{
+		return $this->condition;
 	}
 
 	public function asArray()
@@ -238,6 +265,18 @@ class FactCondition implements Condition
 		
 		else
 			return Maybe::because($this->name);
+	}
+
+	public function negate(KnowledgeDomain $domain)
+	{
+		// NOTE: The logic of this negation is UNSOUND!
+		$negation = new WhenAnyCondition();
+
+		foreach ($domain->values[$this->name] as $possible_value)
+			if ($possible_value != $this->value)
+				$negation->addCondition(new FactCondition($this->name, $possible_value));
+
+		return $negation;
 	}
 
 	public function asArray()
@@ -374,6 +413,45 @@ class Maybe extends TruthState
 		}
 
 		return $effects;
+	}
+}
+
+class KnowledgeDomain
+{
+	public $values;
+
+	public function __construct()
+	{
+		$this->values = new Map(function() {
+			return new Set();
+		});
+	}
+
+	static public function deduceFromState(KnowledgeState $state)
+	{
+		$domain = new self();
+
+		// Obtain all the FactConditions from the rules that test
+		// or conclude some value.
+		foreach ($state->rules as $rule)
+		{
+			$fact_conditions = array_filter_type('FactCondition',
+				array_flatten($rule->condition->asArray()));
+
+			foreach ($fact_conditions as $condition)
+				$domain->values[$condition->name]->push($condition->value);
+
+			foreach ($rule->consequences as $fact_name => $value)
+				$domain->values[$fact_name]->push($value);
+		}
+
+		// Obtain all the possible answers from the questions
+		foreach ($state->questions as $question)
+			foreach ($question->options as $option)
+				foreach ($option->consequences as $fact_name => $value)
+					$domain->values[$fact_name]->push($value);
+
+		return $domain;
 	}
 }
 
