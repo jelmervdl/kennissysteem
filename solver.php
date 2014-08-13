@@ -196,7 +196,7 @@ class WhenAnyCondition implements Condition
  */
 class NegationCondition implements Condition
 {
-	private $condtion;
+	private $condition;
 
 	public function __construct(Condition $condition)
 	{
@@ -210,12 +210,12 @@ class NegationCondition implements Condition
 
 	public function asArray()
 	{
-		return array($this, array_map_method('asArray', $this->conditions));
+		return array($this, $this->condition->asArray());
 	}
 }
 
 /**
- * <fact [value="true|false"]>fact_name</fact>
+ * <fact name="fact_name">value</fact>
  */
 class FactCondition implements Condition
 {
@@ -276,6 +276,9 @@ class Goal
 	}
 }
 
+/**
+ * <answer value="value">message</answer>
+ */
 class Answer
 {
 	public $value;
