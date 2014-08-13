@@ -52,6 +52,7 @@ function red_if_zero($value) {
 			<dt>Aantal vragen:</dt>
 			<dd><?=count($kb->questions)?></dd>
 		</dl>
+
 		<?php foreach ($stats as $fact): ?>
 		<h3>
 			<?=$this->html($fact->name)?>
@@ -80,5 +81,40 @@ function red_if_zero($value) {
 			</tbody>
 		</table>
 		<?php endforeach ?>
+
+		<section id="info-domain">
+			<h2>Domein</h2>
+			<table>
+				<thead>
+					<th>Sleutel</th>
+					<th>Waardes</th>
+				</thead>
+				<tbody>
+				<?php foreach ($domain->values as $key => $values): ?>
+					<tr>
+						<th><?=$this->html($key)?></th>
+						<td>
+							<ul>
+							<?php foreach ($values as $value): ?>
+								<li><?=$this->html($value)?></li>
+							<?php endforeach ?>
+							</ul>
+						</td>
+					</tr>
+				<?php endforeach ?>
+				</tbody>
+			</table>
+		</section>
+
+		<section id="info-rules"> 
+			<h2>Regels</h2>
+
+			<?php foreach ($kb->rules as $rule): ?>
+			<section>
+				<p><?=$this->html($rule->description)?></p>
+				<pre><?=$rule?></pre>
+			</section>
+			<?php endforeach ?>
+		</section>
 	</body>
 </html>
