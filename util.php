@@ -318,11 +318,18 @@ class Template
 	}
 }
 
-
 function verbose($state = null)
 {
 	static $verbose;
 	return $state === null
 		? $verbose
 		: $verbose = $state;
+}
+
+function simplify(Condition $condition)
+{
+	while (($simplified = $condition->simplify()) != $condition)
+		$condition = $simplified;
+
+	return $condition;
 }

@@ -97,6 +97,8 @@ interface Condition
 
 	public function negate(KnowledgeDomain $domain);
 
+	public function simplify();
+
 	public function asArray();
 }
 
@@ -152,6 +154,13 @@ class WhenAllCondition implements Condition
 		return $negation;
 	}
 
+	public function simplify()
+	{
+		return count($this->conditions) === 1
+			? $this->conditions[0]
+			: $this;
+	}
+
 	public function asArray()
 	{
 		return array($this, array_map_method('asArray', $this->conditions));
@@ -205,6 +214,13 @@ class WhenAnyCondition implements Condition
 		return $negation;
 	}
 
+	public function simplify()
+	{
+		return count($this->conditions) === 1
+			? $this->conditions[0]
+			: $this;
+	}
+
 	public function asArray()
 	{
 		return array($this, array_map_method('asArray', $this->conditions));
@@ -233,6 +249,13 @@ class NegationCondition implements Condition
 	public function negate(KnowledgeDomain $domain)
 	{
 		return $this->condition;
+	}
+
+	public function simplify()
+	{
+		return $this->condition instanceof NegationCondition
+			? $this->condition->condition
+			: $this;
 	}
 
 	public function asArray()
@@ -277,6 +300,11 @@ class FactCondition implements Condition
 				$negation->addCondition(new FactCondition($this->name, $possible_value));
 
 		return $negation;
+	}
+
+	public function simplify()
+	{
+		return $this;
 	}
 
 	public function asArray()
