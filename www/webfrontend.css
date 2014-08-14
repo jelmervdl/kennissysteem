@@ -180,3 +180,33 @@ th:nth-child(1), td:nth-child(1) {
 .delete button:hover {
 	background: #d33;
 }
+
+.upload-knowledge-base-form {
+	display: block;
+	max-width: 400px;
+	margin: 4em auto;
+	padding: 1em;
+}
+
+.upload-knowledge-base-form button {
+	font-size: 1.5em;
+	border: 1px solid silver;
+	background: #eee;
+	margin: 0.2em;
+	padding: 0.1em 1em;
+	border-radius: 2px;
+	cursor: pointer;
+	color: black;
+	font: inherit;
+	display: inline-block;
+	text-decoration: none;
+	text-shadow: white 0 1px 0;
+}
+
+form > div {
+	margin-bottom: 1em;
+}
+
+form > div > label {
+	display: block;
+}

@@ -7,6 +7,7 @@
 	<body id="webfrontend">
 		<nav>
 			<a href="<?=$this->attr($_SERVER['REQUEST_URI'])?>">Start opnieuw</a>
+			<a href="analyse.php?kb=<?=rawurlencode($_GET['kb'])?>">Analyse</a>
 			<a href="index.php">Kennisbanken</a>
 		</nav>
 		<header>

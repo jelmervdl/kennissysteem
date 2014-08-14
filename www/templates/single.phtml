@@ -17,17 +17,24 @@
 			<p>The following errors occurred:</p>
 			<ul>
 				<?php foreach ($errors as $error): ?>
-				<li><?=$this->html($error)?></li>
+				<li title="<?=$this->attr(sprintf('%s:%d', $error->file, $error->line))?>"><?=$this->html($error->message)?></li>
 				<?php endforeach ?>
 			</ul>
 		</section>
 		<?php endif ?>
 
-		<section class="kennisbanken">
+		<section class="upload-knowledge-base-form">
+			<h2>Run a knowledge base</h2>
 			<form method="post" enctype="multipart/form-data">
-				<input type="file" name="knowledgebase">
-				<button type="submit" name="action" value="run">Run</button>
-				<button type="submit" name="action" value="analyse">Analyse</button>
+				<div>
+					<label for="input-knowledgebase">Knowledge base XML file:</label>
+					<input type="file" name="knowledgebase" id="input-knowledgebase">
+				</div>
+
+				<div class="controls">
+					<button type="submit" name="action" value="run">Run</button>
+					<button type="submit" name="action" value="analyse">Analyse</button>
+				</div>
 			</form>
 		</section>
 		<footer>

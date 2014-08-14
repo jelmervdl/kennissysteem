@@ -6,18 +6,27 @@ include '../reader.php';
 
 date_default_timezone_set('Europe/Amsterdam');
 
-$message = null;
+$errors = array();
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST')
+if ($_SERVER['REQUEST_METHOD'] == 'POST'
+	&& isset($_FILES['knowledgebase'])
+	&& $file = process_file($_FILES['knowledgebase'], $errors))
 {
-	if (isset($_FILES['knowledgebase']))
-		$message = process_file($_FILES['knowledgebase']);
-	
-	else if (isset($_POST['delete-file']))
-		$message = delete_file($_POST['delete-file']);
+	switch ($_POST['action'])
+	{
+		case 'analyse':
+			header('Location: analyse.php?kb=' . rawurlencode($file));
+			break;
+
+		case 'run':
+			header('Location: webfrontend.php?kb=' . rawurlencode($file));
+			break;
+	}
+
+	exit;
 }
 
-function process_file($file)
+function process_file($file, array &$errors = array())
 {
 	if ($file['error'] != 0)
 		return "Er is een fout opgetreden bij het uploaden.";
@@ -25,45 +34,21 @@ function process_file($file)
 	$reader = new KnowledgeBaseReader;
 	$errors = $reader->lint($file['tmp_name']);
 
-	if (!preg_match('/^[a-zA-Z0-9_\-\.]+\.xml$/i', $file['name']))
-		return "De bestandsnaam bevat karakters die niet goed verwerkt kunnen worden.";
+	$unique_name = sha1(microtime() . uniqid('kb', true)) . '.xml';
 
 	if (count($errors) > 0)
+		return false;
+
+	if (!move_uploaded_file($file['tmp_name'], '../knowledgebases/' . $unique_name))
 	{
-		$out = "De volgende fouten zijn gevonden in de knowledge-base:\n<ul>";
-		
-		foreach ($errors as $error)
-			$out .= sprintf("\n<li title=\"%s\">%s</li>\n",
-				htmlspecialchars($error->file . ':' . $error->line, ENT_QUOTES, 'utf-8'),
-				$error->message);
-		
-		return $out .= "</ul>\n";
+		$errors[] = "De knowledge-base kon niet worden opgeslagen op de server.";
+		return false;
 	}
-
-	if (!move_uploaded_file($file['tmp_name'], '../knowledgebases/' . $file['name']))
-		return "De knowledge-base kon niet worden opgeslagen op de server.";
 	
-	return "De knowlegde-base is opgeslagen :)";
+	return $unique_name;
 }
 
-function delete_file($file)
-{
-	if (!preg_match('/^[a-zA-Z0-9_\-\.]+\.xml$/i', $file))
-		return "De bestandsnaam bevat karakters die niet goed verwerkt kunnen worden.";
-	
-	return unlink('../knowledgebases/' . $file)
-		? 'De knowledge-base is verwijderd.'
-		: 'De knowledge-base kon niet verwijderd worden.';
-}
-
-$template = new Template('templates/index.phtml');
-$knowledge_bases = glob('../knowledgebases/*.xml');
-
-usort($knowledge_bases, function($a, $b) {
-	return -1 * compare(filemtime($a), filemtime($b));
-});
-
-$template->message = $message;
-$template->knowledge_bases = $knowledge_bases;
+$template = new Template('templates/single.phtml');
+$template->errors = $errors;
 
 echo $template->render();
