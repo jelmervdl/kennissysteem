@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Inference engine</title>
+		<link rel="stylesheet" href="webfrontend.css">
+	</head>
+	<body id="kennisbanken">
+		<nav>
+			<!-- what should come here? -->
+		</nav>
+		<header>
+			<h1>Inference engine</h1>
+		</header>
+
+		<?php if ($errors): ?>
+		<section class="status-update">
+			<p>The following errors occurred:</p>
+			<ul>
+				<?php foreach ($errors as $error): ?>
+				<li><?=$this->html($error)?></li>
+				<?php endforeach ?>
+			</ul>
+		</section>
+		<?php endif ?>
+
+		<section class="kennisbanken">
+			<form method="post" enctype="multipart/form-data">
+				<input type="file" name="knowledgebase">
+				<button type="submit" name="action" value="run">Run</button>
+				<button type="submit" name="action" value="analyse">Analyse</button>
+			</form>
+		</section>
+		<footer>
+			<p>Source code available on <a href="https://github.com/jelmervdl/kennissysteem-brandveiligheid">Github</a>.</p>
+		</footer>
+	</body>
+</html>
