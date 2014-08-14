@@ -148,6 +148,18 @@ class KnowledgeBaseReader
 			}
 		}
 
+		if ($rule->condition === null)
+			$this->logError("KnowledgeBaseReader::parseRule: "
+				. "Rule node on line " . $node->getLineNo()
+				. " has no condition (missing when/when_all/when_any node)",
+				E_USER_WARNING);
+
+		if ($rule->consequences === null || count($rule->consequences) === 0)
+			$this->logError("KnowledgeBaseReader::parseRule: "
+				. "Rule node on line " . $node->getLineNo()
+				. " has no consequences (missing or empty then node)",
+				E_USER_WARNING);
+
 		$rule->inferred_facts = array_keys($rule->consequences);
 
 		return $rule;
@@ -181,6 +193,24 @@ class KnowledgeBaseReader
 					continue;
 			}
 		}
+
+		if ($question->description === null)
+			$this->logError("KnowledgeBaseReader::parseQuestion: "
+				. "Question node on line " . $node->getLineNo()
+				. " is missing a description element",
+				E_USER_WARNING);
+
+		if (count($question->options) === 0)
+			$this->logError("KnowledgeBaseReader::parseQuestion: "
+				. "Question node on line " . $node->getLineNo()
+				. " has no possible answers (no option elements)",
+				E_USER_WARNING);
+
+		if (count($question->options) === 1)
+			$this->logError("KnowledgeBaseReader::parseQuestion: "
+				. "Question node on line " . $node->getLineNo()
+				. " has only one possible answer",
+				E_USER_NOTICE);
 
 		$inferred_facts = array();
 		foreach ($question->options as $option)
@@ -218,6 +248,12 @@ class KnowledgeBaseReader
 			}
 		}
 
+		if (count($goal->answers) === 0)
+			$this->logError("KnowledgeBaseReader::parseGoal: "
+				. "Goal node on line " . $node->getLineNo()
+				. " has no possible outcomes (missing answer nodes)",
+				E_USER_WARNING);
+
 		return $goal;
 	}
 
@@ -247,6 +283,12 @@ class KnowledgeBaseReader
 			if ($childCondition)
 				$condition->addCondition($childCondition);
 		}
+
+		if (count($condition->conditions) === 0)
+			$this->logError("KnowledgeBaseReader::parseConditionSet: "
+				. $node->nodeName . " node on line " . $node->getLineNo()
+				. " has no child conditions (missing when/when_all/when_any/fact node)",
+				E_USER_WARNING);
 
 		return $condition;
 	}
@@ -356,6 +398,18 @@ class KnowledgeBaseReader
 					continue;
 			}
 		}
+
+		if ($option->description == '')
+			$this->logError("KnowledgeBaseReader::parseOption: "
+				. "Option node on line " . $node->getLineNo()
+				. " has no description (missing or empty description node)",
+				E_USER_WARNING);
+
+		if (count($option->consequences) === 0)
+			$this->logError("KnowledgeBaseReader::parseOption: "
+				. "Option node on line " . $node->getLineNo()
+				. " has no consequences (missing then node)",
+				E_USER_WARNING);
 
 		return $option;
 	}

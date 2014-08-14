@@ -115,7 +115,7 @@ interface Condition
  */
 class WhenAllCondition implements Condition 
 {
-	private $conditions = array();
+	public $conditions = array();
 
 	public function addCondition(Condition $condition)
 	{
@@ -174,7 +174,7 @@ class WhenAllCondition implements Condition
  */
 class WhenAnyCondition implements Condition
 {
-	private $conditions = array();
+	public $conditions = array();
 
 	public function addCondition(Condition $condition)
 	{
@@ -234,7 +234,7 @@ class WhenAnyCondition implements Condition
  */
 class NegationCondition implements Condition
 {
-	private $condition;
+	public $condition;
 
 	public function __construct(Condition $condition)
 	{
