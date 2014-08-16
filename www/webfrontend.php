@@ -3,6 +3,7 @@
 include '../util.php';
 include '../solver.php';
 include '../reader.php';
+include '../formatter.php';
 
 function _encode($data)
 {

@@ -70,22 +70,38 @@ table {
 	border-spacing: 0;
 }
 
-th {
+.knowledge-bases th,
+.analysis-table th {
 	text-align: left;
 	font-weight: normal;
 	border-bottom: 1px solid silver;
 }
 
-td, th {
+.knowledge-bases td,
+.knowledge-bases th,
+.analysis-table td,
+.analysis-table th {
 	padding: 0 1em;
 	border-left: 1px solid silver;
 }
 
-th:nth-child(1), td:nth-child(1) {
+.analysis-table td strong {
+	color: red;
+}
+
+.knowledge-bases th:nth-child(1),
+.knowledge-bases td:nth-child(1),
+.analysis-table th:nth-child(1),
+.analysis-table td:nth-child(1) {
 	border-left: none;
 }
 
-.kennisbanken,
+.analysis-table th:nth-child(1),
+.analysis-table td:nth-child(1) {
+	width: 200px;
+}
+
+.knowledge-bases,
 .completed {
 	width: 900px;
 	margin: 0 auto;
@@ -146,8 +162,45 @@ th:nth-child(1), td:nth-child(1) {
 	display: none;
 }
 
-.state-info {
+#debug-info {
 	display: none;
+}
+
+.show-debug-info #debug-info {
+	display: block;
+	position: fixed;
+	top: 0;
+	bottom: 0;
+	right: 0;
+	width: 33%;
+	background: #eee;
+	border-left: 1px solid #ccc;
+	box-shadow: 0 0 10px #000;
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
+#debug-info .grippy {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 5px;
+	left: 0;
+	cursor: ew-resize;
+}
+
+.state-info {
+	padding: 1em;
+}
+
+.state-info h3 {
+	border-bottom: 1px solid black;
+}
+
+.state-info.rule-state ul {
+	list-style: none;
+	padding: 0;
+	font-size: 0.75em;
 }
 
 .action a,
@@ -209,4 +262,61 @@ form > div {
 
 form > div > label {
 	display: block;
+}
+
+.domain-analysis th,
+.domain-analysis td {
+	text-align: left;
+	border-bottom: 1px solid #ccc;
+}
+
+.kb-rule {
+	margin-bottom: 1em;
+	border: 2px solid #ccc;
+	border-collapse: collapse;
+}
+
+.kb-rule table {
+	border: 2px solid rgba(0, 0, 0, 0.3);
+}
+
+.kb-rule table:hover {
+	border-color: #000;
+}
+
+.kb-rule > tbody > tr > th {
+	text-align: left;
+}
+
+.kb-rule th,
+.kb-rule td {
+	padding: 2px;
+}
+
+
+.kb-rule table th {
+	background: rgba(0, 0, 0, 0.3);
+	font-weight: bold;
+}
+
+.kb-rule .line-number {
+	float: right;
+	color: #333;
+	font-size: 0.8em;
+	font-weight: normal;
+}
+
+.kb-rule .evaluation-true {
+	color: white;
+	background: green;
+}
+
+.kb-rule .evaluation-false {
+	background: red;
+	color: white;
+}
+
+.kb-rule .evaluation-maybe {
+	background: #eee;
+	color: black;
 }

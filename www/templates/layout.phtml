@@ -9,6 +9,7 @@
 			<a href="<?=$this->attr($_SERVER['REQUEST_URI'])?>">Start over</a>
 			<a href="analyse.php?kb=<?=rawurlencode($_GET['kb'])?>">Analyse</a>
 			<a href="index.php">Upload</a>
+			<a href="#debug">Toggle debug</a>
 		</nav>
 		<header>
 			<h1><?=$this->html($state->title)?></h1>
@@ -20,42 +21,94 @@
 				<?=$content?>
 			</form>
 		</div>
-		<aside id="fact-state" class="state-info">
-			<h3>Facts</h3>
-			<dl>
-				<?php foreach($state->facts as $name => $value): ?>
-				<dt><?=$name?></dt>
-				<dd><?=$value?></dt>
-				<?php endforeach ?>
-			</dl>
+		<aside id="debug-info">
+			<section class="state-info fact-state">
+				<h3>Facts</h3>
+				<dl>
+					<?php foreach($state->facts as $name => $value): ?>
+					<dt><?=$name?></dt>
+					<dd><?=$value?></dt>
+					<?php endforeach ?>
+				</dl>
+			</section>
+			
+			<section class="state-info goal-stack">
+				<h3>Goal stack</h3>
+				<ol>
+					<?php foreach ($state->goalStack as $goal): ?>
+					<li><?=$goal?></li>
+					<?php endforeach ?>
+				</ol>
+			</section>
+			
+			<section class="state-info rule-state">
+				<h3>Rules</h3>
+				<?php $formatter = new HTMLFormatter($state); ?>
+				<ul>
+					<?php foreach($state->rules as $rule): ?>
+					<li><?=$formatter->formatRule($rule)?></li>
+					<?php endforeach ?>
+				</ul>
+			</section>
 		</aside>
-		<aside id="goal-stack" class="state-info">
-			<h3>Goal stack</h3>
-			<ol>
-				<?php foreach ($state->goalStack as $goal): ?>
-				<li><?=$goal?></li>
-				<?php endforeach ?>
-			</ol>
-		</aside>
+
+		<script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
 		<script>
 		/* when clicking on an item, select the accompanying radio-button
 		and submit the form. Unless the user clicks on a link. */
-		Array.prototype.forEach.call(
-			document.querySelectorAll('.question > .options > li'),
-			function(option) {
-				option.classList.add('single-click');
-				option.addEventListener('click', function(e) {
-					if (e.target.nodeName == 'A')
-						return;
+		$('.question > .options > li')
+			.addClass('single-click')
+			.click(function(e) {
+				if (e.target.nodeName == 'A')
+					return;
 
-					var radio = option.querySelector('input[type=radio]');
-					radio.checked = true;
-					e.preventDefault();
-					radio.form.submit();
-				});
+				var radio = $(this).find('input[type=radio]');
+				radio.prop('checked', true);
+				e.preventDefault();
+				radio.get(0).form.submit();
 			});
 		
-		document.querySelector('.question button[type=submit]').style.display = 'none';
+		$('.question button[type=submit]').hide();
+
+		var panel = $('#debug-info');
+
+		var grippy = $('<div>').addClass('grippy').appendTo(panel);
+
+		var delta = 15;
+
+		function updateDebugPanelVisibility() {
+			console.log(parseInt(localStorage.debug));
+			$(document.body).toggleClass('show-debug-info', !!parseInt(localStorage.debug));
+
+			if (localStorage.debugPanelWidth)
+				panel.css('width', localStorage.debugPanelWidth);
+		}
+
+		updateDebugPanelVisibility();
+
+		$('a[href=#debug]').click(function(e) {
+			e.preventDefault();
+			localStorage.debug = parseInt(localStorage.debug) ? 0 : 1;
+			updateDebugPanelVisibility();
+		});
+
+		function resizeDebugPanel(e) {
+			localStorage.debugPanelWidth = Math.max(document.body.clientWidth - e.clientX + delta, 150);
+			panel.css('width', localStorage.debugPanelWidth);
+		}
+
+		function removeResizeListener() {
+			$(window)
+				.off('mousemove', resizeDebugPanel)
+				.off('mouseup', removeResizeListener);
+		}
+
+		grippy.mousedown(function(e) {
+			e.preventDefault();
+			jQuery(window)
+				.on('mousemove', resizeDebugPanel)
+				.on('mouseup', removeResizeListener);
+		});
 		</script>
 	</body>
 </html>

@@ -3,6 +3,7 @@
 include '../util.php';
 include '../solver.php';
 include '../reader.php';
+include '../formatter.php';
 
 if (!preg_match('/^[a-zA-Z0-9_\-\.]+\.xml$/i', $_GET['kb']))
 	die('Doe eens niet!');

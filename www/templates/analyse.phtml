@@ -9,14 +9,6 @@ function red_if_zero($value) {
 		<title>Analyse <?=$this->html($kb->title)?></title>
 		<link rel="stylesheet" href="webfrontend.css">
 		<style>
-			th:nth-child(1), td:nth-child(1) {
-				width: 200px;
-			}
-
-			td strong {
-				color: red;
-			}
-
 			h3 {
 				border-top: 1px solid black;
 				padding: 1em 0;
@@ -58,7 +50,7 @@ function red_if_zero($value) {
 			<?=$this->html($fact->name)?>
 			<small>(<a href="webfrontend.php?kb=<?=urlencode($_GET['kb'])?>&goals=<?=urlencode($fact->name)?>">try to infer this fact</a>)</small>
 		</h3>
-		<table>
+		<table class="fact-analysis analysis-table">
 			<thead>
 				<tr>
 					<th>Value</th>
@@ -84,7 +76,7 @@ function red_if_zero($value) {
 
 		<section id="info-domain">
 			<h2>Domain</h2>
-			<table>
+			<table class="domain-analysis analysis-table">
 				<thead>
 					<th>Fact name</th>
 					<th>Possible values</th>
@@ -111,8 +103,7 @@ function red_if_zero($value) {
 
 			<?php foreach ($kb->rules as $rule): ?>
 			<section>
-				<p><?=$this->html($rule->description)?></p>
-				<pre><?=$rule?></pre>
+				<?php $formatter = new HTMLFormatter(); echo $formatter->formatRule($rule)?>
 			</section>
 			<?php endforeach ?>
 		</section>
