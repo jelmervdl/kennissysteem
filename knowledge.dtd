@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!ELEMENT knowledge (title, description, (fact|rule|question|goal)*) >
+<!ELEMENT knowledge (title?, description?, (fact|rule|question|goal)*) >
 
 <!ELEMENT rule (description?, if, then) >
 <!ELEMENT question (description, option+) >
