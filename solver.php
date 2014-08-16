@@ -5,7 +5,7 @@
  *
  * <rule>
  *     [<description>]
- *     <when|when_all|when_any/>
+ *     <if/>
  *     <then/>
  * </rule>
  */
@@ -103,15 +103,9 @@ interface Condition
 }
 
 /**
- * <when>
- *     <fact name=""/>
- * </when>
- *
- * en
- *
- * <when_all>
- *     <when/>
- * </when_all>
+ * <and>
+ *     Conditions, e.g. <fact/>
+ * </and>
  */
 class WhenAllCondition implements Condition 
 {
@@ -168,9 +162,9 @@ class WhenAllCondition implements Condition
 }
 
 /**
- * <when_any>
- *     <when/>
- * </when_any>
+ * <or>
+ *     Conditions, e.g. <fact/>
+ * </or>
  */
 class WhenAnyCondition implements Condition
 {
@@ -229,7 +223,7 @@ class WhenAnyCondition implements Condition
 
 /**
  * <not>
- *     <when/>
+ *     Condition, e.g. <fact/>
  * </not>
  */
 class NegationCondition implements Condition

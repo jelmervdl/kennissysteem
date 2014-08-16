@@ -148,14 +148,14 @@ class KnowledgeBaseReader
 
 		if ($rule->condition === null)
 			$this->logError("KnowledgeBaseReader::parseRule: "
-				. "Rule node on line " . $node->getLineNo()
-				. " has no condition (missing or empty if-node)",
+				. "'rule' node on line " . $node->getLineNo()
+				. " has no condition (missing or empty 'if' node)",
 				E_USER_WARNING);
 
 		if ($rule->consequences === null || count($rule->consequences) === 0)
 			$this->logError("KnowledgeBaseReader::parseRule: "
-				. "Rule node on line " . $node->getLineNo()
-				. " has no consequences (missing or empty then node)",
+				. "'rule' node on line " . $node->getLineNo()
+				. " has no consequences (missing or empty 'then' node)",
 				E_USER_WARNING);
 
 		$rule->inferred_facts = array_keys($rule->consequences);
@@ -186,7 +186,7 @@ class KnowledgeBaseReader
 				
 				default:
 					$this->logError("KnowledgeBaseReader::parseQuestion: "
-						. "Skipping unknown element {$childNode->nodeName}",
+						. "Skipping unknown element '{$childNode->nodeName}'",
 						E_USER_NOTICE);
 					continue;
 			}
@@ -194,19 +194,19 @@ class KnowledgeBaseReader
 
 		if ($question->description === null)
 			$this->logError("KnowledgeBaseReader::parseQuestion: "
-				. "Question node on line " . $node->getLineNo()
-				. " is missing a description element",
+				. "'question' node on line " . $node->getLineNo()
+				. " is missing a 'description' element",
 				E_USER_WARNING);
 
 		if (count($question->options) === 0)
 			$this->logError("KnowledgeBaseReader::parseQuestion: "
-				. "Question node on line " . $node->getLineNo()
-				. " has no possible answers (no option elements)",
+				. "'question' node on line " . $node->getLineNo()
+				. " has no possible answers (no 'option' elements)",
 				E_USER_WARNING);
 
 		if (count($question->options) === 1)
 			$this->logError("KnowledgeBaseReader::parseQuestion: "
-				. "Question node on line " . $node->getLineNo()
+				. "'question' node on line " . $node->getLineNo()
 				. " has only one possible answer",
 				E_USER_NOTICE);
 
@@ -240,7 +240,7 @@ class KnowledgeBaseReader
 				
 				default:
 					$this->logError("KnowledgeBaseReader::parseGoal: "
-						. "Skipping unknown element {$childNode->nodeName}",
+						. "Skipping unknown element '{$childNode->nodeName}'",
 						E_USER_NOTICE);
 					continue;
 			}
@@ -248,8 +248,8 @@ class KnowledgeBaseReader
 
 		if (count($goal->answers) === 0)
 			$this->logError("KnowledgeBaseReader::parseGoal: "
-				. "Goal node on line " . $node->getLineNo()
-				. " has no possible outcomes (missing answer nodes)",
+				. "'goal' node on line " . $node->getLineNo()
+				. " has no possible outcomes (missing 'answer' nodes)",
 				E_USER_WARNING);
 
 		return $goal;
@@ -266,8 +266,8 @@ class KnowledgeBaseReader
 		
 		if (count($childNodes) !== 1)
 			$this->logError("KnowledgeBaseReader::parseRuleCondition: "
-				. $node->nodeName . " node on line " . $node->getLineNo()
-				. " does not contain exactly one condition.",
+				. "'" . $node->nodeName . "' node on line " . $node->getLineNo()
+				. " does not contain exactly one condition (a 'and'/'or'/'not'/'fact' node).",
 				E_USER_WARNING);
 
 		return $this->parseCondition(current($childNodes));
@@ -285,8 +285,8 @@ class KnowledgeBaseReader
 
 		if (count($container->conditions) === 0)
 			$this->logError("KnowledgeBaseReader::parseConditionSet: "
-				. $node->nodeName . " node on line " . $node->getLineNo()
-				. " has no child conditions (missing when/when_all/when_any/fact node)",
+				. "'" . $node->nodeName . "' node on line " . $node->getLineNo()
+				. " has no child conditions (missing 'and'/'or'/'not'/'fact' nodes)",
 				E_USER_WARNING);
 
 		return $container;
@@ -314,7 +314,7 @@ class KnowledgeBaseReader
 
 			default:
 				$this->logError("KnowledgeBaseReader::parseCondition: "
-					. "Skipping unknown element {$node->nodeName}",
+					. "Skipping unknown element '{$node->nodeName}'",
 					E_USER_NOTICE);
 				$condition = null;
 				continue;
@@ -327,7 +327,7 @@ class KnowledgeBaseReader
 	{
 		if (!$node->hasAttribute('name'))
 			$this->logError("KnowledgeBaseReader::parseFactCondition: "
-				. "Rule missing name attribute",
+				. "'fact' node is missing a 'name' attribute.",
 				E_USER_WARNING);
 
 		$name = $node->getAttribute('name');
@@ -361,7 +361,7 @@ class KnowledgeBaseReader
 			case 'fact':
 				if (!$node->hasAttribute('name'))
 					$this->logError("KnowledgeBaseReader::parseFact: "
-						. "Rule missing name attribute",
+						. "'fact' node missing 'name' attribute",
 						E_USER_WARNING);
 
 				$name = $node->getAttribute('name');
@@ -370,7 +370,7 @@ class KnowledgeBaseReader
 							
 			default:
 				$this->logError("KnowledgeBaseReader::parseFact: "
-					. "Skipping unknown element {$node->nodeName}",
+					. "Skipping unknown element '{$node->nodeName}'",
 					E_USER_NOTICE);
 				continue;
 		}
@@ -394,7 +394,7 @@ class KnowledgeBaseReader
 				
 				default:
 					$this->logError("KnowledgeBaseReader::parseOption: "
-						. "Skipping unknown element {$childNode->nodeName}",
+						. "Skipping unknown element '{$childNode->nodeName}'",
 						E_USER_NOTICE);
 					continue;
 			}
@@ -402,14 +402,14 @@ class KnowledgeBaseReader
 
 		if ($option->description == '')
 			$this->logError("KnowledgeBaseReader::parseOption: "
-				. "Option node on line " . $node->getLineNo()
-				. " has no description (missing or empty description node)",
+				. "'option' node on line " . $node->getLineNo()
+				. " has no description (missing or empty 'description' node)",
 				E_USER_WARNING);
 
 		if (count($option->consequences) === 0)
 			$this->logError("KnowledgeBaseReader::parseOption: "
-				. "Option node on line " . $node->getLineNo()
-				. " has no consequences (missing then node)",
+				. "'option' node on line " . $node->getLineNo()
+				. " has no consequences (missing 'then' node)",
 				E_USER_WARNING);
 
 		return $option;
