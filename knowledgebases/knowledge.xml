@@ -5,10 +5,12 @@
 
 	<rule>
 		<description>De regels zijn van toepassing</description>
-		<when_all>
-			<fact name="is_gebouw">yes</fact>
-			<fact name="heeft_brandcompartiment">yes</fact>
-		</when_all>
+		<if>
+			<and>
+				<fact name="is_gebouw">yes</fact>
+				<fact name="heeft_brandcompartiment">yes</fact>
+			</and>
+		</if>
 		<then>
 			<fact name="regels_van_toepassing">yes</fact>
 		</then>
@@ -16,12 +18,14 @@
 
 	<rule>
 		<description>Het gaat om een gebouw</description>
-		<when_any>
-			<fact name="gebruiksfunctie">woonfunctie</fact>
-			<fact name="gebruiksfunctie">industriefunctie</fact>
-			<fact name="gebruiksfunctie">kantoorfunctie</fact>
-			<fact name="gebruiksfunctie">winkelfunctie</fact>
-		</when_any>
+		<if>
+			<or>
+				<fact name="gebruiksfunctie">woonfunctie</fact>
+				<fact name="gebruiksfunctie">industriefunctie</fact>
+				<fact name="gebruiksfunctie">kantoorfunctie</fact>
+				<fact name="gebruiksfunctie">winkelfunctie</fact>
+			</or>
+		</if>
 		<then>
 			<fact name="is_gebouw">yes</fact>
 		</then>
@@ -81,6 +85,6 @@
 		<description>Zijn de regels van toepassing?</description>
 		<answer value="yes">Ja, de regels zijn van toepassing.</answer>
 		<answer value="no">Nee, deze situatie is niet specifiek beschreven in de regelgeving.</answer>
-		<answer>Geen idee</answer>
+		<answer value="undefined">Geen idee</answer>
 	</goal>
 </knowledge>
