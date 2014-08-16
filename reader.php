@@ -130,10 +130,8 @@ class KnowledgeBaseReader
 					$rule->description = $childNode->firstChild->data;
 					break;
 				
-				case 'when':
-				case 'when_all':
-				case 'when_any':
-					$rule->condition = $this->parseConditionSet($childNode);
+				case 'if':
+					$rule->condition = $this->parseRuleCondition($childNode);
 					break;
 				
 				case 'then':
@@ -151,7 +149,7 @@ class KnowledgeBaseReader
 		if ($rule->condition === null)
 			$this->logError("KnowledgeBaseReader::parseRule: "
 				. "Rule node on line " . $node->getLineNo()
-				. " has no condition (missing when/when_all/when_any node)",
+				. " has no condition (missing or empty if-node)",
 				E_USER_WARNING);
 
 		if ($rule->consequences === null || count($rule->consequences) === 0)
@@ -262,35 +260,36 @@ class KnowledgeBaseReader
 		//
 	}
 
-	private function parseConditionSet($node)
+	private function parseRuleCondition($node)
 	{
-		switch ($node->nodeName)
-		{
-			case 'when':
-			case 'when_all':
-				$condition = new WhenAllCondition;
-				break;
-			
-			case 'when_any':
-				$condition = new WhenAnyCondition;
-				break;
-		}
+		$childNodes = iterator_to_array($this->childElements($node));
+		
+		if (count($childNodes) !== 1)
+			$this->logError("KnowledgeBaseReader::parseRuleCondition: "
+				. $node->nodeName . " node on line " . $node->getLineNo()
+				. " does not contain exactly one condition.",
+				E_USER_WARNING);
 
+		return $this->parseCondition(current($childNodes));
+	}
+
+	private function parseConditionSet($node, $container)
+	{
 		foreach ($this->childElements($node) as $childNode)
 		{
 			$childCondition = $this->parseCondition($childNode);
 
 			if ($childCondition)
-				$condition->addCondition($childCondition);
+				$container->addCondition($childCondition);
 		}
 
-		if (count($condition->conditions) === 0)
+		if (count($container->conditions) === 0)
 			$this->logError("KnowledgeBaseReader::parseConditionSet: "
 				. $node->nodeName . " node on line " . $node->getLineNo()
 				. " has no child conditions (missing when/when_all/when_any/fact node)",
 				E_USER_WARNING);
 
-		return $condition;
+		return $container;
 	}
 
 	private function parseCondition($node)
@@ -305,10 +304,12 @@ class KnowledgeBaseReader
 				$condition = $this->parseNegationCondition($node);
 				break;
 			
-			case 'when':
-			case 'when_all':
-			case 'when_any':
-				$condition = $this->parseConditionSet($node);
+			case 'and':
+				$condition = $this->parseConditionSet($node, new WhenAllCondition);
+				break;
+
+			case 'or':
+				$condition = $this->parseConditionSet($node, new WhenAnyCondition);
 				break;
 
 			default:
