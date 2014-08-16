@@ -210,9 +210,25 @@ class WhenAnyCondition implements Condition
 
 	public function simplify()
 	{
-		return count($this->conditions) === 1
-			? $this->conditions[0]
-			: $this;
+		// If this group contains only one child condition, just remove the group.
+		// (Equal to removing parenthesis from a single statement.)
+		if (count($this->conditions) === 1)
+			return $this->conditions[0];
+
+		$condition = new self;
+
+		// Move nested or-conditions to top level:
+		// (Equal to [A or [B or C]] -> [A or B or C])
+		foreach ($this->conditions as $child)
+		{
+			if ($child instanceof self)
+				foreach ($child->conditions as $childCondition)
+					$this->addCondition($childCondition);
+			else
+				$condition->addCondition($child);
+		}
+
+		return $condition;
 	}
 
 	public function asArray()
