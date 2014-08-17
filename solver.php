@@ -11,7 +11,7 @@
  */
 class Rule
 {
-	public $inferred_facts = array();
+	public $inferred_facts;
 
 	public $description;
 
@@ -23,9 +23,14 @@ class Rule
 
 	public $line_number;
 
+	public function __construct()
+	{
+		$this->inferred_facts = new Set();
+	}
+
 	public function infers($fact)
 	{
-		return in_array($fact, $this->inferred_facts);
+		return $this->inferred_facts->contains($fact);
 	}
 
 	public function __toString()
@@ -56,9 +61,14 @@ class Question
 
 	public $line_number;
 
+	public function __construct()
+	{
+		$this->inferred_facts = new Set();
+	}
+
 	public function infers($fact)
 	{
-		return in_array($fact, $this->inferred_facts);
+		return $this->inferred_facts->contains($fact);
 	}
 }
 
@@ -109,17 +119,22 @@ interface Condition
  */
 class WhenAllCondition implements Condition 
 {
-	public $conditions = array();
+	public $conditions;
+
+	public function __construct()
+	{
+		$this->conditions = new Set();
+	}
 
 	public function addCondition(Condition $condition)
 	{
-		$this->conditions[] = $condition;
+		$this->conditions->push($condition);
 	}
 
 	public function evaluate(KnowledgeState $state)
 	{
 		// assumptie: er moet ten minste één conditie zijn
-		assert(count($this->conditions) > 0);
+		assert('count($this->conditions) > 0');
 
 		$values = array();
 		foreach ($this->conditions as $condition)
@@ -151,7 +166,7 @@ class WhenAllCondition implements Condition
 	public function simplify()
 	{
 		return count($this->conditions) === 1
-			? $this->conditions[0]
+			? current($this->conditions)
 			: $this;
 	}
 
@@ -168,17 +183,22 @@ class WhenAllCondition implements Condition
  */
 class WhenAnyCondition implements Condition
 {
-	public $conditions = array();
+	public $conditions;
+
+	public function __construct()
+	{
+		$this->conditions = new Set();
+	}
 
 	public function addCondition(Condition $condition)
 	{
-		$this->conditions[] = $condition;
+		$this->conditions->push($condition);
 	}
 
 	public function evaluate(KnowledgeState $state)
 	{
 		// assumptie: er moet ten minste één conditie zijn
-		assert(count($this->conditions) > 0);
+		assert('count($this->conditions) > 0');
 
 		$values = array();
 		foreach ($this->conditions as $condition)
@@ -211,7 +231,7 @@ class WhenAnyCondition implements Condition
 	public function simplify()
 	{
 		return count($this->conditions) === 1
-			? $this->conditions[0]
+			? current($this->conditions)
 			: $this;
 	}
 
@@ -323,7 +343,12 @@ class Goal
 	
 	public $description;
 
-	public $answers = array();
+	public $answers;
+
+	public function __construct()
+	{
+		$this->answers = new Set();
+	}
 
 	public function answer(KnowledgeState $state)
 	{
@@ -488,20 +513,30 @@ class KnowledgeState
 
 	public $description;
 
-	public $facts = array();
+	public $facts;
 
-	public $rules = array();
+	public $rules;
 
-	public $questions = array();
+	public $questions;
 
-	public $goals = array();
+	public $goals;
 
-	public $solved = array();
+	public $solved;
 
 	public $goalStack;
 
 	public function __construct()
 	{
+		$this->facts = array();
+
+		$this->rules = new Set();
+
+		$this->questions = new Set();
+
+		$this->goals = new Set();
+
+		$this->solved = new Set();
+
 		$this->goalStack = new Stack();
 	}
 
@@ -580,7 +615,7 @@ class Solver
 					
 					// Het kan niet zijn dat het al eens is opgelost. Dan zou hij
 					// in facts moeten zitten.
-					assert('!in_array($main_cause, $state->solved)');
+					assert('!$state->solved->contains($main_cause)');
 
 					// zet het te bewijzen fact bovenaan op de todo-lijst.
 					$state->goalStack->push($main_cause);
@@ -604,7 +639,7 @@ class Solver
 					// en markeer hem dan maar als niet waar (closed-world assumption?)
 					$state->apply(array($unsatisfied_goal => STATE_UNDEFINED));
 					
-					$solved[] = $unsatisfied_goal;
+					$state->solved->push($unsatisfied_goal);
 				}
 			}
 			// Yes, het is gelukt om een Yes of No antwoord te vinden voor dit goal.
@@ -613,10 +648,10 @@ class Solver
 			{
 				// aanname: als het goal kon worden afgeleid, dan is het nu deel van
 				// de afgeleide kennis.
-				assert(isset($state->facts[$state->goalStack->top()]));
+				assert('isset($state->facts[$state->goalStack->top()])');
 
 				// op naar het volgende goal.
-				$state->solved[] = $state->goalStack->pop();
+				$state->solved->push($state->goalStack->pop());
 			}
 		}
 	}
@@ -643,21 +678,21 @@ class Solver
 			return $state->facts[$goal];
 		
 		// Is er misschien een regel die we kunnen toepassen
-		$relevant_rules = array_filter($state->rules,
+		$relevant_rules = new CallbackFilterIterator($state->rules->getIterator(),
 			function($rule) use ($goal) { return $rule->infers($goal); });
 		
 		// Is er misschien een directe vraag die we kunnen stellen?
-		$relevant_questions = array_filter($state->questions,
+		$relevant_questions = new CallbackFilterIterator($state->questions->getIterator(),
 			function($question) use ($goal) { return $question->infers($goal); });
 
 		if (verbose())
 			printf("%d regels en %d vragen gevonden\n",
-				count($relevant_rules), count($relevant_questions));
+				iterator_count($relevant_rules), iterator_count($relevant_questions));
 
 		// Sla ook alle resultaten op van de Maybe rules. Hier kunnen we later
 		// misschien uit afleiden welk goal we vervolgens moeten afleiden om ze
 		// te laten beslissen.
-		$maybe_rules = array_filter($relevant_rules, function($rule) use ($state) {
+		$maybe_rules = new CallbackFilterIterator($relevant_rules, function($rule) use ($state) {
 				return $rule->condition->evaluate($state) instanceof Maybe;
 			});
 
@@ -677,7 +712,7 @@ class Solver
 			// als de regel kon worden toegepast, haal hem dan maar uit de
 			// set van regels. Meerdere malen toepassen is niet logisch.
 			if ($rule_result instanceof Yes or $rule_result instanceof No)
-				$state->rules = array_filter($state->rules, curry('unequals', $rule));
+				$state->rules->remove($rule);
 
 			// regel heeft nieuwe kennis opgeleverd, update de $state, en we hebben
 			// onze solve-stap voltooid.
@@ -691,18 +726,16 @@ class Solver
 		}
 
 		// Vraag gevonden!
-		if (count($relevant_questions))
+		foreach ($relevant_questions as $question)
 		{
-			$question = current($relevant_questions);
-
 			// deze vraag is alleen over te slaan als er nog regels open staan om dit feit
 			// af te leiden of als er alternatieve vragen naast deze (of eerder gestelde,
 			// vandaar $n++) zijn.
-			$skippable = (count($relevant_questions) - 1) + count($maybe_rules);
+			$skippable = (iterator_count($relevant_questions) - 1) + iterator_count($maybe_rules);
 
 			// haal de vraag hoe dan ook uit de mogelijk te stellen vragen. Het heeft geen zin
 			// om hem twee keer te stellen.
-			$state->questions = array_filter($state->questions, curry('unequals', $question));
+			$state->questions->remove($question);
 
 			return new AskedQuestion($question, $skippable);
 		}
@@ -715,6 +748,6 @@ class Solver
 		// niet konden worden afgeleid. Diegene die solve aanroept kan dan 
 		return Maybe::because(array_map(function($rule) use ($state) {
 				return $rule->condition->evaluate($state);
-			}, $maybe_rules));
+			}, iterator_to_array($maybe_rules)));
 	}
 }

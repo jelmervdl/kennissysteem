@@ -71,17 +71,17 @@ class KnowledgeBaseReader
 			{
 				case 'rule':
 					$rule = $this->parseRule($childNode);
-					$kb->rules[] = $rule;
+					$kb->rules->push($rule);
 					break;
 				
 				case 'question':
 					$question = $this->parseQuestion($childNode);
-					$kb->questions[] = $question;
+					$kb->questions->push($question);
 					break;
 				
 				case 'goal':
 					$goal = $this->parseGoal($childNode);
-					$kb->goals[] = $goal;
+					$kb->goals->push($goal);
 					break;
 				
 				/*
@@ -158,7 +158,7 @@ class KnowledgeBaseReader
 				. " has no consequences (missing or empty 'then' node)",
 				E_USER_WARNING);
 
-		$rule->inferred_facts = array_keys($rule->consequences);
+		$rule->inferred_facts->pushAll(array_keys($rule->consequences));
 
 		return $rule;
 	}
@@ -210,13 +210,10 @@ class KnowledgeBaseReader
 				. " has only one possible answer",
 				E_USER_NOTICE);
 
-		$inferred_facts = array();
 		foreach ($question->options as $option)
 			foreach (array_keys($option->consequences) as $inferred_fact)
-				$inferred_facts[] = $inferred_fact;
+				$question->inferred_facts->push($inferred_fact);
 		
-		$question->inferred_facts = array_unique($inferred_facts);
-
 		return $question;
 	}
 
@@ -235,7 +232,7 @@ class KnowledgeBaseReader
 					break;
 				
 				case 'answer':
-					$goal->answers[] = $this->parseAnswer($childNode);
+					$goal->answers->push($this->parseAnswer($childNode));
 					break;
 				
 				default:

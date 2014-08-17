@@ -80,7 +80,7 @@ class HTMLFormatter
 			implode("\n",
 				array_map(
 					function($condition) { return '<tr><td>' . $this->formatCondition($condition) . '</td></tr>'; },
-					$condition->conditions)));
+					iterator_to_array($condition->conditions))));
 	}
 
 	protected function formatWhenAnyCondition(WhenAnyCondition $condition)
@@ -90,7 +90,7 @@ class HTMLFormatter
 			implode("\n",
 				array_map(
 					function($condition) { return '<tr><td>' . $this->formatCondition($condition) . '</td></tr>'; },
-					$condition->conditions)));
+					iterator_to_array($condition->conditions))));
 	}
 
 	protected function formatNegationCondition(NegationCondition $condition)

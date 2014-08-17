@@ -187,10 +187,30 @@ class Set implements IteratorAggregate, Countable
 		$this->values = array();
 	}
 
+	public function contains($value)
+	{
+		return in_array($value, $this->values);
+	}
+
 	public function push($value)
 	{
-		if (!in_array($value, $this->values))
+		if (!$this->contains($value))
 			$this->values[] = $value;
+	}
+
+	public function pushAll($values)
+	{
+		foreach ($values as $value)
+			$this->push($value);
+	}
+
+	public function remove($value)
+	{
+		$index = array_search($value, $this->values);
+
+		return $index !== false
+			? array_splice($this->values, $index, 1)
+			: false;
 	}
 
 	public function getIterator()
