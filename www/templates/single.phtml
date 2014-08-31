@@ -37,8 +37,136 @@
 				</div>
 			</form>
 		</section>
+
+		<section class="help">
+			<h2>How it works</h2>
+			<p>A knowledge base used by this program consists of <a href="#rule">rules</a>, <a href="#question">questions</a> and one or multiple <a href="#goal">goals</a>. Both rules and questions can yield knowledge which is stored in <a href="#fact">facts</a>.</p>
+
+			<p>The program will try to infer the value of the goal by looking for rules it can apply using the knowledge it already has. If it doesn't find any rules for which all the facts in the <tt>if</tt>-clause are known, it will add the unknown facts to the goal stack. It will also look for questions that could yield the facts looked for and will ask the one that has the most impact on the state of the knowledge base.</p>
+
+			<p id="closed-world-assumption">Note that this program uses a closed world assumption: if it cannot decide the value of a fact based on rules or questions, it will assign it the value <tt>undefined</tt>. You should never use that litteraly in your knowledge base, but you can make use of the fact that <tt>undefined</tt> is not equal to <tt>yes</tt> or some other value.</p>
+		</section>
+
+		<section class="help">
+			<h2>Writing a knowledge base</h2>
+			<p>The knowledge base is written using simple XML. Globally, your file will look something like this:</p>
+			<code><pre>
+&lt;knowledge&gt;
+	&lt;title&gt;My test kb&lt;/title&gt;
+	&lt;description&gt;Decide whether to take a course.&lt;/description&gt;
+
+	&lt;!-- Here follow multiple rules, questions and goals --&gt;
+
+	&lt;!-- And yes, you can use this syntax to add
+	     comments to your knowledge base :) --&gt;
+&lt;/knowledge&gt;
+</pre></code>
+
+			<p>You can download and run <a href="knowledge-base-example.xml">knowledge-base-example.xml</a> as a start and modify it to fit your needs.</p>
+
+			<section id="fact">
+				<h3>Facts</h3>
+				<p>The most atomic part of this reasoning engine are little <code>&lt;fact&gt;</code> elements. They are what it tries to derive and they are the fundamental elements of all the rules, as you will see in the next sections.</p>
+				<code><pre>
+&lt;fact name="follow-course"&gt;yes&lt;/fact&gt;
+</pre></code>
+				<p>A fact always has a name specified using the attribute <tt>name</tt> and a value. A name could be <tt>follow-course</tt> and the value could be <tt>yes</tt>, <tt>no</tt>, <tt>whatever-you-like</tt> or <tt>undefined</tt>. The last value is a bit special, as this is the value the inference engine gives a fact when there are no more rules nor questions which can give the fact a value. I like to treat <tt>undefined</tt> as an implicit <em>no, because it is not yes as far as I know</em>.</p>
+			</section>
+
+			<section id="goal">
+				<h3>Goals</h3>
+				<p>Goals are the facts that your knowledge base is trying to answer and are the initial elements on the goal stack. At the end, the conclusion for each goal is shown. For example, if your knowledge base is written for answering whether you should follow a course it will show you what it recommends.</p>
+				<code><pre>
+&lt;goal name="follow-course"&gt;
+	&lt;description&gt;Should you follow the course?&lt;description&gt;
+	&lt;answer value="yes"&gt;Yes, you should&lt;/answer&gt;
+	&lt;answer value="no"&gt;No, you should not&lt;/answer&gt;
+	&lt;answer&gt;You should decide for yourself&lt;/answer&gt;
+&lt;/goal&gt;
+</pre></code>
+				<p>The last cause does not explicitly test for a value, which will make it test for the <tt>undefined</tt> value. See <a href="#closed-world-assumption">the closed world assumption.</a></p>
+			</section>
+
+			<section id="rule">
+				<h3>Rules</h3>
+				<p>The inference engine tries to gain new knowledge by applying rules. The rules, however, are very straightforward if-then rules. They also have a description but that is just there to help you remember what the rules encode. The most basic example of a rule:</p>
+				<code><pre>
+&lt;rule&gt;
+	&lt;description&gt;If the course is mandatory,
+	  you should follow this course.&lt;description&gt;
+	&lt;if&gt;
+		&lt;fact name="course-is-mandatory"&gt;yes&lt;/fact&gt;
+	&lt;/if&gt;
+	&lt;then&gt;
+		&lt;fact name="follow-course"&gt;yes&lt;/fact&gt;
+	&lt;/then&gt;
+&lt;rule&gt;
+</pre></code>
+				<p>Furthermore, you can use <code>&lt;and&gt;</code>, <code>&lt;or&gt;</code> and &lt;not&gt; clauses to form more complex rules:</p>
+				<code><pre>
+&lt;rule&gt;
+	&lt;description&gt;If the course is mandatory or fun,
+	  you should follow this course.&lt;description&gt;
+	&lt;if&gt;
+		&lt;or&gt;
+			&lt;fact name="course-is-mandatory"&gt;yes&lt;/fact&gt;
+			&lt;fact name="course-is-fun"&gt;yes&lt;/fact&gt;
+		&lt;/or&gt;
+	&lt;/if&gt;
+	&lt;then&gt;
+		&lt;fact name="follow-course"&gt;yes&lt;/fact&gt;
+	&lt;/then&gt;
+&lt;rule&gt;
+</pre></code>
+				<p>You can nest those as deep as you want. However, most of the time it is easier to chain a few rules. For example, writing two rules: <tt>if (teacher-is-interesting = yes and material-is-interesting = yes) then course-is-fun = yes</tt> and <tt>if (course-is-fun = yes or course-is-mandatory = yes) then follow-course = yes</tt> instead of <tt>if (teacher-is-interesting = yes and material-is-interesting = yes) or (course-is-mandatory = yes) then follow-course = yes</tt>. As for all programming challenges, less complex rules are almost always better.</p>
+			</section>
+
+			<section id="question">
+				<h3>Questions</h3>
+				<p>You cannot test your knowledge base without data from the outside. So as some facts can be derived from rules inside the knowledge base, such as <tt>follow-course</tt>, others like <tt>material-is-interesting</tt> need to be asked to the user of the system. This can be done by defining questions for such facts:</p>
+				<code><pre>
+&lt;question&gt;
+	&lt;description&gt;If the material of the course interesting?&lt;/description&gt;
+	&lt;option&gt;
+		&lt;description&gt;The material is very interesting&lt;/description&gt;
+		&lt;then&gt;
+			&lt;fact name="material-is-interesting"&gt;yes&lt;/fact&gt;
+		&lt;/then&gt;
+	&lt;/option&gt;
+	&lt;option&gt;
+		&lt;description&gt;It is utterly boring&lt;/description&gt;
+		&lt;then&gt;
+			&lt;fact name="material-is-interesting"&gt;no&lt;/fact&gt;
+		&lt;/then&gt;
+	&lt;/option&gt;
+&lt;/question&gt;
+</pre></code>
+			</section>
+		</section>
+
 		<footer>
 			<p>Source code available on <a href="https://github.com/jelmervdl/kennissysteem">Github</a>.</p>
 		</footer>
+
+		<script>
+			Array.prototype.forEach.call(
+				document.querySelectorAll("a[href^='#']"),
+				function(el) {
+					console.log(el);
+					el.addEventListener('click', function() {
+						var hash = el.href.substring(el.href.indexOf('#') + 1);
+						var ref = document.getElementById(hash);
+						
+						Array.prototype.forEach.call(
+							document.querySelectorAll('.highlight'),
+							function(node) {
+								node.classList.remove('highlight')
+							});
+						
+						if (ref)
+							ref.classList.add('highlight');
+					});
+				});
+		</script>
 	</body>
 </html>

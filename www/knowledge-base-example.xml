@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<knowledge>
+	<title>Did John do something wrong?</title>
+	<description>This is an example to show you some of the features of the inference engine.</description>
+
+	<goal name="must-repair-damage">
+		<description>Does the person have to repair the damages?</description>
+		<answer value="yes"><![CDATA[The person <em>must</em> repair the damages.]]></answer>
+		<answer>The person does not have to repair the damages.</answer>
+	</goal>
+
+	<rule>
+		<description>If his name is John, and he has done something wrong, he should repair the damages.</description>
+		<if>
+			<and>
+				<fact name="person-named-john">yes</fact>
+				<fact name="done-something-wrong">yes</fact>
+			</and>
+		</if>
+		<then>
+			<fact name="must-repair-damage">yes</fact>
+		</then>
+	</rule>
+
+	<rule>
+		<description>John has to have cleaned his room and done the dishes today.</description>
+		<if>
+			<or>
+				<fact name="cleaned-his-room">no</fact>
+				<fact name="done-his-dishes">no</fact>
+			</or>
+		</if>
+		<then>
+			<fact name="done-something-wrong">yes</fact>
+		</then>
+	</rule>
+
+	<question>
+		<description>Is the person named John</description>
+		<option>
+			<description>Yes</description>
+			<then>
+				<fact name="person-named-john">yes</fact>
+			</then>
+		</option>
+		<option>
+			<description>No</description>
+			<then>
+				<fact name="person-named-john">no</fact>
+			</then>
+		</option>
+	</question>
+
+	<question>
+		<description>Has the person done his dishes today</description>
+		<option>
+			<description>Yes</description>
+			<then>
+				<fact name="done-his-dishes">yes</fact>
+			</then>
+		</option>
+		<option>
+			<description>No</description>
+			<then>
+				<fact name="done-his-dishes">no</fact>
+			</then>
+		</option>
+	</question>
+
+	<question>
+		<description>Has the person cleaned his room today</description>
+		<option>
+			<description>Yes</description>
+			<then>
+				<fact name="cleaned-his-room">yes</fact>
+			</then>
+		</option>
+		<option>
+			<description>No</description>
+			<then>
+				<fact name="cleaned-his-room">no</fact>
+			</then>
+		</option>
+	</question>
+
+</knowledge>
