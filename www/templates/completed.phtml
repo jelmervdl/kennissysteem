@@ -3,7 +3,7 @@
 	<dl>
 	<?php foreach ($state->goals as $goal): ?>
 		<dt><?=$goal->description?></dt>
-		<dd><?
+		<dd><?php
 			$answer = $goal->answer($state);
 			echo $answer
 				? $answer->description
