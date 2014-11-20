@@ -5,7 +5,7 @@ Because the course is given in Dutch and everyone working on the project speaks 
 
 # Usage
 ## Web based version
-The version in this repository is hosted at http://pkt.ikhoefgeen.nl/ but it is easy to set up a small webserver and host your own code. Any webserver with PHP >= 5.4 should do. If you are taking the Knowledge Technology Practical I can arrange hosting for you.
+The version in this repository is hosted at http://kat.ikhoefgeen.nl/ but it is easy to set up a small webserver and host your own code. Any webserver with PHP >= 5.4 should do. If you are taking the Knowledge Technology Practical I can arrange hosting for you.
 
 Put your knowledge base in the 'knowledgebases' folder (or upload them through the web interface) and point your browser to the www/index.php file to get started.
 
@@ -19,7 +19,7 @@ Example:
 	main.php knowledge.xml
 
 # Knowledge base format
-The knowledge base can contain rules, questions and goals to infer and is written using XML. See `regen.xml` for an example.
+The knowledge base can contain rules, questions and goals to infer and is written using XML. See `www/knowledge-base-example.xml` for an example.
 
 ## Knowledge file
 	<knowledge>
@@ -34,20 +34,20 @@ The knowledge base can contain rules, questions and goals to infer and is writte
 		<description>A description of the rule</description>
 
 		<!-- conditions of when the rule can be applied -->
-		<when_any>
+		<if>
 			<!-- testing the value value of a fact -->
 			<fact name="pressure">high</fact>
 			
 			<!-- You can nest conditions -->
-			<when_all>
+			<and>
 				<fact name="pressure">low</fact>
 
 				<!-- negations -->
 				<not>
 					<fact name="state_machine">on</fact>
 				</not>
-			</when_all>
-		</when_any>
+			</and>
+		</iff>
 
 		<!-- consequences of the rule -->
 		<then>
@@ -123,9 +123,9 @@ This is a bit of a more complicated implementation of the previous suggestion. F
 Rules would need new operators, like 'part-of':
 
 	<rule>
-		<when>
+		<if>
 			<fact name="place of pain" operator="part-of">head</fact>
-		</when>
+		</if>
 		<then>
 			<fact name="medicine">paracetamol</fact>
 		</then>
