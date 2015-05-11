@@ -578,6 +578,10 @@ class Solver
 	 */
 	public function solveAll(KnowledgeState $state)
 	{
+		// Make sure the knowledge base is completely inferred for as far as
+		// possible with the existing knowledge
+		$this->forwardChain($state);
+
 		// herhaal zo lang er goals op de goal stack zitten
 		while (!$state->goalStack->isEmpty())
 		{
@@ -638,6 +642,9 @@ class Solver
 
 					// en markeer hem dan maar als niet waar (closed-world assumption?)
 					$state->apply(array($unsatisfied_goal => STATE_UNDEFINED));
+
+					// compute the effects of this change by applying the other rules
+					$this->forwardChain($state);
 					
 					$state->solved->push($unsatisfied_goal);
 				}
@@ -689,41 +696,8 @@ class Solver
 			printf("%d regels en %d vragen gevonden\n",
 				iterator_count($relevant_rules), iterator_count($relevant_questions));
 
-		// Sla ook alle resultaten op van de Maybe rules. Hier kunnen we later
-		// misschien uit afleiden welk goal we vervolgens moeten afleiden om ze
-		// te laten beslissen.
-		$maybe_rules = new CallbackFilterIterator($relevant_rules, function($rule) use ($state) {
-				return $rule->condition->evaluate($state) instanceof Maybe;
-			});
-
-		// (Let hier op de volgorde: we leiden eerst regels af, dan pas mogelijke vragen.)
-
-		// Probeer alle mogelijk (relevante) regels, en zie of er eentje
-		// nieuwe kennis afleidt.
-		$n = 0;
 		foreach ($relevant_rules as $rule)
-		{
-			$rule_result = $rule->condition->evaluate($state);
-
-			if (verbose())
-				printf("Regel %d (%s) levert %s op.\n",
-					$n++, $rule->description, $rule_result);
-
-			// als de regel kon worden toegepast, haal hem dan maar uit de
-			// set van regels. Meerdere malen toepassen is niet logisch.
-			if ($rule_result instanceof Yes or $rule_result instanceof No)
-				$state->rules->remove($rule);
-
-			// regel heeft nieuwe kennis opgeleverd, update de $state, en we hebben
-			// onze solve-stap voltooid.
-			if ($rule_result instanceof Yes)
-			{
-				// als het antwoord ja was, bereken dan de gevolgen door in $state
-				$state->apply($rule->consequences);
-				
-				return $rule_result;
-			}
-		}
+			assert('$rule->condition->evaluate($state) instanceof Maybe');
 
 		// Vraag gevonden!
 		foreach ($relevant_questions as $question)
@@ -731,7 +705,7 @@ class Solver
 			// deze vraag is alleen over te slaan als er nog regels open staan om dit feit
 			// af te leiden of als er alternatieve vragen naast deze (of eerder gestelde,
 			// vandaar $n++) zijn.
-			$skippable = (iterator_count($relevant_questions) - 1) + iterator_count($maybe_rules);
+			$skippable = (iterator_count($relevant_questions) - 1) + iterator_count($relevant_rules);
 
 			// haal de vraag hoe dan ook uit de mogelijk te stellen vragen. Het heeft geen zin
 			// om hem twee keer te stellen.
@@ -748,6 +722,37 @@ class Solver
 		// niet konden worden afgeleid. Diegene die solve aanroept kan dan 
 		return Maybe::because(array_map(function($rule) use ($state) {
 				return $rule->condition->evaluate($state);
-			}, iterator_to_array($maybe_rules)));
+			}, iterator_to_array($relevant_rules)));
+	}
+
+	public function forwardChain(KnowledgeState $state)
+	{
+		while (!$state->rules->isEmpty())
+		{
+			foreach ($state->rules as $rule)
+			{
+				$rule_result = $rule->condition->evaluate($state);
+
+				if (verbose())
+					printf("Regel %d (%s) levert %s op.\n",
+						isset($n) ? ++$n : $n = 1, $rule->description, $rule_result);
+
+				// If a rule could be applied, remove it to prevent it from being
+				// applied again.
+				if ($rule_result instanceof Yes or $rule_result instanceof No)
+					$state->rules->remove($rule);
+
+				// If the rule was true, add the consequences, the inferred knowledge
+				// to the knowledge state and continue applying rules on the new knowledge.
+				if ($rule_result instanceof Yes)
+				{
+					$state->apply($rule->consequences);
+					continue 2;
+				}
+			}
+
+			// None of the rules changed the state: stop trying.
+			break;
+		}
 	}
 }

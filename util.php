@@ -222,6 +222,11 @@ class Set implements IteratorAggregate, Countable
 	{
 		return count($this->values);
 	}
+
+	public function isEmpty()
+	{
+		return $this->count() === 0;
+	}
 }
 
 /**
