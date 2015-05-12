@@ -578,10 +578,6 @@ class Solver
 	 */
 	public function solveAll(KnowledgeState $state)
 	{
-		// Make sure the knowledge base is completely inferred for as far as
-		// possible with the existing knowledge
-		$this->forwardChain($state);
-
 		// herhaal zo lang er goals op de goal stack zitten
 		while (!$state->goalStack->isEmpty())
 		{
@@ -680,6 +676,9 @@ class Solver
 		if (verbose())
 			printf("Af te leiden: %s\n", $goal);
 		
+		// Forward chain until there is nothing left to derive.
+		$this->forwardChain($state);
+
 		// Kijk of het feit al afgeleid is en in de $facts lijst staat
 		if (isset($state->facts[$goal]))
 			return $state->facts[$goal];
