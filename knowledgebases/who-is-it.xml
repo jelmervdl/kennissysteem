@@ -1,21 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <knowledge>
-	<title>Test multiple goals</title>
-	<description>Testcase for solving multiple goals at the same time</description>
+	<title>Who is it?</title>
+	<description>
+		Example of a Who Is It?-like problem.
+		
+		Note that it will only pick Jenna after confirming both gender and haircolor,
+		and that "I dont know" is a valid outcome.
+	</description>
 
-	<goal name="steve">
-		<description>Is it Steve?</description>
-		<answer value="yes">Yes</answer>
-	</goal>
-
-	<goal name="jenna">
-		<description>Is it Jenna?</description>
-		<answer value="yes">Yes</answer>
-	</goal>
-
-	<goal name="john">
-		<description>Is it John?</description>
-		<answer value="yes">Yes</answer>
+	<goal name="person">
+		<description>Who is it?</description>
+		<answer value="Jenna">It is Jenna</answer>
+		<answer value="Steve">It is Steve</answer>
+		<answer value="John">It must be John</answer>
+		<answer>I don't know anybody who fits that description.</answer>
 	</goal>
 
 	<rule>
@@ -26,7 +24,7 @@
 			</and>
 		</if>
 		<then>
-			<fact name="jenna">yes</fact>
+			<fact name="person">Jenna</fact>
 		</then>
 	</rule>
 
@@ -38,7 +36,7 @@
 			</and>
 		</if>
 		<then>
-			<fact name="steve">yes</fact>
+			<fact name="person">Steve</fact>
 		</then>
 	</rule>
 
@@ -50,7 +48,7 @@
 			</and>
 		</if>
 		<then>
-			<fact name="john">yes</fact>
+			<fact name="person">John</fact>
 		</then>
 	</rule>
 
