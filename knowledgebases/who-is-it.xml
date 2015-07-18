@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<knowledge>
+	<title>Test multiple goals</title>
+	<description>Testcase for solving multiple goals at the same time</description>
+
+	<goal name="steve">
+		<description>Is it Steve?</description>
+		<answer value="yes">Yes</answer>
+	</goal>
+
+	<goal name="jenna">
+		<description>Is it Jenna?</description>
+		<answer value="yes">Yes</answer>
+	</goal>
+
+	<goal name="john">
+		<description>Is it John?</description>
+		<answer value="yes">Yes</answer>
+	</goal>
+
+	<rule>
+		<if>
+			<and>
+				<fact name="haircolor">blond</fact>
+				<fact name="gender">female</fact>
+			</and>
+		</if>
+		<then>
+			<fact name="jenna">yes</fact>
+		</then>
+	</rule>
+
+	<rule>
+		<if>
+			<and>
+				<fact name="haircolor">black</fact>
+				<fact name="gender">male</fact>
+			</and>
+		</if>
+		<then>
+			<fact name="steve">yes</fact>
+		</then>
+	</rule>
+
+	<rule>
+		<if>
+			<and>
+				<fact name="job">consultant</fact>
+				<fact name="gender">male</fact>
+			</and>
+		</if>
+		<then>
+			<fact name="john">yes</fact>
+		</then>
+	</rule>
+
+	<question>
+		<description>Is this person male or female?</description>
+		<option>
+			<description>Female</description>
+			<then>
+				<fact name="gender">female</fact>
+			</then>
+		</option>
+		<option>
+			<description>Male</description>
+			<then>
+				<fact name="gender">male</fact>
+			</then>
+		</option>
+	</question>
+
+	<question>
+		<description>What is the color of this persons hair?</description>
+		<option>
+			<description>Blond</description>
+			<then>
+				<fact name="haircolor">blond</fact>
+			</then>
+		</option>
+		<option>
+			<description>Black</description>
+			<then>
+				<fact name="haircolor">black</fact>
+			</then>
+		</option>
+		<option>
+			<description>Purple</description>
+			<then>
+				<fact name="haircolor">purple</fact>
+			</then>
+		</option>
+	</question>
+
+	<question>
+		<description>What is this person doing for a living?</description>
+		<option>
+			<description>Consultant</description>
+			<then>
+				<fact name="job">consultant</fact>
+			</then>
+		</option>
+		<option>
+			<description>Thief</description>
+			<then>
+				<fact name="job">thief</fact>
+			</then>
+		</option>
+	</question>
+
+</knowledge>
