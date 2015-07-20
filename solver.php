@@ -384,7 +384,7 @@ abstract class TruthState
 {
 	public $factors;
 
-	public function __construct(array $factors = array())
+	public function __construct(Traversable $factors)
 	{
 		$this->factors = $factors;
 	}
@@ -393,15 +393,24 @@ abstract class TruthState
 	{
 		return sprintf("[%s because %s]",
 			get_class($this),
-			implode(' and ', array_map('strval', $this->factors)));
+			implode(' and ', iterator_map($this->factors, 'strval')));
 	}
 
 	abstract public function negate();
 
-	static public function because($factors)
+	static public function because($factors = null)
 	{
+		if (is_null($factors))
+			$factors = new EmptyIterator();
+
+		elseif (is_scalar($factors))
+			$factors = new ArrayIterator([$factors]);
+
+		elseif (is_array($factors))
+			$factors = new ArrayIterator($factors);
+
 		$called_class = get_called_class();
-		return new $called_class((array) $factors);
+		return new $called_class($factors);
 	}
 }
 
@@ -445,7 +454,7 @@ class Maybe extends TruthState
 		return array_keys($causes);
 	}
 
-	private function divideAmong($percentage, array $factors)
+	private function divideAmong($percentage, Traversable $factors)
 	{
 		$effects = new Map(0.0);
 
@@ -653,6 +662,7 @@ class Solver
 					$state->solved->push($unsatisfied_goal);
 				}
 			}
+
 			// Yes, het is gelukt om een Yes of No antwoord te vinden voor dit goal.
 			// Mooi, dan kan dat van de te bewijzen stack af.
 			else
@@ -695,6 +705,11 @@ class Solver
 		$relevant_rules = new CallbackFilterIterator($state->rules->getIterator(),
 			function($rule) use ($goal) { return $rule->infers($goal); });
 		
+		// Assume that all relevant rules result in maybe's. If not, something went
+		// horribly wrong in $this->forwardChain()!
+		foreach ($relevant_rules as $rule)
+			assert('$rule->condition->evaluate($state) instanceof Maybe');
+
 		// Is er misschien een directe vraag die we kunnen stellen?
 		$relevant_questions = new CallbackFilterIterator($state->questions->getIterator(),
 			function($question) use ($goal) { return $question->infers($goal); });
@@ -703,16 +718,21 @@ class Solver
 			printf("%d regels en %d vragen gevonden\n",
 				iterator_count($relevant_rules), iterator_count($relevant_questions));
 
-		foreach ($relevant_rules as $rule)
-			assert('$rule->condition->evaluate($state) instanceof Maybe');
+		// If this problem can be solved by a rule, use it!
+		if (iterator_count($relevant_rules) > 0)
+			return Maybe::because(new CallbackMapIterator($relevant_rules, function($rule) use ($state) {
+				return $rule->condition->evaluate($state);
+			}));
 
-		// Vraag gevonden!
-		foreach ($relevant_questions as $question)
+		// If not, but when we do have a question to solve it, use that instead.
+		if (iterator_count($relevant_questions) > 0)
 		{
+			$question = iterator_first($relevant_questions);
+
 			// deze vraag is alleen over te slaan als er nog regels open staan om dit feit
 			// af te leiden of als er alternatieve vragen naast deze (of eerder gestelde,
 			// vandaar $n++) zijn.
-			$skippable = (iterator_count($relevant_questions) - 1) + iterator_count($relevant_rules);
+			$skippable = iterator_count($relevant_questions) - 1;
 
 			// haal de vraag hoe dan ook uit de mogelijk te stellen vragen. Het heeft geen zin
 			// om hem twee keer te stellen.
@@ -721,15 +741,9 @@ class Solver
 			return new AskedQuestion($question, $skippable);
 		}
 
-		// $relevant_rules is leeg of leverde alleen maar Maybes op.
-
-		// Geen enkele regel of vraag leverde direct een antwoord op $fact
-		// Dus geven we de nieuwe state (zonder de al gestelde vragen) terug
-		// en Maybe met alle redenen waarom de niet-volledig-afgeleide regels
-		// niet konden worden afgeleid. Diegene die solve aanroept kan dan 
-		return Maybe::because(array_map(function($rule) use ($state) {
-				return $rule->condition->evaluate($state);
-			}, iterator_to_array($relevant_rules)));
+		// We have no idea how to solve this. No longer our problem!
+		// (The caller should set $goal to undefined or something.)
+		return Maybe::because();
 	}
 
 	public function forwardChain(KnowledgeState $state)

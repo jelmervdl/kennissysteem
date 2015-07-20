@@ -117,6 +117,21 @@ function iterator_contains(Iterator $it, $needle)
 	return false;
 }
 
+function iterator_first(Iterator $it)
+{
+	$it->rewind();
+
+	if (!$it->valid())
+		throw new RuntimeException("Iterator has no valid elements");
+
+	return $it->current();
+}
+
+function iterator_map(Iterator $it, Callable $callback)
+{
+	return new CallbackMapIterator($it, $callback);
+}
+
 function unequals($a, $b)
 {
 	return $a != $b;
@@ -125,6 +140,23 @@ function unequals($a, $b)
 function pick($property, $object)
 {
 	return $object->$property;
+}
+
+class CallbackMapIterator extends IteratorIterator
+{
+	protected $callback;
+
+	public function __construct(Traversable $iterator, Callable $callback)
+	{
+		parent::__construct($iterator);
+
+		$this->callback = $callback;
+	}
+	
+	public function current()
+	{
+		return call_user_func($this->callback, parent::current(), parent::key());
+	}
 }
 
 class Map implements ArrayAccess, IteratorAggregate
@@ -140,16 +172,25 @@ class Map implements ArrayAccess, IteratorAggregate
 	
 	public function offsetExists($key)
 	{
+		if (!is_scalar($key))
+			throw new InvalidArgumentException('$key can only be of a scalar type');
+
 		return isset($this->data[$key]);
 	}
 
 	public function offsetUnset($key)
 	{
+		if (!is_scalar($key))
+			throw new InvalidArgumentException('$key can only be of a scalar type');
+
 		unset($this->data[$key]);
 	}
 
 	public function offsetGet($key)
 	{
+		if (!is_scalar($key))
+			throw new InvalidArgumentException('$key can only be of a scalar type');
+
 		return isset($this->data[$key])
 			? $this->data[$key]
 			: $this->offsetSet($key, $this->makeDefaultValue($key));
@@ -157,6 +198,9 @@ class Map implements ArrayAccess, IteratorAggregate
 
 	public function offsetSet($key, $value)
 	{
+		if (!is_scalar($key))
+			throw new InvalidArgumentException('$key can only be of a scalar type');
+
 		return $this->data[$key] = $value;
 	}
 
