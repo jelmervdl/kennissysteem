@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<knowledge>
+	<title>Implicit dependencies</title>
+	<description>
+		Example of implicit dependencies in a knowledge base.
+		
+		For example, the question "is the traffic light green?" assumes
+		that there is a traffic light at all.
+	</description>
+
+	<goal name="drive">
+		<description>May I drive?</description>
+		<answer value="yes">Yes</answer>
+		<answer value="no">No</answer>
+		<answer>I don't know.</answer>
+	</goal>
+
+	<rule>
+		<description>There is only a traffic light color if there is a traffic light at all.</description>
+		<if>
+			<fact name="traffic_light_present">yes</fact>
+		</if>
+		<then>
+			<fact name="traffic_light_color">$observed_traffic_light_color</fact>
+		</then>
+	</rule>
+
+	<rule>
+		<description>If there is a traffic light and it is green, you can go.</description>
+		<if>
+			<and>
+				<fact name="traffic_light_color">green</fact>
+			</and>
+		</if>
+		<then>
+			<fact name="drive">yes</fact>
+		</then>
+	</rule>
+
+	<rule>
+		<description>You may drive first if you have priority and there is no traffic light.</description>
+		<if>
+			<and>
+				<fact name="priority">yes</fact>
+				<fact name="traffic_light_present">no</fact>
+			</and>
+		</if>
+		<then>
+			<fact name="drive">yes</fact>
+		</then>
+	</rule>
+
+	<rule>
+		<description>Don't drive if the traffic light is red.</description>
+		<if>
+			<fact name="traffic_light_color">red</fact>
+		</if>
+		<then>
+			<fact name="drive">no</fact>
+		</then>
+	</rule>
+
+	<rule>
+		<description>Do I have priority?</description>
+		<if>
+			<or>
+				<fact name="priority_road">yes</fact>
+				<fact name="crossing_side">right</fact>
+			</or>
+		</if>
+		<then>
+			<fact name="priority">yes</fact>
+		</then>
+	</rule>
+
+	<question>
+		<description>Are you driving on a priority lane?</description>
+		<option>
+			<description>Yes</description>
+			<then>
+				<fact name="priority_road">yes</fact>
+			</then>
+		</option>
+		<option>
+			<description>No</description>
+			<then>
+				<fact name="priority_road">no</fact>
+			</then>
+		</option>
+	</question>
+
+	<question>
+		<description>Are you on the right side of the crossing of the car you expect priority from?</description>
+		<option>
+			<description>Yes</description>
+			<then>
+				<fact name="crossing_side">right</fact>
+			</then>
+		</option>
+		<option>
+			<description>No</description>
+			<then>
+				<fact name="crossing_side">left</fact>
+			</then>
+		</option>
+	</question>
+
+	<question>
+		<description>Is there a traffic light?</description>
+		<option>
+			<description>Yes</description>
+			<then>
+				<fact name="traffic_light_present">yes</fact>
+			</then>
+		</option>
+		<option>
+			<description>No</description>
+			<then>
+				<fact name="traffic_light_present">no</fact>
+			</then>
+		</option>
+	</question>
+
+	<question>
+		<description>What is the color of the traffic light?</description>
+		<option>
+			<description>Green</description>
+			<then>
+				<fact name="observed_traffic_light_color">green</fact>
+			</then>
+		</option>
+		<option>
+			<description>Yellow</description>
+			<then>
+				<fact name="observed_traffic_light_color">yellow</fact>
+			</then>
+		</option>
+		<option>
+			<description>Red</description>
+			<then>
+				<fact name="observed_traffic_light_color">red</fact>
+			</then>
+		</option>
+	</question>
+
+</knowledge>
