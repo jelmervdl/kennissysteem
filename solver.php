@@ -295,13 +295,21 @@ class FactCondition implements Condition
 
 	public function evaluate(KnowledgeState $state)
 	{
-		if (isset($state->facts[$this->name]))
-			return $state->facts[$this->name] == $this->value
-				? Yes::because($this->name)
-				: No::because($this->name);
-		
+		if (!isset($state->facts[$this->name]))
+		{
+			return Maybe::because([$this->name]);
+		}
+		elseif (substr($state->facts[$this->name], 0, 1) == '$')
+		{
+			$proxy_condition = new FactCondition(substr($state->facts[$this->name], 1), $this->value);
+			return $proxy_condition->evaluate($state);
+		}
 		else
-			return Maybe::because($this->name);
+		{
+			return $state->facts[$this->name] == $this->value
+				? Yes::because([$this->name])
+				: No::because([$this->name]);
+		}
 	}
 
 	public function negate(KnowledgeDomain $domain)
