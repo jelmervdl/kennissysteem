@@ -39,22 +39,30 @@ class WebFrontend
 
 		$this->state = $this->getState();
 
-		if (isset($_POST['answer']))
-			$this->state->apply(_decode($_POST['answer']));
+		try
+		{
+			if (isset($_POST['answer']))
+				$this->state->apply(_decode($_POST['answer']));
 
-		$step = $this->solver->solveAll($this->state);
+			$step = $this->solver->solveAll($this->state);
 
-		$page = new Template('templates/layout.phtml');
+			$page = new Template('templates/layout.phtml');
+
+			if ($step instanceof AskedQuestion)
+				$page->content = $this->displayQuestion($step);
+			else
+				$page->content = $this->displayConclusions();
+			
+			if (verbose())
+				echo '</pre>';
+		}
+		catch (Exception $e)
+		{
+			$page = new Template('templates/exception.phtml');
+			$page->exception = $e;
+		}
 
 		$page->state = $this->state;
-
-		if ($step instanceof AskedQuestion)
-			$page->content = $this->displayQuestion($step);
-		else
-			$page->content = $this->displayConclusions();
-		
-		if (verbose())
-			echo '</pre>';
 
 		echo $page->render();
 	}
