@@ -105,10 +105,6 @@ interface Condition
 {
 	public function evaluate(KnowledgeState $state);
 
-	public function negate(KnowledgeDomain $domain);
-
-	public function simplify();
-
 	public function asArray();
 }
 
@@ -151,23 +147,6 @@ class WhenAllCondition implements Condition
 			return Maybe::because($maybes);
 
 		return Yes::because($values);
-	}
-
-	public function negate(KnowledgeDomain $domain)
-	{
-		$negation = new WhenAnyCondition();
-
-		foreach ($this->conditions as $condition)
-			$negation->addCondition($condition->negate($domain));
-
-		return $negation;
-	}
-
-	public function simplify()
-	{
-		return count($this->conditions) === 1
-			? current($this->conditions)
-			: $this;
 	}
 
 	public function asArray()
@@ -218,23 +197,6 @@ class WhenAnyCondition implements Condition
 		return No::because($values);
 	}
 
-	public function negate(KnowledgeDomain $domain)
-	{
-		$negation = new WhenAllCondition();
-
-		foreach ($this->conditions as $condition)
-			$negation->addCondition($condition->negate($domain));
-
-		return $negation;
-	}
-
-	public function simplify()
-	{
-		return count($this->conditions) === 1
-			? current($this->conditions)
-			: $this;
-	}
-
 	public function asArray()
 	{
 		return array($this, array_map_method('asArray', $this->conditions));
@@ -258,18 +220,6 @@ class NegationCondition implements Condition
 	public function evaluate(KnowledgeState $state)
 	{
 		return $this->condition->evaluate($state)->negate();
-	}
-
-	public function negate(KnowledgeDomain $domain)
-	{
-		return $this->condition;
-	}
-
-	public function simplify()
-	{
-		return $this->condition instanceof NegationCondition
-			? $this->condition->condition
-			: $this;
 	}
 
 	public function asArray()
@@ -310,23 +260,8 @@ class FactCondition implements Condition
 				? Yes::because([$this->name])
 				: No::because([$this->name]);
 		}
-	}
 
-	public function negate(KnowledgeDomain $domain)
-	{
-		// NOTE: The logic of this negation is UNSOUND!
-		$negation = new WhenAnyCondition();
 
-		foreach ($domain->values[$this->name] as $possible_value)
-			if ($possible_value != $this->value)
-				$negation->addCondition(new FactCondition($this->name, $possible_value));
-
-		return $negation;
-	}
-
-	public function simplify()
-	{
-		return $this;
 	}
 
 	public function asArray()
