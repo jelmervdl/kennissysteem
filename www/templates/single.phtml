@@ -5,7 +5,7 @@
 		<link rel="stylesheet" href="webfrontend.css">
 	</head>
 	<body id="kennisbanken">
-		<nav>
+		<nav class="site-nav">
 			<!-- what should come here? -->
 		</nav>
 		<header>
@@ -38,7 +38,20 @@
 			</form>
 		</section>
 
-		<section class="help">
+		<nav class="page-nav">
+			<ol>
+				<li><a href="#how-it-works">How it works</a></li>
+				<li><a href="#knowledge-bases">Writing a knowledge base</a></li>
+				<ol>
+					<li><a href="#fact">Facts</a></li>
+					<li><a href="#goal">Goals</a></li>
+					<li><a href="#rule">Rules</a></li>
+					<li><a href="#question">Questions</a></li>
+				</ol>
+			</ol>
+		</nav>
+
+		<section id="how-it-works" class="help">
 			<h2>How it works</h2>
 			<p>A knowledge base used by this program consists of <a href="#rule">rules</a>, <a href="#question">questions</a> and one or multiple <a href="#goal">goals</a>. Both rules and questions can yield knowledge which is stored in <a href="#fact">facts</a>.</p>
 

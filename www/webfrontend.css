@@ -9,7 +9,7 @@ body {
 	margin-top: 36px;
 }
 
-nav {
+.site-nav {
 	position: fixed;
 	top: 0;
 	left: 0;
@@ -19,7 +19,7 @@ nav {
 	box-shadow: 0 0 4px #333
 }
 
-nav a {
+.site-nav a {
 	display: inline-block;
 	color: #eee;
 	text-shadow: 0 1px 0 #333;
@@ -43,7 +43,7 @@ header > h1 {
 	font-weight: normal;
 }
 
-nav a:hover {
+.site-nav a:hover {
 	background: #eee;
 	color: #444;
 	text-shadow: 0 1px 0 white;
@@ -313,7 +313,8 @@ form > div > label {
 	color: black;
 }
 
-body > section {
+body > section,
+body > .page-nav {
 	max-width: 42em;
 	margin: 1em auto;
 	padding: 1em;
