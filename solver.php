@@ -245,23 +245,14 @@ class FactCondition implements Condition
 
 	public function evaluate(KnowledgeState $state)
 	{
-		if (!isset($state->facts[$this->name]))
-		{
-			return Maybe::because([$this->name]);
-		}
-		elseif (substr($state->facts[$this->name], 0, 1) == '$')
-		{
-			$proxy_condition = new FactCondition(substr($state->facts[$this->name], 1), $this->value);
-			return $proxy_condition->evaluate($state);
-		}
-		else
-		{
-			return $state->facts[$this->name] == $this->value
-				? Yes::because([$this->name])
-				: No::because([$this->name]);
-		}
+		$state_value = $state->value($this->name);
 
+		if ($state_value instanceof Maybe)
+			return $state_value;
 
+		return $state_value == $this->value
+			? Yes::because([$this->name])
+			: No::because([$this->name]);
 	}
 
 	public function asArray()
@@ -295,13 +286,26 @@ class Goal
 
 	public function answer(KnowledgeState $state)
 	{
-		$value = isset($state->facts[$this->name])
-			? $state->facts[$this->name]
-			: null;
-
+		$state_value = $state->value($this->name);
+		
 		foreach ($this->answers as $answer)
-			if ($answer->value == $value || $answer->value === null)
+		{
+			$answer_value = $answer->value;
+
+			// If this is the default option, return it always.
+			if ($answer_value === null)
 				return $answer;
+
+			// If the value is a variable, try to resolve it.
+			if (KnowledgeState::is_variable($answer_value))
+				$answer_value = $state->resolve($answer_value);
+
+			if ($state_value == $answer_value)
+				return $answer;
+		}
+
+		// We didn't find an appropriate answer :O
+		return null;
 	}
 }
 
@@ -326,9 +330,9 @@ abstract class TruthState
 
 	public function __toString()
 	{
-		return sprintf("[%s because %s]",
+		return sprintf("[%s because: %s]",
 			get_class($this),
-			implode(' and ', iterator_map($this->factors, 'strval')));
+			implode(', ', array_map('strval', iterator_to_array($this->factors))));
 	}
 
 	abstract public function negate();
@@ -502,6 +506,44 @@ class KnowledgeState
 	{
 		$this->facts = array_merge($this->facts, $consequences);
 	}
+
+	public function value($fact_name)
+	{
+		$fact_name = $this->resolve($fact_name);
+
+		if ($fact_name instanceof Maybe)
+			return $fact_name;
+
+		if (!isset($this->facts[$fact_name]))
+			return Maybe::because([$fact_name]);
+
+		return $this->resolve($this->facts[$fact_name]);
+	}
+
+	public function resolve($value)
+	{
+		$stack = array();
+
+		while (self::is_variable($value))
+		{
+			if (in_array($value, $stack))
+				throw new RuntimeException("Infinite recursion when trying to retrieve fact '$value' after I retrieved " . implode(', ', $stack) . ".");
+
+			$stack[] = $value;
+
+			if (isset($this->facts[substr($value, 1)]))
+				$value = $this->facts[substr($value, 1)];
+			else
+				return Maybe::because([substr($value, 1)]);
+		}
+
+		return $value;
+	}
+
+	static public function is_variable($fact_name)
+	{
+		return substr($fact_name, 0, 1) == '$';
+	}
 }
 
 define('STATE_UNDEFINED', 'undefined');
@@ -632,9 +674,14 @@ class Solver
 		// Forward chain until there is nothing left to derive.
 		$this->forwardChain($state);
 
-		// Kijk of het feit al afgeleid is en in de $facts lijst staat
-		if (isset($state->facts[$goal]))
-			return $state->facts[$goal];
+		// Test whether the fact is already in the knowledge base and if not, if it is solely
+		// unknown because we don't know the current goal we try to prove. Because, it could
+		// have a variable as value which still needs to be resolved, but that might be a
+		// different goal!
+		$current_value = $state->value($goal);
+
+		if (!($current_value instanceof Maybe && $current_value->factors == new ArrayIterator([$goal])))
+			return $current_value;
 		
 		// Is er misschien een regel die we kunnen toepassen
 		$relevant_rules = new CallbackFilterIterator($state->rules->getIterator(),

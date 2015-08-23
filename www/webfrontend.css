@@ -203,6 +203,20 @@ table {
 	font-size: 0.75em;
 }
 
+.fact-state dd small {
+	font-size: 1em;
+	color: #666;
+	margin-left: 1ch;
+}
+
+.fact-state dd small:before {
+	content: '= ';
+}
+
+.fact-state dd small:after {
+	content: '';
+}
+
 .action a,
 .action button {
 	border: 1px solid silver;

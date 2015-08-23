@@ -27,7 +27,7 @@
 				<dl>
 					<?php foreach($state->facts as $name => $value): ?>
 					<dt><?=$name?></dt>
-					<dd><?=$value?></dt>
+					<dd><?=$value?><?php if (KnowledgeState::is_variable($value)) printf('<small>%s</small>', $state->resolve($value)) ?></dd>
 					<?php endforeach ?>
 				</dl>
 			</section>

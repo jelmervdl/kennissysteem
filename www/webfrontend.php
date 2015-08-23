@@ -102,7 +102,15 @@ class WebFrontend
 				$state->goalStack->push($goal);
 		else
 			foreach ($state->goals as $goal)
+			{
 				$state->goalStack->push($goal->name);
+
+				// Also push any answer values that are variables as goals
+				// to be solved.
+				foreach ($goal->answers as $answer)
+					if (KnowledgeState::is_variable($answer->value))
+						$state->goalStack->push(substr($answer->value, 1));	
+			}
 
 		return $state;
 	}
