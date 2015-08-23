@@ -77,7 +77,6 @@
 		var delta = 15;
 
 		function updateDebugPanelVisibility() {
-			console.log(parseInt(localStorage.debug));
 			$(document.body).toggleClass('show-debug-info', !!parseInt(localStorage.debug));
 
 			if (localStorage.debugPanelWidth)
