@@ -1,26 +1,29 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Exception! &mdash; <?=$this->html($state->title) ?></title>
+		<title>Exception!<?php if ($state) echo ' &mdash; ' . $this->html($state->title) ?></title>
 		<link rel="stylesheet" href="webfrontend.css">
 	</head>
 	<body id="webfrontend">
-		<nav>
+		<nav class="site-nav">
 			<a href="<?=$this->attr($_SERVER['REQUEST_URI'])?>">Start over</a>
 			<a href="analyse.php?kb=<?=rawurlencode($_GET['kb'])?>">Analyse</a>
 			<a href="index.php">Upload</a>
 			<a href="#debug">Toggle debug</a>
 		</nav>
+		<?php if ($state): ?>
 		<header>
 			<h1><?=$this->html($state->title)?></h1>
 			<p><?=$state->description?></p>
 		</header>
-		<div>
+		<?php endif ?>
+		<section>
 			<div class="error">
 				<p><?=$exception->getMessage()?></p>
 				<pre><?=$exception->getTraceAsString()?></pre>
 			</div>
-		</div>
+		</section>
+		<?php if ($state): ?>
 		<aside id="debug-info">
 			<section class="state-info fact-state">
 				<h3>Facts</h3>
@@ -51,6 +54,7 @@
 				</ul>
 			</section>
 		</aside>
+		<?php endif ?>
 
 		<script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
 		<script>

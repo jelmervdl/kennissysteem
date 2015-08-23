@@ -37,10 +37,10 @@ class WebFrontend
 
 		$this->solver = new Solver;
 
-		$this->state = $this->getState();
-
 		try
 		{
+			$this->state = $this->getState();
+
 			if (isset($_POST['answer']))
 				$this->state->apply(_decode($_POST['answer']));
 

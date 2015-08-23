@@ -30,6 +30,9 @@ class KnowledgeBaseReader
 		// backup-titel, een <title/>-element in het bestand zal dit overschrijven.
 		$kb->title = basename($file, '.xml');
 
+		if (!file_exists($file))
+			throw new InvalidArgumentException('Cannot parse knowledge base: file does not exist');
+
 		$doc->load($file, LIBXML_NOCDATA & LIBXML_NOBLANKS);
 
 		if (!$doc->firstChild)
