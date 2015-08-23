@@ -5,7 +5,7 @@ form {
 }
 
 body {
-	font: 14px/24px "Lucida Grande", Lucida, Verdana, sans-serif;
+	font: 16px/1.6 "Lucida Grande", Lucida, Verdana, sans-serif;
 	margin-top: 36px;
 }
 
@@ -315,7 +315,7 @@ form > div > label {
 
 body > section,
 body > .page-nav {
-	max-width: 42em;
+	max-width: 900px;
 	margin: 1em auto;
 	padding: 1em;
 }
