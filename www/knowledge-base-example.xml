@@ -1,84 +1,245 @@
 <?xml version="1.0"?>
 <knowledge>
-	<title>Did John do something wrong?</title>
+	<title>Which program should I enter?</title>
 	<description>This is an example to show you some of the features of the inference engine.</description>
 
-	<goal name="must-repair-damage">
-		<description>Does the person have to repair the damages?</description>
-		<answer value="yes"><![CDATA[The person <em>must</em> repair the damages.]]></answer>
-		<answer>The person does not have to repair the damages.</answer>
+	<goal name="program">
+		<answer value="AI">Artificial Intelligence.</answer>
+		<answer value="CS">Computing Science</answer>
+		<answer value="Phi">Philosophy</answer>
+		<answer value="Psy">Psychology</answer>
+		<answer value="$undefined">I don't know what you should do, sorry…</answer>
+		<answer>Something else, namely $program.</answer>
 	</goal>
 
 	<rule>
-		<description>If his name is John, and he has done something wrong, he should repair the damages.</description>
+		<description>Qualifications for AI</description>
 		<if>
 			<and>
-				<fact name="person-named-john">yes</fact>
-				<fact name="done-something-wrong">yes</fact>
+				<fact name="general_math_level">beta</fact>
+				<or>
+					<fact name="likes">robots</fact>
+					<fact name="likes">agents</fact>
+					<fact name="likes">NLP</fact>
+				</or>
 			</and>
 		</if>
 		<then>
-			<fact name="must-repair-damage">yes</fact>
+			<fact name="program">AI</fact>
 		</then>
 	</rule>
 
 	<rule>
-		<description>John has to have cleaned his room and done the dishes today.</description>
+		<description>Qualifications for CS</description>
+		<if>
+			<and>
+				<fact name="general_math_level">beta</fact>
+				<or>
+					<fact name="likes">programming</fact>
+					<fact name="likes">computer architecture</fact>
+				</or>
+			</and>
+		</if>
+		<then>
+			<fact name="program">CS</fact>
+		</then>
+	</rule>
+
+	<rule>
+		<description>Qualifications for psychology</description>
+		<if>
+			<fact name="likes">people</fact>
+		</if>
+		<then>
+			<fact name="program">Psy</fact>
+		</then>
+	</rule>
+
+	<rule>
+		<description>Qualifications for philosophy</description>
+		<if>
+			<fact name="likes">thinking</fact>
+		</if>
+		<then>
+			<fact name="program">Phi</fact>
+		</then>
+	</rule>
+
+	<rule>
+		<description>Qualifications for architecture</description>
+		<if>
+			<fact name="likes">designing</fact>
+		</if>
+		<then>
+			<fact name="program">Architecture</fact>
+		</then>
+	</rule>
+
+	<rule>
+		<description>Your general math level (less specific, will make other rules easier to write)</description>
 		<if>
 			<or>
-				<fact name="cleaned-his-room">no</fact>
-				<fact name="done-his-dishes">no</fact>
+				<fact name="math_level">B1</fact>
+				<fact name="math_level">B2</fact>
+				<fact name="math_level">D</fact>
 			</or>
 		</if>
 		<then>
-			<fact name="done-something-wrong">yes</fact>
+			<fact name="general_math_level">beta</fact>
+		</then>
+	</rule>
+
+	<rule>
+		<description>If you followed astropyhics or artificial intelligence, we know your math is just fine.</description>
+		<if>
+			<or>
+				<fact name="previous_program">Artificial Intelligence</fact>
+				<fact name="previous_program">Astrophysics</fact>
+			</or>
+		</if>
+		<then>
+			<fact name="previous_math_level">beta</fact>
+		</then>
+	</rule>
+
+	<rule>
+		<description>Your general math level stays the same if you followed a previous program at the university.</description>
+		<if>
+			<not>
+				<fact name="previous_program">none</fact>
+			</not>
+		</if>
+		<then>
+			<fact name="general_math_level">$previous_math_level</fact>
 		</then>
 	</rule>
 
 	<question>
-		<description>Is the person named John</description>
+		<description>What do you like most?</description>
 		<option>
-			<description>Yes</description>
+			<description>robots</description>
 			<then>
-				<fact name="person-named-john">yes</fact>
+				<fact name="likes">robots</fact>
 			</then>
 		</option>
 		<option>
-			<description>No</description>
+			<description>agents</description>
 			<then>
-				<fact name="person-named-john">no</fact>
+				<fact name="likes">agents</fact>
+			</then>
+		</option>
+		<option>
+			<description>NLP</description>
+			<then>
+				<fact name="likes">NLP</fact>
+			</then>
+		</option>
+		<option>
+			<description>programming</description>
+			<then>
+				<fact name="likes">programming</fact>
+			</then>
+		</option>
+		<option>
+			<description>computer architecture</description>
+			<then>
+				<fact name="likes">computer architecture</fact>
+			</then>
+		</option>
+		<option>
+			<description>people</description>
+			<then>
+				<fact name="likes">people</fact>
+			</then>
+		</option>
+		<option>
+			<description>thinking</description>
+			<then>
+				<fact name="likes">thinking</fact>
+			</then>
+		</option>
+		<option>
+			<description>designing</description>
+			<then>
+				<fact name="likes">designing</fact>
 			</then>
 		</option>
 	</question>
 
 	<question>
-		<description>Has the person done his dishes today</description>
+		<description>What math level did you follow during highschool? (Old second phase system)</description>
 		<option>
-			<description>Yes</description>
+			<description>A1</description>
 			<then>
-				<fact name="done-his-dishes">yes</fact>
+				<fact name="math_level">A1</fact>
 			</then>
 		</option>
 		<option>
-			<description>No</description>
+			<description>A2</description>
 			<then>
-				<fact name="done-his-dishes">no</fact>
+				<fact name="math_level">A2</fact>
+			</then>
+		</option>
+		<option>
+			<description>B1</description>
+			<then>
+				<fact name="math_level">B1</fact>
+			</then>
+		</option>
+		<option>
+			<description>B2</description>
+			<then>
+				<fact name="math_level">B2</fact>
+			</then>
+		</option>
+		<option>
+			<description>D</description>
+			<then>
+				<fact name="math_level">D</fact>
 			</then>
 		</option>
 	</question>
 
 	<question>
-		<description>Has the person cleaned his room today</description>
+		<description>Did you follow a different program at the univeristy?</description>
 		<option>
-			<description>Yes</description>
+			<description>Astrophysics</description>
 			<then>
-				<fact name="cleaned-his-room">yes</fact>
+				<fact name="previous_program">Astrophysics</fact>
+			</then>
+		</option>
+		<option>
+			<description>Artificial Intelligence</description>
+			<then>
+				<fact name="previous_program">Artificial Intelligence</fact>
+			</then>
+		</option>
+		<option>
+			<description>Yes, but not something in this list</description>
+			<then>
+				<fact name="previous_program">something</fact>
 			</then>
 		</option>
 		<option>
 			<description>No</description>
 			<then>
-				<fact name="cleaned-his-room">no</fact>
+				<fact name="previous_program">none</fact>
+			</then>
+		</option>
+	</question>
+
+	<question>
+		<description>How would you qualify the math in your previous program?</description>
+		<option>
+			<description>Of a Beta level</description>
+			<then>
+				<fact name="previous_math_level">beta</fact>
+			</then>
+		</option>
+		<option>
+			<description>Of an Alfa level</description>
+			<then>
+				<fact name="previous_math_level">alfa</fact>
 			</then>
 		</option>
 	</question>
