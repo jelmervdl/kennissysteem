@@ -70,6 +70,11 @@ class Question
 	{
 		return $this->inferred_facts->contains($fact);
 	}
+
+	public function __toString()
+	{
+		return sprintf('[Question: %s]', $this->description);
+	}
 }
 
 class AskedQuestion extends Question
@@ -558,6 +563,13 @@ define('STATE_UNDEFINED', 'undefined');
  */
 class Solver
 {
+	protected $log;
+
+	public function __construct(Logger $log)
+	{
+		if ($log)
+			$this->log = $log;
+	}
 
 	/**
 	 * Probeer gegeven een initiële $knowledge state en een lijst van $goals
@@ -577,6 +589,8 @@ class Solver
 		// herhaal zo lang er goals op de goal stack zitten
 		while (!$state->goalStack->isEmpty())
 		{
+			$this->log('Trying to solve %s', [$state->goalStack->top()]);
+
 			// probeer het eerste goal op te lossen
 			$result = $this->solve($state, $state->goalStack->top());
 
@@ -584,6 +598,8 @@ class Solver
 			// de interface hem te laten stellen eigenlijk.)
 			if ($result instanceof AskedQuestion)
 			{
+				$this->log('This resulted in the question %s', [$result]);
+
 				return $result;
 			}
 
@@ -593,6 +609,8 @@ class Solver
 				// waarom niet? $causes bevat een lijst van facts die niet
 				// bekend zijn, dus die willen we proberen op te lossen.
 				$causes = $result->causes();
+
+				$this->log('But I cannot, because the facts %s are not known yet', [$causes]);
 
 				// echo '<pre>', print_r($causes, true), '</pre>';
 
@@ -616,6 +634,8 @@ class Solver
 					// zet het te bewijzen fact bovenaan op de todo-lijst.
 					$state->goalStack->push($main_cause);
 
+					$this->log('I added %s to the goal stack. The stack is now %s', [$main_cause, $state->goalStack]);
+
 					// .. en spring terug naar volgende goal op goal-stack!
 					continue 2; 
 				}
@@ -623,15 +643,12 @@ class Solver
 				// Er zijn geen redenen waarom het goal niet afgeleid kon worden? Ojee!
 				if (count($causes) == 0)
 				{
-					if (verbose())
-						echo "Could not solve " . $state->goalStack->top() . " because "
-						. "there are no missing facts? Maybe there are no rules or questions "
-						. "to infer " . $state->goalStack->top() . ". Assuming the fact is "
-						. "false.";
-					
 					// Haal het onbewezen fact van de todo-lijst
 					$unsatisfied_goal = $state->goalStack->pop();
 
+					$this->log('I mark %s as a STATE_UNDEFINED because I do not know its value ' .
+						'but there are also no rules or questions which I can use to infer it.', [$unsatisfied_goal], LOG_LEVEL_WARNING);
+					
 					// en markeer hem dan maar als niet waar (closed-world assumption?)
 					$state->apply(array($unsatisfied_goal => STATE_UNDEFINED));
 
@@ -646,12 +663,15 @@ class Solver
 			// Mooi, dan kan dat van de te bewijzen stack af.
 			else
 			{
+				$this->log('Inferred %s to be %s and removed it from the goal stack.', [$state->goalStack->top(), $result]);
 				// aanname: als het goal kon worden afgeleid, dan is het nu deel van
 				// de afgeleide kennis.
 				assert('isset($state->facts[$state->goalStack->top()])');
 
 				// op naar het volgende goal.
 				$state->solved->push($state->goalStack->pop());
+
+				$this->log('The goal stack is now %s', [$state->goalStack]);
 			}
 		}
 	}
@@ -670,9 +690,6 @@ class Solver
 	 */
 	public function solve(KnowledgeState $state, $goal)
 	{
-		if (verbose())
-			printf("Af te leiden: %s\n", $goal);
-		
 		// Forward chain until there is nothing left to derive.
 		$this->forwardChain($state);
 
@@ -698,9 +715,8 @@ class Solver
 		$relevant_questions = new CallbackFilterIterator($state->questions->getIterator(),
 			function($question) use ($goal) { return $question->infers($goal); });
 
-		if (verbose())
-			printf("%d regels en %d vragen gevonden\n",
-				iterator_count($relevant_rules), iterator_count($relevant_questions));
+		$this->log("Found %d rules and %s questions", [iterator_count($relevant_rules),
+			iterator_count($relevant_questions)], LOG_LEVEL_VERBOSE);
 
 		// If this problem can be solved by a rule, use it!
 		if (iterator_count($relevant_rules) > 0)
@@ -738,9 +754,8 @@ class Solver
 			{
 				$rule_result = $rule->condition->evaluate($state);
 
-				if (verbose())
-					printf("Regel %d (%s) levert %s op.\n",
-						isset($n) ? ++$n : $n = 1, $rule->description, $rule_result);
+				$this->log("Rule '%s' results in %s", [$rule->description, $rule_result],
+					$rule_result instanceof Yes or $rule_result instanceof No ? LOG_LEVEL_INFO : LOG_LEVEL_VERBOSE);
 
 				// If a rule could be applied, remove it to prevent it from being
 				// applied again.
@@ -751,6 +766,8 @@ class Solver
 				// to the knowledge state and continue applying rules on the new knowledge.
 				if ($rule_result instanceof Yes)
 				{
+					$this->log("Adding %s to the facts dictionary", [dict_to_string($rule->consequences)]);
+
 					$state->apply($rule->consequences);
 					continue 2;
 				}
@@ -759,5 +776,13 @@ class Solver
 			// None of the rules changed the state: stop trying.
 			break;
 		}
+	}
+
+	protected function log($format, array $arguments = [], $level = LOG_LEVEL_INFO)
+	{
+		if (!$this->log)
+			return;
+
+		$this->log->write($format, $arguments, $level);
 	}
 }

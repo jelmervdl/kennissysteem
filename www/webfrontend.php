@@ -17,8 +17,29 @@ function _decode($data)
 
 verbose(!empty($_GET['verbose']));
 
+class WebLogger implements Logger
+{
+	public $messages = array(array());
+
+	public function __wakeup()
+	{
+		$this->messages[] = array();
+	}
+
+	public function write($format, $arguments, $level)
+	{
+		$arguments = array_map(function($arg) {
+			return '<tt>' . Template::html(to_debug_string($arg)) . '</tt>';
+		}, $arguments);
+
+		$this->messages[count($this->messages) - 1][] = [$level, vsprintf($format, $arguments)];
+	}
+}
+
 class WebFrontend
 {
+	private $log;
+
 	private $solver;
 
 	private $state;
@@ -35,7 +56,9 @@ class WebFrontend
 		if (verbose())
 			echo '<pre>';
 
-		$this->solver = new Solver;
+		$this->log = $this->getLog();
+
+		$this->solver = new Solver($this->log);
 
 		try
 		{
@@ -63,6 +86,8 @@ class WebFrontend
 		}
 
 		$page->state = $this->state;
+
+		$page->log = $this->log;
 
 		echo $page->render();
 	}
@@ -121,6 +146,14 @@ class WebFrontend
 		$state = $reader->parse($file);
 		
 		return $state;
+	}
+
+	private function getLog()
+	{
+		if (isset($_POST['log']))
+			return _decode($_POST['log']);
+		else
+			return new WebLogger();
 	}
 }
 

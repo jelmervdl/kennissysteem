@@ -378,17 +378,17 @@ class Template
 		return ob_get_clean();
 	}
 
-	protected function html($data)
+	static public function html($data)
 	{
 		return htmlspecialchars($data, ENT_COMPAT, 'utf-8');
 	}
 
-	protected function attr($data)
+	static public function attr($data)
 	{
 		return htmlspecialchars($data, ENT_QUOTES, 'utf-8');
 	}
 
-	protected function id($data)
+	static public function id($data)
 	{
 		return preg_replace('/[^a-z0-9_]/i', '_', $data);
 	}
@@ -417,4 +417,33 @@ function simplify(Condition $condition)
 		$condition = $simplified;
 
 	return $condition;
+}
+
+function to_debug_string($value)
+{
+	if ($value instanceof Traversable)
+		$value = iterator_to_array($value);
+
+	if (is_array($value))
+		return implode(', ', array_map('to_debug_string', $value));
+
+	return strval($value);
+}
+
+function dict_to_string($dict, $pair_format = '%s: %s')
+{
+	return implode(', ', array_map(function($key, $value) use ($pair_format) {
+		return sprintf($pair_format, $key, $value);
+	}, array_keys($dict), array_values($dict)));
+}
+
+define('LOG_LEVEL_WARNING', 3);
+
+define('LOG_LEVEL_INFO', 2);
+
+define('LOG_LEVEL_VERBOSE', 1);
+
+interface Logger
+{
+	public function write($format, $arguments, $level);
 }
