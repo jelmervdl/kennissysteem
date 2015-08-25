@@ -6,7 +6,7 @@
 			<dt><?=$goal->description?></dt>
 			<dd><?php
 				echo $answer
-					? $answer->description
+					? $state->substitute_variables($answer->description, ['Template', 'html'])
 					: '<pre>' . $state->facts[$goal->name] . '</pre>';
 				?></dd>
 			<?php endif ?>

@@ -90,6 +90,8 @@ class WebFrontend
 	{
 		$template = new Template('templates/question.phtml');
 
+		$template->state = $this->state;
+
 		$template->question = $question;
 
 		return $template->render();
