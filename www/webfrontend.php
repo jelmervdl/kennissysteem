@@ -53,9 +53,6 @@ class WebFrontend
 
 	public function main()
 	{
-		if (verbose())
-			echo '<pre>';
-
 		$this->log = $this->getLog();
 
 		$this->solver = new Solver($this->log);
@@ -75,9 +72,6 @@ class WebFrontend
 				$page->content = $this->displayQuestion($step);
 			else
 				$page->content = $this->displayConclusions();
-			
-			if (verbose())
-				echo '</pre>';
 		}
 		catch (Exception $e)
 		{
