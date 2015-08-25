@@ -27,7 +27,7 @@ function red_if_zero($value) {
 		</style>
 	</head>
 	<body>
-		<nav>
+		<nav class="site-nav">
 			<a href="webfrontend.php?kb=<?=urlencode($_GET['kb'])?>">Run <?=$this->html($kb->title)?></a>
         	<a href="index.php">Upload</a>
 		</nav>
@@ -46,9 +46,9 @@ function red_if_zero($value) {
 		</dl>
 
 		<?php foreach ($stats as $fact): ?>
-		<h3>
+		<h3 id="var_<?=$this->id($fact->name)?>">
 			<?=$this->html($fact->name)?>
-			<small>(<a href="webfrontend.php?kb=<?=urlencode($_GET['kb'])?>&goals=<?=urlencode($fact->name)?>">try to infer this fact</a>)</small>
+			<small>(<a href="webfrontend.php?kb=<?=urlencode($_GET['kb'])?>&amp;goals=<?=urlencode($fact->name)?>">try to infer this fact</a>)</small>
 		</h3>
 		<table class="fact-analysis analysis-table">
 			<thead>
@@ -63,7 +63,13 @@ function red_if_zero($value) {
 			<tbody>
 			<?php foreach ($fact->values as $value => $value_stats): ?>
 				<tr>
-					<td><?=$this->html($value)?></td>
+					<td>
+						<?php if (KnowledgeState::is_variable($value)): ?>
+						<a href="#var_<?=$this->id(KnowledgeState::variable_name($value))?>"><?=$this->html($value)?></a>
+						<?php else: ?>
+						<?=$this->html($value)?>
+						<?php endif ?>
+					</td>
 					<td><?=count($value_stats->inferringQuestions)?></td>
 					<td><?=count($value_stats->inferringRules)?></td>
 					<td><?=red_if_zero(count($value_stats->inferringQuestions) + count($value_stats->inferringRules))?></strong></td>

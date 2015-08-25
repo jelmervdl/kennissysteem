@@ -387,6 +387,11 @@ class Template
 	{
 		return htmlspecialchars($data, ENT_QUOTES, 'utf-8');
 	}
+
+	protected function id($data)
+	{
+		return preg_replace('/[^a-z0-9_]/i', '_', $data);
+	}
 }
 
 function verbose($state = null)
