@@ -511,9 +511,6 @@ class KnowledgeState
 	{
 		$fact_name = $this->resolve($fact_name);
 
-		if ($fact_name instanceof Maybe)
-			return $fact_name;
-
 		if (!isset($this->facts[$fact_name]))
 			return Maybe::because([$fact_name]);
 
@@ -531,10 +528,10 @@ class KnowledgeState
 
 			$stack[] = $value;
 
-			if (isset($this->facts[substr($value, 1)]))
-				$value = $this->facts[substr($value, 1)];
+			if (isset($this->facts[self::variable_name($value)]))
+				$value = $this->facts[self::variable_name($value)];
 			else
-				return Maybe::because([substr($value, 1)]);
+				return self::variable_name($value);
 		}
 
 		return $value;
@@ -543,6 +540,11 @@ class KnowledgeState
 	static public function is_variable($fact_name)
 	{
 		return substr($fact_name, 0, 1) == '$';
+	}
+
+	static public function variable_name($fact_name)
+	{
+		return substr($fact_name, 1); // strip of the $
 	}
 }
 
