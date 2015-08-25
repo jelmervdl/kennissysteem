@@ -1,5 +1,7 @@
 <?php
 
+define('STATE_UNDEFINED', 'undefined');
+
 /**
  * Een rule waarmee een fact gevonden kan worden.
  *
@@ -488,7 +490,9 @@ class KnowledgeState
 
 	public function __construct()
 	{
-		$this->facts = array();
+		$this->facts = array(
+			'undefined' => STATE_UNDEFINED
+		);
 
 		$this->rules = new Set();
 
@@ -542,6 +546,23 @@ class KnowledgeState
 		return $value;
 	}
 
+	public function substitute_variables($text, $formatter = null)
+	{
+		$callback = function($match) use ($formatter) {
+			$value = $this->value($match[1]);
+
+			if ($value instanceof Maybe)
+				return $match[0];
+
+			if ($formatter)
+				$value = call_user_func_array($formatter, [$value]);
+
+			return $value;
+		};
+
+		return preg_replace_callback('/\$([a-z][a-z0-9_]*)\b/i', $callback, $text);
+	}
+
 	static public function is_variable($fact_name)
 	{
 		return substr($fact_name, 0, 1) == '$';
@@ -551,9 +572,13 @@ class KnowledgeState
 	{
 		return substr($fact_name, 1); // strip of the $
 	}
-}
 
-define('STATE_UNDEFINED', 'undefined');
+	static public function is_default_fact($fact_name)
+	{
+		$empty_state = new self();
+		return isset($empty_state->facts[$fact_name]);
+	}
+}
 
 /**
  * Solver is een forward & backward chaining implementatie die op basis van

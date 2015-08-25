@@ -27,9 +27,14 @@
 
 			<section class="state-info fact-state">
 				<h3>Facts</h3>
+				<select id="fact-filter">
+					<option value="user-fact">User defined only</option>
+					<option value="default-fact">System defined only</option>
+					<option value="all">All</option>
+				</select>
 				<dl>
 					<?php foreach($state->facts as $name => $value): ?>
-					<dt><?=$name?></dt>
+					<dt class="all <?=KnowledgeState::is_default_fact($name) ? 'default-fact' : 'user-fact'?>"><?=$name?></dt>
 					<dd><?=$value?><?php if (KnowledgeState::is_variable($value)) printf('<small>%s</small>', $state->resolve($value)) ?></dd>
 					<?php endforeach ?>
 				</dl>
@@ -140,6 +145,7 @@
 
 		function updateLogLevel() {
 			var logLevel = $('#log-level-selector').val();
+			localStorage.logLevel = logLevel;
 
 			$('.state-info.log li').each(function() {
 				var messageLogLevel = this.className.match(/log-level-(\d)/);
@@ -149,9 +155,24 @@
 
 		$('#log-level-selector')
 			.change(updateLogLevel)
-			.val(localStorage.log_level || <?=LOG_LEVEL_INFO?>);
+			.val(localStorage.logLevel || <?=LOG_LEVEL_INFO?>);
 
 		updateLogLevel();
+
+		function updateFactFilter() {
+			var filter = $('#fact-filter').val();
+			localStorage.factFilter = filter;
+
+			$('.fact-state dt').each(function() {
+				$(this).add($(this).next('dd')).toggle(!filter || $(this).hasClass(filter));
+			});
+		}
+
+		$('#fact-filter')
+			.change(updateFactFilter)
+			.val(localStorage.factFilter || 'all');
+
+		updateFactFilter();
 		</script>
 	</body>
 </html>
