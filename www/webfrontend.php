@@ -124,15 +124,6 @@ class WebFrontend
 	}
 }
 
-function first_found_path(array $possible_paths)
-{
-	foreach ($possible_paths as $path)
-		if (file_exists($path))
-			return $path;
-
-	return null;
-}
-
 if (!isset($_GET['kb']) || !preg_match('/^[a-zA-Z0-9_\-\.]+\.xml$/i', $_GET['kb']))
 	redirect('index.php');
 

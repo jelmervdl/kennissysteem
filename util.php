@@ -397,6 +397,15 @@ function verbose($state = null)
 		: $verbose = $state;
 }
 
+function first_found_path(array $possible_paths)
+{
+	foreach ($possible_paths as $path)
+		if (file_exists($path))
+			return $path;
+
+	return null;
+}
+
 function simplify(Condition $condition)
 {
 	while (($simplified = $condition->simplify()) != $condition)
