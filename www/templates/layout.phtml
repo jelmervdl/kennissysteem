@@ -23,6 +23,8 @@
 			</form>
 		</div>
 		<aside id="debug-info">
+			<button class="close" title="Close debug panel">&times;</button>
+
 			<section class="state-info fact-state">
 				<h3>Facts</h3>
 				<dl>
@@ -53,11 +55,11 @@
 			</section>
 
 			<section class="state-info log">
-				<h3>Verbose output</h3>
+				<h3>Step by step</h3>
 				<select id="log-level-selector">
-					<option value="<?=LOG_LEVEL_WARNING?>">Warning</option>
-					<option value="<?=LOG_LEVEL_INFO?>">Info</option>
-					<option value="<?=LOG_LEVEL_VERBOSE?>">Verbose</option>
+					<option value="<?=LOG_LEVEL_WARNING?>">Warnings only</option>
+					<option value="<?=LOG_LEVEL_INFO?>">Useful</option>
+					<option value="<?=LOG_LEVEL_VERBOSE?>">Everything</option>
 				</select>
 				<ol>
 				<?php foreach($log->messages as $step_i => $step): ?>
@@ -113,8 +115,13 @@
 			updateDebugPanelVisibility();
 		});
 
+		$('#debug-info > .close').click(function() {
+			localStorage.debug = 0;
+			updateDebugPanelVisibility();
+		});
+
 		function resizeDebugPanel(e) {
-			localStorage.debugPanelWidth = Math.max(document.body.clientWidth - e.clientX + delta, 150);
+			localStorage.debugPanelWidth = Math.max(document.body.clientWidth - e.clientX + delta, 300);
 			panel.css('width', localStorage.debugPanelWidth);
 		}
 
