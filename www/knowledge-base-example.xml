@@ -3,6 +3,19 @@
 	<title>Which program should I enter?</title>
 	<description>This is an example to show you some of the features of the inference engine.</description>
 
+	<!-- 
+	The goal of our program is to give one advice: which program should you follow.
+
+	Note the goal name parameter: this is the name of the fact that the solver will try to deduce. Each answer has a value which that fact can have.
+
+	The value $undefined is assigned to a fact if the solver cannot find any way to deduce a value for the fact, i.e. there are no rules (left) that are applicable nor any questions.
+
+	The last answer has no value parameter. This one will match anything that is not matched by any of the previous answers. In the text associated with that answer the variable $program is used. You can use the fact name with $ in front of it in pretty much any context to get the value of that fact. Here it is replaced with whatever the value of the fact program is.
+
+	Note that $undefined is also a variable, as it should be the value of the fact 'undefined' in the knowledge base: that is what we try to match.
+
+	If none of the answer-clauses match, and there is no fallback answer-clause without a value, the system won't know what to print and not show the goal at all. You can use this to make an advisor like system by making all possible advises seperate goals and only providing an answer for when that goal is 'yes' or 'true' or whatever value you conceive for a certain advice being applicable.
+	-->
 	<goal name="program">
 		<answer value="AI">Artificial Intelligence.</answer>
 		<answer value="CS">Computing Science</answer>
@@ -12,6 +25,15 @@
 		<answer>Something else, namely $program.</answer>
 	</goal>
 
+	<!--
+	These rule cases are pretty self explaining. The description is more for the programmer than for the user of the QA system: it is only displayed in the debug and analyse views. However, it is really useful to determine which rule is misbehaving and what it should do instead.
+
+	You can have multiple <fact>-clauses in your <then>-clause, but it can only be <fact>-clauses. You can not add rules or questions dynamically in this way.
+
+	If you have multiple tests in your <if>-clause, you should immediately start with an <and> or <or>-clause. And of course you can combine them. The <fact>-clauses test whether a fact with that name has the value.
+
+	In the <fact> clauses you can use variables for both the name argument and the value. It will then use the value of that fact you are referring to as if it has been there instead. If that fact you use as a variable is not yet derived, the solver will do that for you.
+	-->
 	<rule>
 		<description>Qualifications for AI</description>
 		<if>
@@ -75,6 +97,9 @@
 		</then>
 	</rule>
 
+	<!--
+	Having intermediate rules is pretty much always a good idea. This one will derive general_math_level, which is later on (or more exactly in the rules above this one) used to determine the program, which was our goal.
+	-->
 	<rule>
 		<description>Your general math level (less specific, will make other rules easier to write)</description>
 		<if>
@@ -89,6 +114,9 @@
 		</then>
 	</rule>
 
+	<!--
+	It is perfectly valid to have two separate rules with the same <then>-clause, the same consequences. general_math_level will be 'beta' if either of the rules is true. Which one is first tried depends on which facts from the <if>-clause are higher on the goal stack.
+	-->
 	<rule>
 		<description>If you followed astropyhics or artificial intelligence, we know your math is just fine.</description>
 		<if>
@@ -102,6 +130,9 @@
 		</then>
 	</rule>
 
+	<!--
+	Here a variable is used to link the value from the previous_math_level fact to the general_math_level fact if and only if previous_program is 'none'. The value of previous_math_level does not need to be known yet, and is only deduced if this rule was true and the value of general_math_level is queried by the solver.
+	-->
 	<rule>
 		<description>Your general math level stays the same if you followed a previous program at the university.</description>
 		<if>
@@ -114,6 +145,11 @@
 		</then>
 	</rule>
 
+	<!--
+	And finally, to get user input, you can ask questions. Each question has its own set of consequences in the <then>-clause, and these could be multiple. You can even mix multiple facts in the same question. However, it does make it rather difficult to reason about what the solver does.
+
+	Again, you can use variables in both the fact names and values and in the texts of the descriptions. However, variables in the latter one are not guaranteed to be derived before the question is printed, so use those sparsely and know what you are doing.
+	-->
 	<question>
 		<description>What do you like most?</description>
 		<option>

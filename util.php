@@ -392,6 +392,34 @@ class Template
 	{
 		return preg_replace('/[^a-z0-9_]/i', '_', $data);
 	}
+
+	static public function format_plain_text($text)
+	{
+		$plain_paragraphs = new ArrayIterator(preg_split("/\r?\n\r?\n/", $text));
+
+		$formatted_paragraphs = iterator_map($plain_paragraphs,
+			function($plain_paragraph) {
+				return sprintf('<p>%s</p>', nl2br(self::html(trim($plain_paragraph))));
+			});
+
+		return implode("\n", iterator_to_array($formatted_paragraphs));
+	}
+
+	static public function format_code($code, $line_no_offset = null)
+	{
+		static $line_no = 1;
+
+		if ($line_no_offset !== null)
+			$line_no = $line_no_offset;
+
+		$wrapped_lines = array();
+
+		foreach (explode("\n", $code) as $line)
+			$wrapped_lines[] = sprintf('<pre data-lineno="%d">%s</pre>',
+				$line_no++, self::html($line));
+
+		return implode("\n", $wrapped_lines);
+	}
 }
 
 function verbose($state = null)
