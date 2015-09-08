@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<knowledge>
+	<title></title>
+	<description></description>
+
+	<goal name="required">
+		<answer value=""></answer>
+		<answer></answer>
+	</goal>
+
+	<rule>
+		<description></description>
+		<if>
+			<and>
+				<fact name="required"></fact>
+			</and>
+		</if>
+		<then>
+			<fact name="required"></fact>
+		</then>
+	</rule>
+
+	<question>
+		<description></description>
+		<option>
+			<description>required</description>
+			<then>
+				<fact name="required"></fact>
+			</then>
+		</option>
+		<option>
+			<description>required</description>
+			<then>
+				<fact name="required"></fact>
+			</then>
+		</option>
+	</question>
+
+</knowledge>

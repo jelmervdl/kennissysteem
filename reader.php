@@ -130,7 +130,7 @@ class KnowledgeBaseReader
 			switch ($childNode->nodeName)
 			{
 				case 'description':
-					$rule->description = $childNode->firstChild->data;
+					$rule->description = $this->parseText($childNode);
 					break;
 				
 				case 'if':
@@ -430,7 +430,7 @@ class KnowledgeBaseReader
 
 	private function parseText(DOMNode $node)
 	{
-		return trim($node->firstChild->data);
+		return $node->firstChild ? trim($node->firstChild->data) : '';
 	}
 
 	private function firstElement($node)
