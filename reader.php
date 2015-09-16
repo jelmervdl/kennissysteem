@@ -53,12 +53,20 @@ class KnowledgeBaseReader
 	{
 		$errors = array();
 
+		$previous_assert_mode = assert_options(ASSERT_BAIL);
+		assert_options(ASSERT_BAIL, false);
+		
 		set_error_handler(function($number, $message, $file, $line) use (&$errors) {
+			if (preg_match('/^assert\(\): (.+?)$/', $message, $match))
+				$message = html_entity_decode($match[1]);
+
 			$errors[] = (object) compact('number', 'message', 'file', 'line');
 		});
 
-		$this->parse($file);
 		
+		$this->parse($file);
+
+		assert_options(ASSERT_BAIL, $previous_assert_mode);
 		restore_error_handler();
 
 		return $errors;
@@ -66,7 +74,8 @@ class KnowledgeBaseReader
 
 	private function parseKnowledgeBase($node, $kb)
 	{
-		assert('$node->nodeName == "knowledge"');
+		assert('$node->nodeName == "knowledge"',
+			'The document root node is not a <knowledge/> element');
 
 		foreach ($this->childElements($node) as $childNode)
 		{
@@ -443,7 +452,8 @@ class KnowledgeBaseReader
 
 	private function childElements($node)
 	{
-		assert('$node instanceof DOMElement');
+		assert('$node instanceof DOMElement',
+			'$node is not an element that can have child nodes');
 
 		return new DOMElementIterator(new DOMNodeIterator($node->childNodes));
 	}
