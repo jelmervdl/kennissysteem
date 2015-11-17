@@ -590,10 +590,9 @@ class Solver
 {
 	protected $log;
 
-	public function __construct(Logger $log)
+	public function __construct()
 	{
-		if ($log)
-			$this->log = $log;
+        $this->log = new WebLogger();
 	}
 
 	/**
@@ -805,9 +804,6 @@ class Solver
 
 	protected function log($format, array $arguments = [], $level = LOG_LEVEL_INFO)
 	{
-		if (!$this->log)
-			return;
-
 		$this->log->write($format, $arguments, $level);
 	}
 }
