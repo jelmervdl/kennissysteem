@@ -1,4 +1,4 @@
-#!/usr/local/bin/php
+#!/usr/bin/env php
 <?php
 
 error_reporting(E_ALL);
@@ -95,3 +95,4 @@ function cli_ask(Question $question)
 }
 
 main($argc, $argv);
+
