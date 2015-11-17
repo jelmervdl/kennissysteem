@@ -12,11 +12,11 @@ Put your knowledge base in the 'knowledgebases' folder (or upload them through t
 ## CLI-version
 This can be started by calling
 
-	.\main.php [-v] knowledge-base
+	./main.php [-v] knowledge-base
 
 Example:
 	
-	.\main.php knowledge.xml
+	./main.php knowledge.xml
 
 # Knowledge base format
 The knowledge base can contain rules, questions and goals to infer and is written using XML. See `www/knowledge-base-example.xml` for an example.
