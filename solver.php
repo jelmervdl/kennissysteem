@@ -590,10 +590,9 @@ class Solver
 {
 	protected $log;
 
-	public function __construct(Logger $log)
+	public function __construct(Logger $log = null)
 	{
-		if ($log)
-			$this->log = $log;
+		$this->log = $log;
 	}
 
 	/**
