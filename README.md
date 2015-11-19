@@ -92,9 +92,6 @@ The knowledge base can contain rules, questions and goals to infer and is writte
 # Suggested improvements
 This system works but is no where near feature-complete. The following improvements are things I thought of while trying to model certain problems.
 
-## Forward chaining
-The current implementation relies solely on backward chaining, adding fact names to the goal stack while trying to find rules that can determine the value of a certain fact.
-
 ## Better ordering of questions asked
 Currently this is implemented by simply counting which fact is used most in the rules that can be applied to reach a goal, trying to take into account the nesting of that rule. This could be improved by also taking the operator into account (e.g. 'not') or adding more weight to asking questions.
 
