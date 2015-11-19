@@ -30,21 +30,28 @@ function main($argc, $argv)
 		verbose(false);
 
 	// Reader voor de XML-bestanden
-	$reader = new KnowledgeBaseReader;
+	$reader = new KnowledgeBaseReader();
 
 	// Parse een xml-bestand (het eerste argument) tot knowledge base
 	$state = $reader->parse($argv[1]);
 
 	// Start de solver, dat ding dat kan infereren
-	$solver = new Solver;
+	$solver = new Solver();
 
 	// leid alle goals in de knowledge base af.
 	$goals = $state->goals;
 	
 	// Begin met de doelen die we hebben op de goal stack te zetten
 	foreach($goals as $goal)
+	{
 		$state->goalStack->push($goal->name);
-	
+		
+		// Also push any answer values that are variables as goals to be solved.
+		foreach ($goal->answers as $answer)
+			if (KnowledgeState::is_variable($answer->value))
+				$state->goalStack->push(KnowledgeState::variable_name($answer->value));	
+	}
+
 	// Zo lang we nog vragen kunnen stellen, stel ze
 	while (($question = $solver->solveAll($state)) instanceof AskedQuestion)
 	{
@@ -60,7 +67,7 @@ function main($argc, $argv)
 	{
 		printf("%s: %s\n",
 			$goal->description,
-			$goal->answer($state)->description);
+			$state->substitute_variables($goal->answer($state)->description));
 	}
 }
 
