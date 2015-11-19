@@ -471,7 +471,16 @@ define('LOG_LEVEL_INFO', 2);
 
 define('LOG_LEVEL_VERBOSE', 1);
 
-interface Logger
+class WebLogger 
 {
-	public function write($format, $arguments, $level);
+	public $messages = array(array());
+
+	public function write($format, $arguments, $level)
+	{
+		$arguments = array_map(function($arg) {
+			return '<tt>' . Template::html(to_debug_string($arg)) . '</tt>';
+		}, $arguments);
+
+		$this->messages[count($this->messages) - 1][] = [$level, vsprintf($format, $arguments)];
+	}
 }
