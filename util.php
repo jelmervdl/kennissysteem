@@ -290,6 +290,11 @@ class Stack extends SplStack implements Serializable
 		foreach (unserialize($data) as $item)
 			$this->unshift($item);
 	}
+
+	public function __toString()
+	{
+		return sprintf('[%s]', implode(', ', iterator_to_array($this)));
+	}
 }
 
 /**
@@ -420,14 +425,6 @@ class Template
 
 		return implode("\n", $wrapped_lines);
 	}
-}
-
-function verbose($state = null)
-{
-	static $verbose;
-	return $state === null
-		? $verbose
-		: $verbose = $state;
 }
 
 function first_found_path(array $possible_paths)

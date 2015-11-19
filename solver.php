@@ -634,7 +634,7 @@ class Solver
 				// bekend zijn, dus die willen we proberen op te lossen.
 				$causes = $result->causes();
 
-				$this->log('But I cannot, because the facts %s are not known yet', [$causes]);
+				$this->log('But I cannot, because the facts %s are not known yet', [implode(', ', $causes)]);
 
 				// echo '<pre>', print_r($causes, true), '</pre>';
 

@@ -15,8 +15,6 @@ function _decode($data)
 	return unserialize(gzuncompress(base64_decode($data)));
 }
 
-verbose(!empty($_GET['verbose']));
-
 class WebLogger implements Logger
 {
 	public $messages = array(array());

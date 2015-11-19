@@ -8,6 +8,22 @@ include 'util.php';
 include 'solver.php';
 include 'reader.php';
 
+class CliLogger implements Logger
+{
+	private $threshold;
+
+	public function __construct($threshold)
+	{
+		$this->threshold = $threshold;
+	}
+
+	public function write($format, $arguments, $level)
+	{
+		if ($level >= $this->threshold)
+			printf("DEBUG: %s\n\n", vsprintf($format, $arguments));
+	}
+}
+
 function usage($path)
 {
 	echo "Usage: $path knowledge.xml [goal]";
@@ -19,15 +35,15 @@ function main($argc, $argv)
 	if ($argc < 2 || $argc > 3)
 		usage($argv[0]);
 	
-	// Als '-v' is meegegeven tijdens het starten, ga in verbose mode
-	if ($argv[1] == '-v')
+	// Als '-vN' is meegegeven tijdens het starten, ga in verbose mode
+	if (preg_match('/^-v(\d?)$/', $argv[1], $match))
 	{
-		verbose(true);
+		$logger = new CliLogger($match[1] ? intval($match[1]) : LOG_LEVEL_INFO);
 		$argc--;
 		array_shift($argv);
 	}
 	else
-		verbose(false);
+		$logger = null;
 
 	// Reader voor de XML-bestanden
 	$reader = new KnowledgeBaseReader();
@@ -36,7 +52,7 @@ function main($argc, $argv)
 	$state = $reader->parse($argv[1]);
 
 	// Start de solver, dat ding dat kan infereren
-	$solver = new Solver();
+	$solver = new Solver($logger);
 
 	// leid alle goals in de knowledge base af.
 	$goals = $state->goals;
