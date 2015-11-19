@@ -36,7 +36,7 @@ class WebFrontend
 	{
 		$this->log = $this->getLog();
 
-		$this->solver = new Solver($this->log);
+		$this->solver = Solver::withWebLogger($this->log);
 
 		try
 		{

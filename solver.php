@@ -595,6 +595,13 @@ class Solver
         $this->log = new WebLogger();
 	}
 
+    public static function withWebLogger(WebLogger $logger)
+    {
+        $instance = new self();
+        $instance->log=$logger;
+        return $instance;
+    }
+
 	/**
 	 * Probeer gegeven een initiële $knowledge state en een lijst van $goals
 	 * zo veel mogelijk $goals op te lossen. Dit doet hij door een stack met
