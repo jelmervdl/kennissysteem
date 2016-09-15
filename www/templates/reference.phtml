@@ -96,7 +96,7 @@
 		<p>Goals are the facts that your knowledge base is trying to answer and are the initial elements on the goal stack. At the end, the conclusion for each goal is shown. For example, if your knowledge base is written for answering whether you should follow a course it will show you what it recommends.</p>
 		<code><pre>
 &lt;goal name="follow-course"&gt;
-	&lt;description&gt;Should you follow the course?&lt;description&gt;
+	&lt;description&gt;Should you follow the course?&lt;/description&gt;
 	&lt;answer value="yes"&gt;Yes, you should&lt;/answer&gt;
 	&lt;answer value="no"&gt;No, you should not&lt;/answer&gt;
 	&lt;answer&gt;You should decide for yourself&lt;/answer&gt;
@@ -111,20 +111,20 @@
 		<code><pre>
 &lt;rule&gt;
 	&lt;description&gt;If the course is mandatory,
-	  you should follow this course.&lt;description&gt;
+	  you should follow this course.&lt;/description&gt;
 	&lt;if&gt;
 		&lt;fact name="course-is-mandatory"&gt;yes&lt;/fact&gt;
 	&lt;/if&gt;
 	&lt;then&gt;
 		&lt;fact name="follow-course"&gt;yes&lt;/fact&gt;
 	&lt;/then&gt;
-&lt;rule&gt;
+&lt;/rule&gt;
 </pre></code>
 		<p>Furthermore, you can use <code>&lt;and&gt;</code>, <code>&lt;or&gt;</code> and &lt;not&gt; clauses to form more complex rules:</p>
 		<code><pre>
 &lt;rule&gt;
 	&lt;description&gt;If the course is mandatory or fun,
-	  you should follow this course.&lt;description&gt;
+	  you should follow this course.&lt;/description&gt;
 	&lt;if&gt;
 		&lt;or&gt;
 			&lt;fact name="course-is-mandatory"&gt;yes&lt;/fact&gt;
@@ -134,7 +134,7 @@
 	&lt;then&gt;
 		&lt;fact name="follow-course"&gt;yes&lt;/fact&gt;
 	&lt;/then&gt;
-&lt;rule&gt;
+&lt;/rule&gt;
 </pre></code>
 		<p>You can nest those as deep as you want. However, most of the time it is easier to chain a few rules. For example, writing two rules: <tt>if (teacher-is-interesting = yes and material-is-interesting = yes) then course-is-fun = yes</tt> and <tt>if (course-is-fun = yes or course-is-mandatory = yes) then follow-course = yes</tt> instead of <tt>if (teacher-is-interesting = yes and material-is-interesting = yes) or (course-is-mandatory = yes) then follow-course = yes</tt>. As for all programming challenges, less complex rules are almost always better.</p>
 	</section>

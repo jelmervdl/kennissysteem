@@ -3,7 +3,7 @@
 define('STATE_UNDEFINED', 'undefined');
 
 /**
- * Een rule waarmee een fact gevonden kan worden.
+ * A rule which allows you to find a fact.
  *
  * <rule>
  *     [<description>]
@@ -44,7 +44,7 @@ class Rule
 }
 
 /**
- * Een vraag waarmee een antwoord op $inferred_facts kan worden gevonden.
+ * A question which can answer one of the $inferred_facts.
  *
  * <question>
  *     <description/>
