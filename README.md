@@ -119,17 +119,17 @@ It repeats this step until non of the rules' conditions are determinable anymore
 ## Yes/No/Maybe
 The solver makes use of [three-valued logic](https://en.wikipedia.org/wiki/Three-valued_logic#Kleene_and_Priest_logics), namely *yes*, *no* and *I don't have enough information*. That last one is encoded using the *Maybe* object. *Yes* and *No* just behave as expected, and *Maybe* propagates:
 
-  *Yes* and *Maybe* -> *Maybe*
-  *No* and *Maybe* -> *No*
-  *Maybe* and *Maybe* -> *Maybe*
+  *Yes* and *Maybe* -> *Maybe*  
+  *No* and *Maybe* -> *No*  
+  *Maybe* and *Maybe* -> *Maybe*  
   
-  *Yes* or *Maybe*  -> *Yes*
-  *No* or *Maybe*  -> *No*
-  *Maybe* or *Maybe*  -> *Maybe*
+  *Yes* or *Maybe*  -> *Yes*  
+  *No* or *Maybe*  -> *No*  
+  *Maybe* or *Maybe*  -> *Maybe*  
   
-  not *Yes* -> *No*
-  not *No* -> *Yes*
-  not *Maybe* -> *Maybe*
+  not *Yes* -> *No*  
+  not *No* -> *Yes*  
+  not *Maybe* -> *Maybe*  
 
 These objects also contain information on why this is the result of a condition, which is very useful for determining which goal to try to infer during backward chaining.
 
