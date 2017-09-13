@@ -40,6 +40,8 @@ class KnowledgeBaseReader
 
 		$this->parseKnowledgeBase($doc->firstChild, $kb);
 
+		$kb->initGoalStack();
+
 		return $kb;
 	}
 

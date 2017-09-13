@@ -505,6 +505,36 @@ class KnowledgeState
 		$this->goalStack = new Stack();
 	}
 
+	public function __clone()
+	{
+		$this->facts = array_merge($this->facts);
+
+		$this->rules = clone $this->rules;
+
+		$this->questions = clone $this->questions;
+
+		$this->goals = clone $this->goals;
+
+		$this->solved = clone $this->solved;
+
+		$this->goalStack = clone $this->goalStack;
+	}
+
+	public function initGoalStack()
+	{
+		$this->goalStack = new Stack();
+
+		foreach ($this->goals as $goal)
+		{
+			$this->goalStack->push($goal->name);
+
+			// Also push any answer values that are variables as goals to be solved.
+			foreach ($goal->answers as $answer)
+				if (self::is_variable($answer->value))
+					$this->goalStack->push(self::variable_name($answer->value));
+		}
+	}
+
 	/**
 	 * Past $consequences toe op de huidige $state, en geeft dat als nieuwe state terug.
 	 * Alle $consequences krijgen $reason als reden mee.

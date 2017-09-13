@@ -169,6 +169,11 @@ class Map implements ArrayAccess, IteratorAggregate
 	{
 		$this->default_value = $default_value;
 	}
+
+	public function __clone()
+	{
+		$this->data = array_merge($this->data);
+	}
 	
 	public function offsetExists($key)
 	{
@@ -229,6 +234,11 @@ class Set implements IteratorAggregate, Countable
 	public function __construct()
 	{
 		$this->values = array();
+	}
+
+	public function __clone()
+	{
+		$this->values = array_merge($this->values);
 	}
 
 	public function contains($value)
