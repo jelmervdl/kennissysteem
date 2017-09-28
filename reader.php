@@ -69,14 +69,14 @@ class KnowledgeBaseReader
 		try {
 			$this->parse($file);
 		} catch (Error $e) {
-			$errors[] = array(
+			$errors[] = (object) array(
 				'number' => $e->getCode(),
 				'message' => $e->getMessage(),
 				'file' => $e->getFile(),
 				'line' => $e->getLine()
 			);
 		} catch (Exception $e) {
-			$errors[] = array(
+			$errors[] = (object) array(
 				'number' => $e->getCode(),
 				'message' => $e->getMessage(),
 				'file' => $e->getFile(),
