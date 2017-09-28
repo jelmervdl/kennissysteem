@@ -66,8 +66,23 @@ class KnowledgeBaseReader
 			$errors[] = (object) compact('number', 'message', 'file', 'line');
 		});
 
-		
-		$this->parse($file);
+		try {
+			$this->parse($file);
+		} catch (Error $e) {
+			$errors[] = array(
+				'number' => $e->getCode(),
+				'message' => $e->getMessage(),
+				'file' => $e->getFile(),
+				'line' => $e->getLine()
+			);
+		} catch (Exception $e) {
+			$errors[] = array(
+				'number' => $e->getCode(),
+				'message' => $e->getMessage(),
+				'file' => $e->getFile(),
+				'line' => $e->getLine()
+			);
+		}
 
 		assert_options(ASSERT_BAIL, $previous_assert_mode);
 		assert_options(ASSERT_ACTIVE, $previous_assert_state);
@@ -519,6 +534,13 @@ class DOMElementIterator extends FilterIterator
 	{
 		return self::current()->nodeType == XML_ELEMENT_NODE;
 	}
+}
+
+/**
+ * PHP 5 compatibility
+ */
+if (!class_exists('Error')) {
+	class Error extends Exception {}
 }
 
 /*
