@@ -53,6 +53,9 @@ class KnowledgeBaseReader
 	{
 		$errors = array();
 
+		$previous_assert_state = assert_options(ASSERT_ACTIVE);
+		assert_options(ASSERT_ACTIVE, true);
+
 		$previous_assert_mode = assert_options(ASSERT_BAIL);
 		assert_options(ASSERT_BAIL, false);
 		
@@ -67,6 +70,7 @@ class KnowledgeBaseReader
 		$this->parse($file);
 
 		assert_options(ASSERT_BAIL, $previous_assert_mode);
+		assert_options(ASSERT_ACTIVE, $previous_assert_state);
 		restore_error_handler();
 
 		return $errors;
