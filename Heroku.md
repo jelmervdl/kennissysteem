@@ -9,5 +9,3 @@
 7. Click 'Enable Automatic Deploys', this enables Heroku to deploy your app at each push to the master branch of your repository. 
 8. Do a first manual deployment with the 'Deploy Branch' button
 9. Click on 'Open App' at the top of the page to view your freshly setup app! The URL can always be reached, but it may take some time to boot if the Dyno is sleeping.
-
-If you want to set up
