@@ -9,12 +9,20 @@ This school project is a knowledge system that could guide you through the Dutch
 
 # Usage
 ## Web based version
-The version in this repository is hosted at http://kat.ikhoefgeen.nl/ but it is easy to set up a small webserver and host your own code. Any webserver with PHP >= 5.4 should do. If you are taking the Knowledge Technology Practical I can arrange hosting for you.
+The version in this repository is hosted at http://kat.ikhoefgeen.nl/ but it is easy to set up a small webserver and host your own code. Any webserver with PHP >= 5.4 should do. If you are taking the Knowledge Technology Practical I can arrange hosting for you, or you can deploy it yourself on any webserver with PHP. Another option might be [deploying to Heroku](Heroku.md).
 
 Put your knowledge base in the 'knowledgebases' folder (or upload them through the web interface) and point your browser to the www/index.php file to get started.
 
-## CLI-version
-This can be started by calling
+## Heroku
+Heroku allows you to deploy the application to the web right from git. Just pushing your changes also updates your live running application. See [Heroku.md](Heroku.md) for instructions.
+
+## Webserver
+Just copy all the files from this repository to your webserver using FTP or SFTP. If possible, configure the folder *www* is as the document root.
+
+If you also want to be able to upload and run knowledge bases, make sure the knowledgebases folder is writeable for the web service. See [these detailed instructions for Wordpress](https://codex.wordpress.org/Changing_File_Permissions) on how making folders writable (and all the risks involved) works.
+
+## Command line
+Assuming the `php` binary is in your path, you should be able to call:
 
 	./main.php [-v] knowledge-base
 
