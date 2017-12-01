@@ -116,6 +116,8 @@ interface Condition
 }
 
 /**
+ * All conditions need to be true
+ * 
  * <and>
  *     Conditions, e.g. <fact/>
  * </and>
@@ -136,23 +138,26 @@ class WhenAllCondition implements Condition
 
 	public function evaluate(KnowledgeState $state)
 	{
-		// assumptie: er moet ten minste één conditie zijn
+		// Assumption: There has to be at least one condition
 		assert('count($this->conditions) > 0');
 
 		$values = array();
 		foreach ($this->conditions as $condition)
 			$values[] = $condition->evaluate($state);
 
-		// Als er minstens één Nee bij zit, dan iig niet.
+		// If at least one of the values is No, we no this condition
+		// if false (Maybe's don't even matter in that case anymore.)
 		$nos = array_filter_type('No', $values);
 		if (count($nos) > 0)
 			return No::because($nos);
 
-		// Als er een maybe in zit, dan nog steeds onzeker.
+		// If there are maybes left in the values, we know that not yet
+		// all conditions are Yes, so, the verdict for now is also Maybe.
 		$maybes = array_filter_type('Maybe', $values);
 		if (count($maybes) > 0)
 			return Maybe::because($maybes);
 
+		// And otherwise, everything evaluated to Yes, so Yes!
 		return Yes::because($values);
 	}
 
@@ -163,6 +168,8 @@ class WhenAllCondition implements Condition
 }
 
 /**
+ * Just one of the conditions has to be true
+ * 
  * <or>
  *     Conditions, e.g. <fact/>
  * </or>
@@ -183,24 +190,25 @@ class WhenAnyCondition implements Condition
 
 	public function evaluate(KnowledgeState $state)
 	{
-		// assumptie: er moet ten minste één conditie zijn
+		// Assumption: There has to be at least one condition
 		assert('count($this->conditions) > 0');
 
 		$values = array();
 		foreach ($this->conditions as $condition)
 			$values[] = $condition->evaluate($state);
 		
-		// Is er een ja, dan is dit zeker goed.
+		// If threre is at least one Yes, then this condition is met!
 		$yesses = array_filter_type('Yes', $values);
 		if ($yesses)
 			return Yes::because($yesses);
 		
-		// Is er een misschien, dan zou dit ook goed kunnen zijn
+		// If there are still maybe's, then maybe there is still chance
+		// for a Yes. So return Maybe.
 		$maybes = array_filter_type('Maybe', $values);
 		if ($maybes)
 			return Maybe::because($maybes);
 
-		// Geen ja's, geen misschien's, dus alle condities gaven No terug.
+		// No yes, no maybe, only no's. So no.
 		return No::because($values);
 	}
 
@@ -211,6 +219,11 @@ class WhenAnyCondition implements Condition
 }
 
 /**
+ * Evaluates to the opposite of the condition:
+ *   Yes -> No
+ *   No -> Yes
+ *   Maybe -> Maybe
+ * 
  * <not>
  *     Condition, e.g. <fact/>
  * </not>
@@ -236,6 +249,11 @@ class NegationCondition implements Condition
 }
 
 /**
+ * Check whether a fact has a certain value:
+ *   Fact is known and value is the same -> Yes
+ *   Fact is known but value is different -> No
+ *   Fact is not known -> Maybe
+ * 
  * <fact name="fact_name">value</fact>
  */
 class FactCondition implements Condition
@@ -269,10 +287,20 @@ class FactCondition implements Condition
 }
 
 /**
- * Voor het gemak kan je ook goals in je knowledge base voor programmeren.
- * Als je dan main.php zonder te bewijzen goal aanroept gaat hij al deze
- * goals proberen af te leiden.
+ * A goal as defined in the knowledge base. Besides the name
+ * of the fact that is the goal, it can also contain possible
+ * Answers, which are descriptions that should be displayed if
+ * the fact has the value associcated with the answer. The
+ * description of the goal is used in the interface as the
+ * question asked. E.g:
+ * <goal name="wheater">
+ *   <description>What is the weather like?</description>
+ *   <answer value="rain">It rains</answer>
+ *   <answer value="sunshine">The sun shines</answer>
+ *   <answer>Something else</answer>
+ * </goal>
  *
+ * Syntax in knowledge base:
  * <goal name="">
  *     <description/>
  *	   <answer/>
