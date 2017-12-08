@@ -93,7 +93,7 @@ class KnowledgeBaseReader
 
 	private function parseKnowledgeBase($node, $kb)
 	{
-		assert('$node->nodeName == "knowledge"',
+		assert($node->nodeName == "knowledge",
 			'The document root node is not a <knowledge/> element');
 
 		foreach ($this->childElements($node) as $childNode)
@@ -471,7 +471,7 @@ class KnowledgeBaseReader
 
 	private function childElements($node)
 	{
-		assert('$node instanceof DOMElement',
+		assert($node instanceof DOMElement,
 			'$node is not an element that can have child nodes');
 
 		return new DOMElementIterator(new DOMNodeIterator($node->childNodes));

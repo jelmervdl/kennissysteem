@@ -139,7 +139,7 @@ class WhenAllCondition implements Condition
 	public function evaluate(KnowledgeState $state)
 	{
 		// Assumption: There has to be at least one condition
-		assert('count($this->conditions) > 0');
+		assert(count($this->conditions) > 0);
 
 		$values = array();
 		foreach ($this->conditions as $condition)
@@ -191,7 +191,7 @@ class WhenAnyCondition implements Condition
 	public function evaluate(KnowledgeState $state)
 	{
 		// Assumption: There has to be at least one condition
-		assert('count($this->conditions) > 0');
+		assert(count($this->conditions) > 0);
 
 		$values = array();
 		foreach ($this->conditions as $condition)
@@ -358,7 +358,7 @@ abstract class TruthState
 {
 	public $factors;
 
-	public function __construct(Traversable $factors)
+	public function __construct(array $factors)
 	{
 		$this->factors = $factors;
 	}
@@ -367,7 +367,7 @@ abstract class TruthState
 	{
 		return sprintf("[%s because: %s]",
 			get_class($this),
-			implode(', ', array_map('strval', iterator_to_array($this->factors))));
+			implode(', ', array_map('strval', $this->factors)));
 	}
 
 	abstract public function negate();
@@ -375,13 +375,15 @@ abstract class TruthState
 	static public function because($factors = null)
 	{
 		if (is_null($factors))
-			$factors = new EmptyIterator();
+			$factors = [];
 
 		elseif (is_scalar($factors))
-			$factors = new ArrayIterator([$factors]);
+			$factors = [$factors];
 
-		elseif (is_array($factors))
-			$factors = new ArrayIterator($factors);
+		elseif (is_object($factors) && $factors instanceof Traversable)
+			$factors = iterator_to_array($factors);
+
+		assert(is_array($factors));
 
 		$called_class = get_called_class();
 		return new $called_class($factors);
@@ -428,7 +430,7 @@ class Maybe extends TruthState
 		return array_keys($causes);
 	}
 
-	private function divideAmong($percentage, Traversable $factors)
+	private function divideAmong($percentage, array $factors)
 	{
 		$effects = new Map(0.0);
 
@@ -681,7 +683,7 @@ class Solver
 					
 					// Het kan niet zijn dat het al eens is opgelost. Dan zou hij
 					// in facts moeten zitten.
-					assert('!$state->solved->contains($main_cause)');
+					assert(!$state->solved->contains($main_cause));
 
 					// zet het te bewijzen fact bovenaan op de todo-lijst.
 					$state->goalStack->push($main_cause);
@@ -718,7 +720,7 @@ class Solver
 				$this->log('Inferred %s to be %s and removed it from the goal stack.', [$state->goalStack->top(), $result]);
 				// aanname: als het goal kon worden afgeleid, dan is het nu deel van
 				// de afgeleide kennis.
-				assert('isset($state->facts[$state->goalStack->top()])');
+				assert(isset($state->facts[$state->goalStack->top()]));
 
 				// op naar het volgende goal.
 				$state->solved->push($state->goalStack->pop());
@@ -751,7 +753,7 @@ class Solver
 		// different goal!
 		$current_value = $state->value($goal);
 
-		if (!($current_value instanceof Maybe && $current_value->factors == new ArrayIterator([$goal])))
+		if (!($current_value instanceof Maybe && $current_value->factors == [$goal]))
 			return $current_value;
 		
 		// Is er misschien een regel die we kunnen toepassen
@@ -761,7 +763,7 @@ class Solver
 		// Assume that all relevant rules result in maybe's. If not, something went
 		// horribly wrong in $this->forwardChain()!
 		foreach ($relevant_rules as $rule)
-			assert('$rule->condition->evaluate($state) instanceof Maybe');
+			assert($rule->condition->evaluate($state) instanceof Maybe);
 
 		// Is er misschien een directe vraag die we kunnen stellen?
 		$relevant_questions = new CallbackFilterIterator($state->questions->getIterator(),
