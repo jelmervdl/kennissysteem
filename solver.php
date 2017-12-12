@@ -319,6 +319,11 @@ class Goal
 		$this->answers = new Set();
 	}
 
+	public function hasAnswers()
+	{
+		return count($this->answers) > 0;
+	}
+
 	public function answer(KnowledgeState $state)
 	{
 		$state_value = $state->value($this->name);

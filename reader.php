@@ -274,12 +274,6 @@ class KnowledgeBaseReader
 			}
 		}
 
-		if (count($goal->answers) === 0)
-			$this->logError("KnowledgeBaseReader::parseGoal: "
-				. "'goal' node on line " . $node->getLineNo()
-				. " has no possible outcomes (missing 'answer' nodes)",
-				E_USER_WARNING);
-
 		return $goal;
 	}
 
