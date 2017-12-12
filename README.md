@@ -13,22 +13,31 @@ The version in this repository is hosted at http://kat.ikhoefgeen.nl/ but it is 
 
 Put your knowledge base in the 'knowledgebases' folder (or upload them through the web interface) and point your browser to the www/index.php file to get started.
 
+## Local
+More recent versions of PHP come with a built-in web server which is ideal for local development. To use this, open a terminal or console and go into the `www` folder. There, run this command:
+
+	php -S localhost:8080
+
+You can now see your system up and running when you go to http://localhost:8080/ in your web browser.
+
 ## Heroku
 Heroku allows you to deploy the application to the web right from git. Just pushing your changes also updates your live running application. See [Heroku.md](Heroku.md) for instructions.
 
 ## Webserver
 Just copy all the files from this repository to your webserver using FTP or SFTP. If possible, configure the folder *www* is as the document root.
 
-If you also want to be able to upload and run knowledge bases, make sure the knowledgebases folder is writeable for the web service. See [these detailed instructions for Wordpress](https://codex.wordpress.org/Changing_File_Permissions) on how making folders writable (and all the risks involved) works.
+If you also want to be able to upload and run knowledge bases, make sure the `knowledgebases` folder is writeable for the web service. See [these detailed instructions for Wordpress](https://codex.wordpress.org/Changing_File_Permissions) on how making folders writable (and all the risks involved) works.
 
 ## Command line
-Assuming the `php` binary is in your path, you should be able to call:
+There is a command line version available as well. This just runs the entire Q&A in your terminal. Assuming the `php` binary is in your path, you should be able to call:
 
 	./main.php [-v] knowledge-base
 
 Example:
 	
-	./main.php knowledge.xml
+	./main.php knowledgebases/crossing.xml
+
+The -v option enables verbose logging, in case you're wondering what is happening in the reasoner.
 
 # Knowledge base format
 The knowledge base can contain rules, questions and goals to infer and is written using XML. See `www/knowledge-base-example.xml` for an example.
