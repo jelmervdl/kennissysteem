@@ -359,6 +359,14 @@ class Answer
 	public $description;
 }
 
+
+/**
+ * A truth state works a bit like a boolean, except we can have as many values
+ * as we want (in this system we have three: Yes, No and Maybe).
+ * The added value of a truth value above a simple boolean or enum is that it
+ * can also contain information about how it came to that value, which other
+ * facts in this case where responsible for the result.
+ */ 
 abstract class TruthState
 {
 	public $factors;
@@ -420,18 +428,28 @@ class Maybe extends TruthState
 
 	public function causes()
 	{
-		// Hier wordt de volgorde van de vragen effectief bepaald!
-		// We kijken naar alle factoren die ervoor zorgden dat de vraag niet
-		// beantwoord kon worden, welke het meest invloedrijk is, en sorteren
-		// daarop om te zien waar we verder mee moeten.
-		// (Deze implementatie is zeker voor verbetering vatbaar.)
+		// This is where the order of the questions is effectively determined.
+		// It does this by dividing an "amount of contribution" (1.0 here) among
+		// all the causes of this Maybe. Note that the causes (factors) are
+		// sometimes nested, e.g. one of the factors may be another Maybe
+		// that itself has factors.
+		//
+		// Example: this maybe has 3 factors, and one of the factors is itself
+		// a Maybe with three factors. So first, this 1.0 will be divided among
+		// all causes, so every cause will have 0.33. Then, the cause that is 
+		// also a Maybe with three factors will divide the 0.33 among its own
+		// factors, which will all receive 0.11 (0.33 / 3). Finally, all the
+		// factors will be summed: I.e. if the fact 'math_level' occurred
+		// multiple times in this tree, all the "contribution" values will be
+		// summed.
 		$causes = $this->divideAmong(1.0, $this->factors)->data();
 
-		// grootst verantwoordelijk ontbrekend fact op top.
-		asort($causes);
+		// Then, these causes (a associative array with
+		// fact name => contributing weight) will be sorted from large to small
+		// contribution value.
+		arsort($causes);
 
-		$causes = array_reverse($causes);
-
+		// Now return the fact names (the keys of the map)
 		return array_keys($causes);
 	}
 
