@@ -485,9 +485,8 @@ class Maybe extends TruthState
 }
 
 /**
- * Een knowledge base op een bepaald moment. Via KnowledgeState::apply kunnen er
- * nieuwe feiten aan de state toegevoegd worden (en wordt het stieken een nieuwe
- * state).
+ * KnowledgeState represents the knowledge base at a certain moment: used rules
+ * are removed, facts are added, etc.
  */
 class KnowledgeState
 {
