@@ -457,64 +457,30 @@ class Maybe extends TruthState
 	{
 		$effects = new Map(0.0);
 
-		// als er geen factors zijn, dan heeft het ook geen zin
-		// de verantwoordelijkheid per uit te rekenen.
+		// If there are no factors, just return that empty map
 		if (count($factors) == 0)
 			return $effects;
 		
-		// iedere factor op hetzelfde niveau heeft evenveel invloed.
+		// Every factor has the same amount of effect at this level
+		// (but this changes as soon as it is also found deeper nested)
 		$percentage_per_factor = $percentage / count($factors);
 
 		foreach ($factors as $factor)
 		{
-			// recursief de hoeveelheid invloed doorverdelen en optellen bij het totaal per factor.
+			// Recursively divide the "contribution" among each of the factors,
+			// and store how much effect each fact has in total (when it occurs)
+			// multiple times
 			if ($factor instanceof TruthState)
 				foreach ($this->divideAmong($percentage_per_factor, $factor->factors) as $factor_name => $effect)
 					$effects[$factor_name] += $effect;
-			else
+			else {
+				// Not every factor is a truth state: at the end of the tree
+				// of factors are fact names.
 				$effects[$factor] += $percentage_per_factor;
+			}
 		}
 
 		return $effects;
-	}
-}
-
-class KnowledgeDomain
-{
-	public $values;
-
-	public function __construct()
-	{
-		$this->values = new Map(function() {
-			return new Set();
-		});
-	}
-
-	static public function deduceFromState(KnowledgeState $state)
-	{
-		$domain = new self();
-
-		// Obtain all the FactConditions from the rules that test
-		// or conclude some value.
-		foreach ($state->rules as $rule)
-		{
-			$fact_conditions = array_filter_type('FactCondition',
-				array_flatten($rule->condition->asArray()));
-
-			foreach ($fact_conditions as $condition)
-				$domain->values[$condition->name]->push($condition->value);
-
-			foreach ($rule->consequences as $fact_name => $value)
-				$domain->values[$fact_name]->push($value);
-		}
-
-		// Obtain all the possible answers from the questions
-		foreach ($state->questions as $question)
-			foreach ($question->options as $option)
-				foreach ($option->consequences as $fact_name => $value)
-					$domain->values[$fact_name]->push($value);
-
-		return $domain;
 	}
 }
 

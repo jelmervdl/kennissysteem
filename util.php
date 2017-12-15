@@ -436,14 +436,6 @@ function first_found_path(array $possible_paths)
 	return null;
 }
 
-function simplify(Condition $condition)
-{
-	while (($simplified = $condition->simplify()) != $condition)
-		$condition = $simplified;
-
-	return $condition;
-}
-
 function to_debug_string($value)
 {
 	if ($value instanceof Traversable)

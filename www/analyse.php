@@ -85,7 +85,6 @@ foreach ($state->goals as $goal)
 			->push($goal);
 
 $template = new Template('templates/analyse.phtml');
-$template->domain = KnowledgeDomain::deduceFromState($state);
 $template->kb = $state;
 $template->stats = $stats;
 

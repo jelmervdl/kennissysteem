@@ -37,74 +37,78 @@ function red_if_zero($value) {
                 <p>Summary of all the facts, rules, questions in the knowledge base.</p>
         </header>
 		
-		<dl class="stats">
-			<dt>Number of rules:</dt>
-			<dd><?=count($kb->rules)?></dd>
-			
-			<dt>Number of questions:</dt>
-			<dd><?=count($kb->questions)?></dd>
-		</dl>
+		<section id="summary">
+			<h2>Summary</h2>
+			<dl class="stats">
+				<dt>Number of rules:</dt>
+				<dd><a href="#rules"><?=count($kb->rules)?></a></dd>
+				
+				<dt>Number of questions:</dt>
+				<dd><?=count($kb->questions)?></dd>
 
-		<?php foreach ($stats as $fact): ?>
-		<h3 id="var_<?=$this->id($fact->name)?>">
-			<?=$this->html($fact->name)?>
-			<small>(<a href="webfrontend.php?kb=<?=urlencode($_GET['kb'])?>&amp;goals=<?=urlencode($fact->name)?>">try to infer this fact</a>)</small>
-		</h3>
-		<table class="fact-analysis analysis-table">
-			<thead>
-				<tr>
-					<th>Value</th>
-					<th><span class="hint" title="Questions that can cause the fact to become this value">Inferring questions</span></th>
-					<th><span class="hint" title="Rules that can cause the fact to become this value">Inferring rules</span></th>
-					<th><span class="hint" title="Sum of previous two columns, for determining if this value can be obtained">Inferring questions + rules</span></th>
-					<th><span class="hint" title="Rules that test for this value in their condition">Testing rules</span></th>
-				</tr>
-			</thead>
-			<tbody>
-			<?php foreach ($fact->values as $value => $value_stats): ?>
-				<tr>
-					<td>
-						<?php if (KnowledgeState::is_variable($value)): ?>
-						<a href="#var_<?=$this->id(KnowledgeState::variable_name($value))?>"><?=$this->html($value)?></a>
-						<?php else: ?>
-						<?=$this->html($value)?>
-						<?php endif ?>
-					</td>
-					<td><?=count($value_stats->inferringQuestions)?></td>
-					<td><?=count($value_stats->inferringRules)?></td>
-					<td><?=red_if_zero(count($value_stats->inferringQuestions) + count($value_stats->inferringRules))?></strong></td>
-					<td><?=red_if_zero(count($value_stats->dependingRules))?></td>
-				</tr>
-			<?php endforeach ?>
-			</tbody>
-		</table>
-		<?php endforeach ?>
-
-		<section id="info-domain">
+				<dt>Goals</dt>
+				<dd><a href="#goals"><?=count($kb->goals)?></a></dd>
+			</dl>
+		</section>
+		
+		<section id="domain">
 			<h2>Domain</h2>
-			<table class="domain-analysis analysis-table">
+
+			<?php foreach ($stats as $fact): ?>
+			<h3 id="var_<?=$this->id($fact->name)?>">
+				<?=$this->html($fact->name)?>
+				<small>(<a href="webfrontend.php?kb=<?=urlencode($_GET['kb'])?>&amp;goals=<?=urlencode($fact->name)?>">try to infer this fact</a>)</small>
+			</h3>
+			<table class="fact-analysis analysis-table">
 				<thead>
-					<th>Fact name</th>
-					<th>Possible values</th>
+					<tr>
+						<th>Value</th>
+						<th><span class="hint" title="Questions that can cause the fact to become this value">Inferring questions</span></th>
+						<th><span class="hint" title="Rules that can cause the fact to become this value">Inferring rules</span></th>
+						<th><span class="hint" title="Sum of previous two columns, for determining if this value can be obtained">Inferring questions + rules</span></th>
+						<th><span class="hint" title="Rules that test for this value in their condition">Testing rules</span></th>
+					</tr>
 				</thead>
 				<tbody>
-				<?php foreach ($domain->values as $key => $values): ?>
+				<?php foreach ($fact->values as $value => $value_stats): ?>
 					<tr>
-						<th><?=$this->html($key)?></th>
 						<td>
-							<ul>
-							<?php foreach ($values as $value): ?>
-								<li><?=$this->html($value)?></li>
-							<?php endforeach ?>
-							</ul>
+							<?php if (KnowledgeState::is_variable($value)): ?>
+							<a href="#var_<?=$this->id(KnowledgeState::variable_name($value))?>"><?=$this->html($value)?></a>
+							<?php else: ?>
+							<?=$this->html($value)?>
+							<?php endif ?>
 						</td>
+						<td><?=count($value_stats->inferringQuestions)?></td>
+						<td><?=count($value_stats->inferringRules)?></td>
+						<td><?=red_if_zero(count($value_stats->inferringQuestions) + count($value_stats->inferringRules))?></strong></td>
+						<td><?=red_if_zero(count($value_stats->dependingRules))?></td>
 					</tr>
 				<?php endforeach ?>
 				</tbody>
 			</table>
+			<?php endforeach ?>
 		</section>
 
-		<section id="info-rules"> 
+		<section id="goals">
+			<h2>Goals</h2>
+			<section>
+				<?php foreach ($kb->goals as $goal): ?>
+				<h3>
+					<?=$goal->description ? $this->html($goal->description) : '<em>No description</em>' ?>
+					<small>(<a href="#var_<?=$this->id($goal->name)?>"><?=$this->html($goal->name)?></a>)</small>
+				</h3>
+				<dd>
+					<?php foreach ($goal->answers as $answer): ?>
+						<dt><?=is_null($answer->value) ? '<em>other</em>' : $this->html($answer->value)?></dt>
+						<dd><?=$this->html($answer->description)?></dd>
+					<?php endforeach ?>
+				</dd>
+				<?php endforeach?>
+			</dl>
+		</section>
+
+		<section id="rules">
 			<h2>Rules</h2>
 
 			<?php foreach ($kb->rules as $rule): ?>
