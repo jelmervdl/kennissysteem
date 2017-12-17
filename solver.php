@@ -277,8 +277,8 @@ class FactCondition implements Condition
 	{
 		$state_value = $state->value($this->name);
 
-		if ($state_value instanceof Maybe)
-			return $state_value;
+		if ($state_value === null)
+			return Maybe::because([$this->name]);
 
 		return $state_value == $this->value
 			? Yes::because([$this->name])
@@ -345,7 +345,7 @@ class Goal
 			if (KnowledgeState::is_variable($answer_value))
 				$answer_value = $state->resolve($answer_value);
 
-			if ($state_value == $answer_value)
+			if ($state_value === $answer_value)
 				return $answer;
 		}
 
@@ -544,7 +544,7 @@ class KnowledgeState
 		$fact_name = $this->resolve($fact_name);
 
 		if (!isset($this->facts[$fact_name]))
-			return Maybe::because([$fact_name]);
+			return null;
 
 		return $this->resolve($this->facts[$fact_name]);
 	}
@@ -574,7 +574,7 @@ class KnowledgeState
 		$callback = function($match) use ($formatter) {
 			$value = $this->value($match[1]);
 
-			if ($value instanceof Maybe)
+			if ($value === null)
 				return $match[0];
 
 			if ($formatter)
@@ -746,9 +746,9 @@ class Solver
 		// different goal!
 		$current_value = $state->value($goal);
 
-		if (!($current_value instanceof Maybe && $current_value->factors == [$goal]))
+		if ($current_value !== null)
 			return $current_value;
-		
+
 		// Is er misschien een regel die we kunnen toepassen
 		$relevant_rules = new CallbackFilterIterator($state->rules->getIterator(),
 			function($rule) use ($goal) { return $rule->infers($goal); });
@@ -781,16 +781,12 @@ class Solver
 			// vandaar $n++) zijn.
 			$skippable = iterator_count($relevant_questions) - 1;
 
-			// haal de vraag hoe dan ook uit de mogelijk te stellen vragen. Het heeft geen zin
-			// om hem twee keer te stellen.
-			$state->questions->remove($question);
-
 			return new AskedQuestion($question, $skippable);
 		}
 
 		// We have no idea how to solve this. No longer our problem!
 		// (The caller should set $goal to undefined or something.)
-		return Maybe::because();
+		return Maybe::because([]);
 	}
 
 	public function forwardChain(KnowledgeState $state)
