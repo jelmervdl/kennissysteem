@@ -79,17 +79,22 @@ class Question
 	}
 }
 
-class AskedQuestion extends Question
+class AskedQuestion
 {
+	public $question;
+
 	public $skippable;
 
 	public function __construct(Question $question, $skippable)
 	{
-		$this->description = $question->description;
-
-		$this->options = $question->options;
+		$this->question = $question;
 
 		$this->skippable = $skippable;
+	}
+
+	public function __toString()
+	{
+		return sprintf('%s (%s)', $this->question, $this->skippable ? 'skippable' : 'not skippable');
 	}
 }
 

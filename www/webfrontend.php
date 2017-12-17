@@ -84,13 +84,15 @@ class WebFrontend
 		echo $page->render();
 	}
 
-	private function displayQuestion(AskedQuestion $question)
+	private function displayQuestion(AskedQuestion $query)
 	{
 		$template = new Template('templates/question.phtml');
 
 		$template->state = $this->state;
 
-		$template->question = $question;
+		$template->question = $query->question;
+
+		$template->skippable = $query->skippable;
 
 		return $template->render();
 	}

@@ -10,7 +10,7 @@
 			</label>
 		</li>
 		<?php endforeach ?>
-		<?php if($question->skippable): ?>
+		<?php if($skippable): ?>
 		<li class="skip-option">
 			<label>
 				<input type="radio" name="answer" value="<?=_encode(array())?>">
