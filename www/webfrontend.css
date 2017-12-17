@@ -248,7 +248,6 @@ table {
 .fact-state dd small {
 	font-size: 1em;
 	color: #666;
-	margin-left: 1ch;
 }
 
 .fact-state dd small:before {

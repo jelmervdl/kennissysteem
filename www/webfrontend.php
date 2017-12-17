@@ -152,8 +152,10 @@ class WebFrontend
 	}
 }
 
-if (!isset($_GET['kb']) || !preg_match('/^[a-zA-Z0-9_\-\.]+\.xml$/i', $_GET['kb']))
-	redirect('index.php');
+if (!isset($_GET['kb']) || !preg_match('/^[a-zA-Z0-9_\-\.]+\.xml$/i', $_GET['kb'])) {
+	header('Location: index.php');
+	exit;
+}
 
 header('Content-Type: text/html; charset=UTF-8');
 $frontend = new WebFrontend(first_found_path(array(

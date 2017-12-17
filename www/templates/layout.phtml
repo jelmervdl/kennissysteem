@@ -35,7 +35,12 @@
 				<dl>
 					<?php foreach($state->facts as $name => $value): ?>
 					<dt class="all <?=KnowledgeState::is_default_fact($name) ? 'default-fact' : 'user-fact'?>"><?=$name?></dt>
-					<dd><?=$value?><?php if (KnowledgeState::is_variable($value)) printf('<small>%s</small>', $state->resolve($value)) ?></dd>
+					<dd>
+						<?=$this->html($value)?>
+						<?php if (KnowledgeState::is_variable($value) && $state->resolve($value) != $value): ?>
+							<small><?=$this->html($state->resolve($value)) ?></small>
+						<?php endif ?>
+					</dd>
 					<?php endforeach ?>
 				</dl>
 			</section>
