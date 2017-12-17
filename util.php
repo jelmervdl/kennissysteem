@@ -1,5 +1,8 @@
 <?php
 
+error_reporting(E_ALL);
+ini_set('display_errors', true);
+
 assert_options(ASSERT_BAIL, true);
 
 function get_error_enum($errno)
