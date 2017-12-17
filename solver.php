@@ -77,6 +77,15 @@ class Question
 	{
 		return sprintf('[Question: %s]', $this->description);
 	}
+
+	public function option($fact_name, $fact_value)
+	{
+		foreach ($this->options as $option)
+			if (isset($option->consequences[$fact_name]) && $option->consequences[$fact_name] == $fact_value)
+				return $option;
+
+		throw new InvalidArgumentException('This question has no option that leads to that combination of fact name and value');
+	}
 }
 
 class AskedQuestion
@@ -390,21 +399,12 @@ abstract class TruthState
 
 	abstract public function negate();
 
-	static public function because($factors = null)
+	static public function because(iterable $factors)
 	{
-		if (is_null($factors))
-			$factors = [];
-
-		elseif (is_scalar($factors))
-			$factors = [$factors];
-
-		elseif (is_object($factors) && $factors instanceof Traversable)
+		if (is_object($factors) && $factors instanceof Traversable)
 			$factors = iterator_to_array($factors);
 
-		assert(is_array($factors));
-
-		$called_class = get_called_class();
-		return new $called_class($factors);
+		return new static($factors);
 	}
 }
 
@@ -517,6 +517,10 @@ class KnowledgeState
 			'undefined' => STATE_UNDEFINED
 		);
 
+		$this->reasons = array(
+			'undefined' => null
+		);
+
 		$this->rules = new Set();
 
 		$this->questions = new Set();
@@ -534,9 +538,13 @@ class KnowledgeState
 	 * 
 	 * @return KnowledgeState
 	 */
-	public function apply(array $consequences)
+	public function apply(array $consequences, object $reason = null)
 	{
 		$this->facts = array_merge($this->facts, $consequences);
+
+		$this->reasons = array_merge($this->reasons, array_combine(
+				array_keys($consequences),
+				array_fill(0, count($consequences), $reason)));
 	}
 
 	public function value($fact_name)
@@ -811,7 +819,7 @@ class Solver
 				{
 					$this->log("Adding %s to the facts dictionary", [dict_to_string($rule->consequences)]);
 
-					$state->apply($rule->consequences);
+					$state->apply($rule->consequences, $rule);
 					continue 2;
 				}
 			}

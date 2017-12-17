@@ -1,3 +1,19 @@
+<?php
+
+$explain = function($fact_name, $value) use ($state) {
+	$reason = $state->reasons[$fact_name];
+
+	if ($reason instanceof AskedQuestion)
+		return sprintf('You answered "%s" when asked "%s"',
+			$reason->question->option($fact_name, $value)->description,
+			$reason->question->description);
+	if ($reason instanceof Rule)
+		return sprintf('The rule "%s" evaluated to Yes', $reason->description);
+	else
+		return '';
+};
+
+?>
 <!DOCTYPE html>
 <html>
 	<head>
@@ -35,7 +51,12 @@
 				<dl>
 					<?php foreach($state->facts as $name => $value): ?>
 					<dt class="all <?=KnowledgeState::is_default_fact($name) ? 'default-fact' : 'user-fact'?>"><?=$name?></dt>
-					<dd><?=$value?><?php if (KnowledgeState::is_variable($value)) printf('<small>%s</small>', $state->resolve($value)) ?></dd>
+					<dd title="<?=$this->attr($explain($name, $value))?>">
+						<?=$this->html($value)?>
+						<?php if (KnowledgeState::is_variable($value)): ?>
+							<small><?=$this->html($state->resolve($value)) ?></small>
+						<?php endif ?>
+					</dd>
 					<?php endforeach ?>
 				</dl>
 			</section>

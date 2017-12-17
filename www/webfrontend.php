@@ -60,7 +60,12 @@ class WebFrontend
 			$this->state = $this->getState();
 
 			if (isset($_POST['answer']))
-				$this->state->apply(_decode($_POST['answer']));
+			{
+				$question = $this->solver->solveAll($this->state);
+				assert($question instanceof  AskedQuestion);
+				$this->state->questions->remove($question);
+				$this->state->apply(_decode($_POST['answer']), $question);
+			}
 
 			$step = $this->solver->solveAll($this->state);
 
