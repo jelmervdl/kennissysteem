@@ -62,7 +62,7 @@ class WebFrontend
 			if (isset($_POST['answer']))
 			{
 				$question = $this->solver->solveAll($this->state);
-				assert($question instanceof  AskedQuestion);
+				assert($question instanceof AskedQuestion);
 				$this->state->questions->remove($question);
 				$this->state->apply(_decode($_POST['answer']), $question);
 			}
@@ -157,8 +157,10 @@ class WebFrontend
 	}
 }
 
-if (!isset($_GET['kb']) || !preg_match('/^[a-zA-Z0-9_\-\.]+\.xml$/i', $_GET['kb']))
-	redirect('index.php');
+if (!isset($_GET['kb']) || !preg_match('/^[a-zA-Z0-9_\-\.]+\.xml$/i', $_GET['kb'])) {
+	header('Location: index.php');
+	exit;
+}
 
 header('Content-Type: text/html; charset=UTF-8');
 $frontend = new WebFrontend(first_found_path(array(

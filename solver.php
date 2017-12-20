@@ -35,6 +35,11 @@ class Rule
 		return $this->inferred_facts->contains($fact);
 	}
 
+	public function evaluate(KnowledgeState $state)
+	{
+		return $this->condition->evaluate($state);
+	}
+
 	public function __toString()
 	{
 		return sprintf('[Rule "%s" (line %d)]',
@@ -286,12 +291,26 @@ class FactCondition implements Condition
 	{
 		$state_value = $state->value($this->name);
 
+		// If the fact is not in the kb, say we can't know whether this condition is true
 		if ($state_value === null)
 			return new Maybe($this, [$this->name]);
 
-		return $state_value == $this->value
-			? new Yes($this, [$state->reason($this->name)])
-			: new No($this, [$state->reason($this->name)]);
+		// If it is partially in the knowledge base (i.e. it is the value of a
+		// variable, but we don't know the value of that variable yet)
+		if (KnowledgeState::is_variable($state_value))
+			return new Maybe($this, [KnowledgeState::variable_name($state_value)]);
+
+		// if the value is a variable, this will resolve it to a value
+		// (or a variable if that isn't known yet to the kb!)
+		$test_value = $state->resolve($this->value);
+
+		// If it did resolve to a variable, we first need to know its value
+		if (KnowledgeState::is_variable($test_value))
+			return new Maybe($this, [KnowledgeState::variable_name($test_value)]);
+
+		return $state_value == $test_value
+			? new Yes($this, [$this->name])
+			: new No($this, [$this->name]);
 	}
 
 	public function asArray()
@@ -578,7 +597,7 @@ class KnowledgeState
 			if (isset($this->facts[self::variable_name($value)]))
 				$value = $this->facts[self::variable_name($value)];
 			else
-				return self::variable_name($value);
+				return $value;
 		}
 
 		return $value;
@@ -771,7 +790,7 @@ class Solver
 		// Assume that all relevant rules result in maybe's. If not, something went
 		// horribly wrong in $this->forwardChain()!
 		foreach ($relevant_rules as $rule)
-			assert($rule->condition->evaluate($state) instanceof Maybe);
+			assert($rule->evaluate($state) instanceof Maybe);
 
 		// Is er misschien een directe vraag die we kunnen stellen?
 		$relevant_questions = new CallbackFilterIterator($state->questions->getIterator(),
@@ -784,7 +803,7 @@ class Solver
 		// to the solver. It will then determine which goal to pursue next.
 		if (iterator_count($relevant_rules) > 0)
 			return new Maybe(null, new CallbackMapIterator($relevant_rules, function($rule) use ($state) {
-				return $rule->condition->evaluate($state);
+				return $rule->evaluate($state);
 			}));
 
 		// If not, but when we do have a question to solve it, use that instead.
@@ -811,7 +830,7 @@ class Solver
 		{
 			foreach ($state->rules as $rule)
 			{
-				$rule_result = $rule->condition->evaluate($state);
+				$rule_result = $rule->evaluate($state);
 
 				$this->log("Rule '%s' results in %s", [$rule->description, $rule_result],
 					$rule_result instanceof Yes or $rule_result instanceof No ? LOG_LEVEL_INFO : LOG_LEVEL_VERBOSE);
