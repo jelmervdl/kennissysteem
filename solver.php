@@ -163,16 +163,16 @@ class WhenAllCondition implements Condition
 		// if false (Maybe's don't even matter in that case anymore.)
 		$nos = array_filter_type('No', $values);
 		if (count($nos) > 0)
-			return No::because($nos);
+			return new No($this, $nos);
 
 		// If there are maybes left in the values, we know that not yet
 		// all conditions are Yes, so, the verdict for now is also Maybe.
 		$maybes = array_filter_type('Maybe', $values);
 		if (count($maybes) > 0)
-			return Maybe::because($maybes);
+			return new Maybe($this, $maybes);
 
 		// And otherwise, everything evaluated to Yes, so Yes!
-		return Yes::because($values);
+		return new Yes($this, $values);
 	}
 
 	public function asArray()
@@ -214,16 +214,16 @@ class WhenAnyCondition implements Condition
 		// If threre is at least one Yes, then this condition is met!
 		$yesses = array_filter_type('Yes', $values);
 		if ($yesses)
-			return Yes::because($yesses);
+			return new Yes($this, $yesses);
 		
 		// If there are still maybe's, then maybe there is still chance
 		// for a Yes. So return Maybe.
 		$maybes = array_filter_type('Maybe', $values);
 		if ($maybes)
-			return Maybe::because($maybes);
+			return new Maybe($this, $maybes);
 
 		// No yes, no maybe, only no's. So no.
-		return No::because($values);
+		return new No($this, $values);
 	}
 
 	public function asArray()
@@ -253,7 +253,7 @@ class NegationCondition implements Condition
 
 	public function evaluate(KnowledgeState $state)
 	{
-		return $this->condition->evaluate($state)->negate();
+		return $this->condition->evaluate($state)->negate($this);
 	}
 
 	public function asArray()
@@ -287,11 +287,11 @@ class FactCondition implements Condition
 		$state_value = $state->value($this->name);
 
 		if ($state_value === null)
-			return Maybe::because([$this->name]);
+			return new Maybe($this, [$this->name]);
 
 		return $state_value == $this->value
-			? Yes::because([$this->name])
-			: No::because([$this->name]);
+			? new Yes($this, [$state->reason($this->name)])
+			: new No($this, [$state->reason($this->name)]);
 	}
 
 	public function asArray()
@@ -384,10 +384,20 @@ class Answer
 abstract class TruthState
 {
 	public $factors;
+	
+	public $reason; // The thing that generated the value, e.g. a rule, condition, etc.
 
-	public function __construct(array $factors)
+	public function __construct($reason = null, iterable $factors = null)
 	{
+		if (is_object($factors))
+			$factors = iterator_to_array($factors);
+
+		if (is_null($factors))
+			$factors = [];
+
 		$this->factors = $factors;
+		
+		$this->reason = $reason;
 	}
 
 	public function __toString()
@@ -397,38 +407,30 @@ abstract class TruthState
 			implode(', ', array_map('strval', $this->factors)));
 	}
 
-	abstract public function negate();
-
-	static public function because(iterable $factors)
-	{
-		if (is_object($factors) && $factors instanceof Traversable)
-			$factors = iterator_to_array($factors);
-
-		return new static($factors);
-	}
+	abstract public function negate(object $reason);
 }
 
 class Yes extends TruthState
 {
-	public function negate()
+	public function negate(object $reason)
 	{
-		return new No($this->factors);
+		return new No($reason, [$this]);
 	}
 }
 
 class No extends TruthState
 {
-	public function negate()
+	public function negate(object $reason)
 	{
-		return new Yes($this->factors);
+		return new Yes($reason, [$this]);
 	}
 }
 
 class Maybe extends TruthState 
 {
-	public function negate()
+	public function negate(object $reason)
 	{
-		return new Maybe($this->factors);
+		return new Maybe($reason, [$this]);
 	}
 
 	public function causes()
@@ -555,6 +557,11 @@ class KnowledgeState
 			return null;
 
 		return $this->resolve($this->facts[$fact_name]);
+	}
+
+	public function reason($fact_name)
+	{
+		
 	}
 
 	public function resolve($value)
@@ -714,7 +721,7 @@ class Solver
 				}
 			}
 
-			// Yes, het is gelukt om een Yes of No antwoord te vinden voor dit goal.
+			// Yes, het is gelukt om een waarde te vinden voor dit goal.
 			// Mooi, dan kan dat van de te bewijzen stack af.
 			else
 			{
@@ -773,9 +780,10 @@ class Solver
 		$this->log("Found %d rules and %s questions", [iterator_count($relevant_rules),
 			iterator_count($relevant_questions)], LOG_LEVEL_VERBOSE);
 
-		// If this problem can be solved by a rule, use it!
+		// If this problem can be solved by rules, combine all their factors and return that 
+		// to the solver. It will then determine which goal to pursue next.
 		if (iterator_count($relevant_rules) > 0)
-			return Maybe::because(new CallbackMapIterator($relevant_rules, function($rule) use ($state) {
+			return new Maybe(null, new CallbackMapIterator($relevant_rules, function($rule) use ($state) {
 				return $rule->condition->evaluate($state);
 			}));
 
@@ -794,7 +802,7 @@ class Solver
 
 		// We have no idea how to solve this. No longer our problem!
 		// (The caller should set $goal to undefined or something.)
-		return Maybe::because([]);
+		return new Maybe();
 	}
 
 	public function forwardChain(KnowledgeState $state)
@@ -819,7 +827,7 @@ class Solver
 				{
 					$this->log("Adding %s to the facts dictionary", [dict_to_string($rule->consequences)]);
 
-					$state->apply($rule->consequences, $rule);
+					$state->apply($rule->consequences, $rule_result);
 					continue 2;
 				}
 			}
