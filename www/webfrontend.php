@@ -63,8 +63,13 @@ class WebFrontend
 			{
 				$question = $this->solver->solveAll($this->state);
 				assert($question instanceof AskedQuestion);
+				
+				$option = $question->question->options[$_POST['answer']];
+				assert($option instanceof Option);
+
 				$this->state->questions->remove($question);
-				$this->state->apply(_decode($_POST['answer']), $question);
+
+				$this->state->applyAnswer($option);
 			}
 
 			$step = $this->solver->solveAll($this->state);

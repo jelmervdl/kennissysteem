@@ -73,6 +73,12 @@ class Question
 		$this->inferred_facts = new Set();
 	}
 
+	public function addOption(Option $option)
+	{
+		$option->question = $this;
+		$this->options[] = $option;
+	}
+
 	public function infers($fact)
 	{
 		return $this->inferred_facts->contains($fact);
@@ -81,15 +87,6 @@ class Question
 	public function __toString()
 	{
 		return sprintf('[Question: %s]', $this->description);
-	}
-
-	public function option($fact_name, $fact_value)
-	{
-		foreach ($this->options as $option)
-			if (isset($option->consequences[$fact_name]) && $option->consequences[$fact_name] == $fact_value)
-				return $option;
-
-		throw new InvalidArgumentException('This question has no option that leads to that combination of fact name and value');
 	}
 }
 
@@ -122,6 +119,8 @@ class AskedQuestion
  */
 class Option
 {
+	public $question;
+
 	public $description;
 
 	public $consequences = array();
@@ -309,8 +308,8 @@ class FactCondition implements Condition
 			return new Maybe($this, [KnowledgeState::variable_name($test_value)]);
 
 		return $state_value == $test_value
-			? new Yes($this, [$this->name])
-			: new No($this, [$this->name]);
+			? new Yes($this, [$state->reason($this->name)])
+			: new No($this, [$state->reason($this->name)]);
 	}
 
 	public function asArray()
@@ -510,6 +509,59 @@ class Maybe extends TruthState
 	}
 }
 
+interface Reason
+{
+	public function __toString();
+}
+
+class KnowledgeItem
+{
+	public $value;
+
+	public $reason;
+
+	public function __construct($value, Reason $reason = null)
+	{
+		$this->value = $value;
+
+		$this->reason = $reason;
+	}
+}
+
+class AnsweredQuestionReason implements Reason
+{
+	public $answer;
+
+	public function __construct(Option $answer)
+	{
+		$this->answer = $answer;
+	}
+
+	public function __toString()
+	{
+		return sprintf('User answered "%s" when asked "%s"', $this->answer->description, $this->answer->question->description);
+	}
+}
+
+class InferredRuleReason implements Reason
+{
+	public $rule;
+
+	public $truthValue;
+
+	public function __construct(Rule $rule, Yes $truthValue)
+	{
+		$this->rule = $rule;
+
+		$this->truthValue = $truthValue;
+	}
+
+	public function __toString()
+	{
+		return sprintf('Rule "%s" evaluated to true because %s', $this->rule, $this->truthValue);
+	}
+}
+
 /**
  * KnowledgeState represents the knowledge base at a certain moment: used rules
  * are removed, facts are added, etc.
@@ -535,11 +587,7 @@ class KnowledgeState
 	public function __construct()
 	{
 		$this->facts = array(
-			'undefined' => STATE_UNDEFINED
-		);
-
-		$this->reasons = array(
-			'undefined' => null
+			'undefined' => new KnowledgeItem(STATE_UNDEFINED, null)
 		);
 
 		$this->rules = new Set();
@@ -553,19 +601,16 @@ class KnowledgeState
 		$this->goalStack = new Stack();
 	}
 
-	/**
-	 * Past $consequences toe op de huidige $state, en geeft dat als nieuwe state terug.
-	 * Alle $consequences krijgen $reason als reden mee.
-	 * 
-	 * @return KnowledgeState
-	 */
-	public function apply(array $consequences, object $reason = null)
+	public function applyAnswer(Option $answer)
 	{
-		$this->facts = array_merge($this->facts, $consequences);
+		foreach ($answer->consequences as $name => $value)
+			$this->facts[$name] = new KnowledgeItem($value, new AnsweredQuestionReason($answer));
+	}
 
-		$this->reasons = array_merge($this->reasons, array_combine(
-				array_keys($consequences),
-				array_fill(0, count($consequences), $reason)));
+	public function applyRule(Rule $rule, Yes $evaluation)
+	{
+		foreach ($rule->consequences as $name => $value)
+			$this->facts[$name] = new KnowledgeItem($value, new InferredRuleReason($rule, $evaluation));
 	}
 
 	public function value($fact_name)
@@ -575,12 +620,15 @@ class KnowledgeState
 		if (!isset($this->facts[$fact_name]))
 			return null;
 
-		return $this->resolve($this->facts[$fact_name]);
+		if (!($this->facts[$fact_name] instanceof KnowledgeItem))
+			var_dump($this->facts[$fact_name]);
+
+		return $this->resolve($this->facts[$fact_name]->value);
 	}
 
 	public function reason($fact_name)
 	{
-		
+		return $this->facts[$fact_name]->reason;
 	}
 
 	public function resolve($value)
@@ -595,7 +643,7 @@ class KnowledgeState
 			$stack[] = $value;
 
 			if (isset($this->facts[self::variable_name($value)]))
-				$value = $this->facts[self::variable_name($value)];
+				$value = $this->facts[self::variable_name($value)]->value;
 			else
 				return $value;
 		}
@@ -846,7 +894,7 @@ class Solver
 				{
 					$this->log("Adding %s to the facts dictionary", [dict_to_string($rule->consequences)]);
 
-					$state->apply($rule->consequences, $rule_result);
+					$state->applyRule($rule, $rule_result);
 					continue 2;
 				}
 			}

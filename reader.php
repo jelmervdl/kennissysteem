@@ -124,7 +124,7 @@ class KnowledgeBaseReader
 
 				case 'fact':
 					list($name, $value) = $this->parseFact($childNode);
-					$kb->facts[$name] = $value;
+					$kb->apply([$name => $value]);
 					break;
 
 				case 'title':
@@ -212,7 +212,7 @@ class KnowledgeBaseReader
 					break;
 				
 				case 'option':
-					$question->options[] = $this->parseOption($childNode);
+					$question->addOption($this->parseOption($childNode));
 					break;
 				
 				default:
