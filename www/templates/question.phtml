@@ -1,6 +1,8 @@
 <section class="question">
 	<p><?=$state->substitute_variables($question->description, ['Template', 'html'])?></p>
 
+	<p><?php var_dump($state->possibleDecisiveValues($state->goalStack->top())) ?></p>
+
 	<ol class="options">
 		<?php foreach ($question->options as $option): ?>
 		<li>

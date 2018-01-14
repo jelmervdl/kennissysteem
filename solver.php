@@ -122,6 +122,8 @@ interface Condition
 {
 	public function evaluate(KnowledgeState $state);
 
+	public function possibleDecisiveValues($fact_name, KnowledgeState $state);
+
 	public function asArray();
 }
 
@@ -169,6 +171,20 @@ class WhenAllCondition implements Condition
 
 		// And otherwise, everything evaluated to Yes, so Yes!
 		return Yes::because($values);
+	}
+
+	public function possibleDecisiveValues($fact_name, KnowledgeState $state)
+	{	
+		// If already decided, the values are not relevant
+		if (!($this->evaluate($state) instanceof Maybe))
+			return [];
+
+		$values = [];
+
+		foreach ($this->conditions as $condition)
+			$values = array_merge($values, $condition->possibleDecisiveValues($fact_name, $state));
+		
+		return $values;
 	}
 
 	public function asArray()
@@ -222,6 +238,20 @@ class WhenAnyCondition implements Condition
 		return No::because($values);
 	}
 
+	public function possibleDecisiveValues($fact_name, KnowledgeState $state)
+	{	
+		// If already decided, the values are not relevant
+		if (!($this->evaluate($state) instanceof Maybe))
+			return [];
+
+		$values = [];
+
+		foreach ($this->conditions as $condition)
+			$values = array_merge($values, $condition->possibleDecisiveValues($fact_name, $state));
+		
+		return $values;
+	}
+
 	public function asArray()
 	{
 		return array($this, array_map_method('asArray', $this->conditions));
@@ -245,6 +275,12 @@ class NegationCondition implements Condition
 	public function __construct(Condition $condition)
 	{
 		$this->condition = $condition;
+	}
+
+	public function possibleDecisiveValues($fact_name, KnowledgeState $state)
+	{	
+		// I think this is incorrect!
+		return $this->condition->possibleDecisiveValues($fact_name, $state);
 	}
 
 	public function evaluate(KnowledgeState $state)
@@ -276,6 +312,14 @@ class FactCondition implements Condition
 	{
 		$this->name = trim($name);
 		$this->value = trim($value);
+	}
+
+	public function possibleDecisiveValues($fact_name, KnowledgeState $state)
+	{	
+		if ($this->name == $fact_name)
+			return [$this->value];
+		else
+			return [];
 	}
 
 	public function evaluate(KnowledgeState $state)
@@ -556,6 +600,16 @@ class KnowledgeState
 	public function apply(array $consequences)
 	{
 		$this->facts = array_merge($this->facts, $consequences);
+	}
+
+	public function possibleDecisiveValues($fact_name)
+	{
+		$values = [];
+
+		foreach ($this->rules as $rule)
+			$values = array_merge($values, $rule->condition->possibleDecisiveValues($fact_name, $this));
+
+		return array_unique($values);
 	}
 
 	public function value($fact_name)
