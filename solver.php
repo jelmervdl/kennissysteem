@@ -141,6 +141,11 @@ class WhenAllCondition implements Condition
 		$this->conditions = new Set();
 	}
 
+	public function __toString()
+	{
+		return sprintf('(%s)', implode(' && ', $this->conditions->map('strval')));
+	}
+
 	public function addCondition(Condition $condition)
 	{
 		$this->conditions->push($condition);
@@ -191,6 +196,11 @@ class WhenAnyCondition implements Condition
 	public function __construct()
 	{
 		$this->conditions = new Set();
+	}
+
+	public function __toString()
+	{
+		return sprintf('(%s)', implode(' || ', $this->conditions->map('strval')));
 	}
 
 	public function addCondition(Condition $condition)
@@ -247,6 +257,11 @@ class NegationCondition implements Condition
 		$this->condition = $condition;
 	}
 
+	public function __toString()
+	{
+		return sprintf('!%s', $this->condition);
+	}
+
 	public function evaluate(KnowledgeState $state)
 	{
 		return $this->condition->evaluate($state)->negate();
@@ -276,6 +291,11 @@ class FactCondition implements Condition
 	{
 		$this->name = trim($name);
 		$this->value = trim($value);
+	}
+
+	public function __toString()
+	{
+		return sprintf('%s = %s', $this->name, $this->value);
 	}
 
 	public function evaluate(KnowledgeState $state)
