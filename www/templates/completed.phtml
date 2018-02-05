@@ -1,5 +1,5 @@
 <section class="completed">
-	<h2>Verdict</h2>
+	<h2>Conclusions</h2>
 	<dl>
 	<?php foreach ($state->goals as $goal): ?>
 		<?php if ($goal->hasAnswers() && (($answer = $goal->answer($state)) || $state->facts[$goal->name] != STATE_UNDEFINED)): ?>
