@@ -61,15 +61,15 @@ class WebFrontend
 
 			if (isset($_POST['answer']))
 			{
-				$question = $this->solver->solveAll($this->state);
-				assert($question instanceof AskedQuestion);
-				
-				$option = $question->question->options[$_POST['answer']];
+				$query = $this->solver->solveAll($this->state);
+				assert($query instanceof AskedQuestion);
+
+				$option = $query->question->options[$_POST['answer']];
 				assert($option instanceof Option);
 
-				$this->state->questions->remove($question);
+				$this->state->questions->remove($query->question);
 
-				$this->state->applyAnswer($option);
+				$this->state->applyAnswer($query->question, $option);
 			}
 
 			$step = $this->solver->solveAll($this->state);
@@ -100,6 +100,8 @@ class WebFrontend
 
 		$template->state = $this->state;
 
+		$template->formatter = new HTMLFormatter($this->state);
+
 		$template->question = $query->question;
 
 		$template->skippable = $query->skippable;
@@ -112,6 +114,8 @@ class WebFrontend
 		$template = new Template('templates/completed.phtml');
 
 		$template->state = $this->state;
+
+		$template->formatter = new HTMLFormatter($this->state);
 
 		return $template->render();
 	}

@@ -9,6 +9,56 @@ class HTMLFormatter
 		$this->state = $state;
 	}
 
+	public function formatReason(Reason $reason)
+	{
+		if ($reason instanceof InferredRule)
+			return $this->formatInferredRule($reason);
+
+		if ($reason instanceof AnsweredQuestion)
+			return $this->formatAnsweredQuestion($reason);
+	}
+
+	public function formatAnsweredQuestion(AnsweredQuestion $reason)
+	{
+		return sprintf('
+			<li class="answered-question">
+				<span class="question">%s</span>
+				<span class="option answer">%s</span>
+			</li>',
+				$this->state->substitute_variables($reason->question->description, ['Template', 'html']),
+				$this->state->substitute_variables($reason->answer->description, ['Template', 'html']));
+	}
+
+	public function formatInferredRule(InferredRule $reason)
+	{
+		return sprintf('
+			<li class="inferred-rule">
+				<span class="rule-description">%s</span>
+				<ol class="truth-state %s" title="%s">
+					%s
+				</ol>
+			</li>',
+				$this->escape($reason->rule->description),
+				get_class($reason->truthValue),
+				$this->escape(strval($reason->truthValue->reason)),
+				implode("\n", $this->formatTruthValue($reason->truthValue)));
+	}
+
+	public function formatTruthValue(TruthState $value)
+	{
+		$factors = [];
+
+		foreach ($value->factors as $factor)
+			if ($factor instanceof TruthState)
+				$factors = array_merge($factors, $this->formatTruthValue($factor));
+			elseif ($factor instanceof Reason)
+				$factors[] = $this->formatReason($factor);
+			else
+				throw new InvalidArgumentException();
+
+		return $factors;
+	}
+
 	public function formatRule(Rule $rule)
 	{
 		return sprintf('

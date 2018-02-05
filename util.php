@@ -265,6 +265,11 @@ class Set implements IteratorAggregate, Countable
 		return new ArrayIterator($this->values);
 	}
 
+	public function map(callable $operation)
+	{
+		return array_map($operation, $this->values);
+	}
+
 	public function count()
 	{
 		return count($this->values);

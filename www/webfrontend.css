@@ -418,3 +418,49 @@ code.numbered pre:before {
 	content: attr(data-lineno);
 	color: rgba(0, 0, 0, 0.4);
 }
+
+.explanation .answered-question .question {
+	max-width: none;
+	margin: 0;
+}
+
+.explanation .answered-question .answer {
+	font-style: italic;
+}
+
+.explanation ol,
+.explanation ol ol {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+} 
+
+.explanation ol ol {
+	margin-left: 10px;
+}
+
+.explanation ol li {
+	position: relative;
+	margin: 0;
+	padding: 4px 0 4px 18px;
+	border-left: 1px solid #333;
+}
+
+.explanation ol li:last-child {
+	border-left: none;
+}
+
+.explanation ol li:before {
+	position: absolute;
+	top: 0;
+	left: 0;
+	height: 1em;
+	width: 12px;
+	border-bottom: 1px solid #333;
+	content: "";
+	display: inline-block;
+}
+
+.explanation ol li:last-child:before {
+	border-left: 1px solid #333;   
+}

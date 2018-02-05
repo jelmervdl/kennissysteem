@@ -75,7 +75,6 @@ class Question
 
 	public function addOption(Option $option)
 	{
-		$option->question = $this;
 		$this->options[] = $option;
 	}
 
@@ -105,7 +104,7 @@ class AskedQuestion
 
 	public function __toString()
 	{
-		return sprintf('%s (%s)', $this->question, $this->skippable ? 'skippable' : 'not skippable');
+		return sprintf('%s (%s)', $this->question->__toString(), $this->skippable ? 'skippable' : 'not skippable');
 	}
 }
 
@@ -119,8 +118,6 @@ class AskedQuestion
  */
 class Option
 {
-	public $question;
-
 	public $description;
 
 	public $consequences = array();
@@ -413,6 +410,13 @@ abstract class TruthState
 		if (is_null($factors))
 			$factors = [];
 
+		foreach ($factors as $factor)
+			assert(
+				($factor instanceof TruthState)
+				or ($factor instanceof Reason)
+				or is_string($factor)
+			, 'factor is a ' . gettype($factor));
+
 		$this->factors = $factors;
 		
 		$this->reason = $reason;
@@ -520,7 +524,7 @@ class KnowledgeItem
 
 	public $reason;
 
-	public function __construct($value, Reason $reason = null)
+	public function __construct($value, Reason $reason)
 	{
 		$this->value = $value;
 
@@ -528,22 +532,26 @@ class KnowledgeItem
 	}
 }
 
-class AnsweredQuestionReason implements Reason
+class AnsweredQuestion implements Reason
 {
+	public $question;
+
 	public $answer;
 
-	public function __construct(Option $answer)
+	public function __construct(Question $question, Option $answer)
 	{
+		$this->question = $question;
+
 		$this->answer = $answer;
 	}
 
 	public function __toString()
 	{
-		return sprintf('User answered "%s" when asked "%s"', $this->answer->description, $this->answer->question->description);
+		return sprintf('User answered "%s" when asked "%s"', $this->answer->description, $this->question->description);
 	}
 }
 
-class InferredRuleReason implements Reason
+class InferredRule implements Reason
 {
 	public $rule;
 
@@ -559,6 +567,19 @@ class InferredRuleReason implements Reason
 	public function __toString()
 	{
 		return sprintf('Rule "%s" evaluated to true because %s', $this->rule, $this->truthValue);
+	}
+}
+
+class PredefinedConstant implements Reason
+{
+	public function __construct($explanation)
+	{
+		$this->explanation = $explanation;
+	}
+
+	public function __toString()
+	{
+		return $this->explanation;
 	}
 }
 
@@ -587,7 +608,8 @@ class KnowledgeState
 	public function __construct()
 	{
 		$this->facts = array(
-			'undefined' => new KnowledgeItem(STATE_UNDEFINED, null)
+			'undefined' => new KnowledgeItem(STATE_UNDEFINED,
+				new PredefinedConstant('Undefined is defined as undefined'))
 		);
 
 		$this->rules = new Set();
@@ -601,16 +623,22 @@ class KnowledgeState
 		$this->goalStack = new Stack();
 	}
 
-	public function applyAnswer(Option $answer)
+	public function applyAnswer(Question $question, Option $answer)
 	{
 		foreach ($answer->consequences as $name => $value)
-			$this->facts[$name] = new KnowledgeItem($value, new AnsweredQuestionReason($answer));
+			$this->facts[$name] = new KnowledgeItem($value, new AnsweredQuestion($question, $answer));
 	}
 
 	public function applyRule(Rule $rule, Yes $evaluation)
 	{
 		foreach ($rule->consequences as $name => $value)
-			$this->facts[$name] = new KnowledgeItem($value, new InferredRuleReason($rule, $evaluation));
+			$this->facts[$name] = new KnowledgeItem($value, new InferredRule($rule, $evaluation));
+	}
+
+	public function markUndefined($fact_name)
+	{
+		$this->facts[$fact_name] = new KnowledgeItem(STATE_UNDEFINED,
+			new PredefinedConstant("There was no rule or question left to find a value for $fact_name"));
 	}
 
 	public function value($fact_name)
@@ -620,8 +648,7 @@ class KnowledgeState
 		if (!isset($this->facts[$fact_name]))
 			return null;
 
-		if (!($this->facts[$fact_name] instanceof KnowledgeItem))
-			var_dump($this->facts[$fact_name]);
+		assert($this->facts[$fact_name] instanceof KnowledgeItem);
 
 		return $this->resolve($this->facts[$fact_name]->value);
 	}
@@ -779,7 +806,7 @@ class Solver
 						'but there are also no rules or questions which I can use to infer it.', [$unsatisfied_goal], LOG_LEVEL_WARNING);
 					
 					// en markeer hem dan maar als niet waar (closed-world assumption?)
-					$state->apply(array($unsatisfied_goal => STATE_UNDEFINED));
+					$state->markUndefined($unsatisfied_goal);
 
 					// compute the effects of this change by applying the other rules
 					$this->forwardChain($state);
