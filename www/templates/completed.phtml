@@ -10,9 +10,9 @@
 					? $state->substitute_variables($answer->description, ['Template', 'html'])
 					: '<pre>' . $state->facts[$goal->name]->value . '</pre>';
 				?></p>
-				<ol class="explanation">
-					<?= $formatter->formatReason($state->facts[$goal->name]->reason) ?>
-				</ol>
+				<div class="explanation">
+					<ol><?= $formatter->formatReason($state->facts[$goal->name]->reason) ?></ol>
+				</div>
 			<?php endif ?>
 	<?php endforeach ?>
 

@@ -34,13 +34,12 @@ class HTMLFormatter
 		return sprintf('
 			<li class="inferred-rule">
 				<span class="rule-description">%s</span>
-				<ol class="truth-state %s" title="%s">
+				<ol class="truth-state %s">
 					%s
 				</ol>
 			</li>',
 				$this->escape($reason->rule->description),
 				get_class($reason->truthValue),
-				$this->escape(strval($reason->truthValue->reason)),
 				implode("\n", $this->formatTruthValue($reason->truthValue)));
 	}
 
