@@ -2,8 +2,8 @@
 
 error_reporting(E_ALL);
 ini_set('display_errors', true);
+ini_set('assert.exception', '1');
 
-assert_options(ASSERT_BAIL, true);
 
 function get_error_enum($errno)
 {

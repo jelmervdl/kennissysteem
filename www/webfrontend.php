@@ -71,7 +71,7 @@ class WebFrontend
 			else
 				$page->content = $this->displayConclusions();
 		}
-		catch (Exception $e)
+		catch (Exception | Error $e)
 		{
 			$page = new Template('templates/exception.phtml');
 			$page->exception = $e;
