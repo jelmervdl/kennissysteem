@@ -126,24 +126,29 @@ interface Condition
 }
 
 /**
- * All conditions need to be true
+ * N of the conditions have to be true
  * 
- * <and>
+ * <or>
  *     Conditions, e.g. <fact/>
- * </and>
+ * </or>
  */
-class WhenAllCondition implements Condition 
+class WhenSomeCondition implements Condition
 {
 	public $conditions;
 
-	public function __construct()
+	public $threshold;
+
+	public function __construct(int $threshold)
 	{
 		$this->conditions = new Set();
+
+		$this->threshold = $threshold;
 	}
 
 	public function __toString()
 	{
-		return sprintf('(%s)', implode(' && ', $this->conditions->map('strval')));
+		return sprintf('(At least %d of these is/are true: %s)',
+			implode(' ; ', $this->threshold, $this->conditions->map('strval')));
 	}
 
 	public function addCondition(Condition $condition)
@@ -154,31 +159,57 @@ class WhenAllCondition implements Condition
 	public function evaluate(KnowledgeState $state)
 	{
 		// Assumption: There has to be at least one condition
-		assert(count($this->conditions) > 0);
+		assert(count($this->conditions) >= $this->threshold);
 
 		$values = array();
 		foreach ($this->conditions as $condition)
 			$values[] = $condition->evaluate($state);
-
-		// If at least one of the values is No, we no this condition
-		// if false (Maybe's don't even matter in that case anymore.)
-		$nos = array_filter_type('No', $values);
-		if (count($nos) > 0)
-			return No::because($nos);
-
-		// If there are maybes left in the values, we know that not yet
-		// all conditions are Yes, so, the verdict for now is also Maybe.
+		
+		// If threre is at least one Yes, then this condition is met!
+		$yesses = array_filter_type('Yes', $values);
+		if (count($yesses) >= $this->threshold)
+			return Yes::because($yesses);
+		
+		// If there are still maybe's, then maybe there is still chance
+		// for a Yes. So return Maybe.
 		$maybes = array_filter_type('Maybe', $values);
-		if (count($maybes) > 0)
+		if (count($yesses) + count($maybes) >= $this->threshold)
 			return Maybe::because($maybes);
 
-		// And otherwise, everything evaluated to Yes, so Yes!
-		return Yes::because($values);
+		// Not enough yes, not enough maybe, too many no's. So no.
+		return No::because($values);
 	}
 
 	public function asArray()
 	{
 		return array($this, array_map_method('asArray', $this->conditions));
+	}
+}
+
+/**
+ * All conditions need to be true
+ * 
+ * <and>
+ *     Conditions, e.g. <fact/>
+ * </and>
+ */
+class WhenAllCondition extends WhenSomeCondition
+{
+	public function __construct()
+	{
+		parent::__construct(1);
+	}
+
+	public function __toString()
+	{
+		return sprintf('(%s)', implode(' && ', $this->conditions->map('strval')));
+	}
+
+	public function addCondition(Condition $condition)
+	{
+		parent::addCondition($condition);
+
+		$this->threshold = count($this->conditions);
 	}
 }
 
@@ -189,54 +220,19 @@ class WhenAllCondition implements Condition
  *     Conditions, e.g. <fact/>
  * </or>
  */
-class WhenAnyCondition implements Condition
+class WhenAnyCondition extends WhenSomeCondition
 {
-	public $conditions;
-
 	public function __construct()
 	{
-		$this->conditions = new Set();
+		parent::__construct(1);
 	}
 
 	public function __toString()
 	{
 		return sprintf('(%s)', implode(' || ', $this->conditions->map('strval')));
 	}
-
-	public function addCondition(Condition $condition)
-	{
-		$this->conditions->push($condition);
-	}
-
-	public function evaluate(KnowledgeState $state)
-	{
-		// Assumption: There has to be at least one condition
-		assert(count($this->conditions) > 0);
-
-		$values = array();
-		foreach ($this->conditions as $condition)
-			$values[] = $condition->evaluate($state);
-		
-		// If threre is at least one Yes, then this condition is met!
-		$yesses = array_filter_type('Yes', $values);
-		if ($yesses)
-			return Yes::because($yesses);
-		
-		// If there are still maybe's, then maybe there is still chance
-		// for a Yes. So return Maybe.
-		$maybes = array_filter_type('Maybe', $values);
-		if ($maybes)
-			return Maybe::because($maybes);
-
-		// No yes, no maybe, only no's. So no.
-		return No::because($values);
-	}
-
-	public function asArray()
-	{
-		return array($this, array_map_method('asArray', $this->conditions));
-	}
 }
+
 
 /**
  * Evaluates to the opposite of the condition:
