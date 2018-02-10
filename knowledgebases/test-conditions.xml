@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<knowledge>
+	<title>Condition test</title>
+	
+	<goal name="test_and">
+		<description>and-rule</description>
+		<answer value="pass">Yes</answer>
+		<answer>No</answer>
+	</goal>
+
+	<goal name="test_or">
+		<description>or-rule</description>
+		<answer value="pass">Yes</answer>
+		<answer>No</answer>
+	</goal>
+
+	<goal name="test_some">
+		<description>some-rule</description>
+		<answer value="pass">Yes</answer>
+		<answer>No</answer>
+	</goal>
+
+	<rule>
+		<if>
+			<and>
+				<fact name="q1">yes</fact>
+				<fact name="q2">yes</fact>
+				<fact name="q3">yes</fact>
+			</and>
+		</if>
+		<then>
+			<fact name="test_and">pass</fact>
+		</then>
+	</rule>
+
+	<rule>
+		<if>
+			<or>
+				<fact name="q1">yes</fact>
+				<fact name="q2">yes</fact>
+				<fact name="q3">yes</fact>
+			</or>
+		</if>
+		<then>
+			<fact name="test_or">pass</fact>
+		</then>
+	</rule>
+
+	<rule>
+		<if>
+			<some threshold="2">
+				<fact name="q1">yes</fact>
+				<fact name="q2">yes</fact>
+				<fact name="q3">yes</fact>
+			</some>
+		</if>
+		<then>
+			<fact name="test_some">pass</fact>
+		</then>
+	</rule>
+
+	<question>
+		<description>Question 1</description>
+		<option>
+			<description>Yes</description>
+			<then>
+				<fact name="q1">yes</fact>
+			</then>
+		</option>
+		<option>
+			<description>No</description>
+			<then>
+				<fact name="q1">no</fact>
+			</then>
+		</option>
+	</question>
+
+	<question>
+		<description>Question 2</description>
+		<option>
+			<description>Yes</description>
+			<then>
+				<fact name="q2">yes</fact>
+			</then>
+		</option>
+		<option>
+			<description>No</description>
+			<then>
+				<fact name="q2">no</fact>
+			</then>
+		</option>
+	</question>
+
+	<question>
+		<description>Question 3</description>
+		<option>
+			<description>Yes</description>
+			<then>
+				<fact name="q3">yes</fact>
+			</then>
+		</option>
+		<option>
+			<description>No</description>
+			<then>
+				<fact name="q3">no</fact>
+			</then>
+		</option>
+	</question>
+</knowledge>
