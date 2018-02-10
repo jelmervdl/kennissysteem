@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<knowledge>
+	<title>Variable goal test</title>
+
+	<goal name="$goal">
+		<description>The goal ($goal) was reached with value $value</description>
+		<answer value="true">Yes</answer>
+		<answer>No</answer>
+	</goal>
+	
+	<rule>
+		<description>Value is equal to 1</description>
+		<if>
+			<fact name="value">1</fact>
+		</if>
+		<then>
+			<fact name="eq-1">true</fact>
+		</then>
+	</rule>
+
+	<rule>
+		<description>Value is equal to 2</description>
+		<if>
+			<fact name="value">2</fact>
+		</if>
+		<then>
+			<fact name="eq-2">true</fact>
+		</then>
+	</rule>
+
+	<rule>
+		<description>Value is equal to 3</description>
+		<if>
+			<fact name="value">3</fact>
+		</if>
+		<then>
+			<fact name="eq-3">true</fact>
+		</then>
+	</rule>
+
+	<question>
+		<description>Which goal should be solved</description>
+		<option>
+			<description>Value is equal to 1</description>
+			<then>
+				<fact name="goal">eq-1</fact>
+			</then>
+		</option>
+		<option>
+			<description>Value is equal to 2</description>
+			<then>
+				<fact name="goal">eq-2</fact>
+			</then>
+		</option>
+		<option>
+			<description>Value is equal to 3</description>
+			<then>
+				<fact name="goal">eq-3</fact>
+			</then>
+		</option>
+	</question>
+
+	<question>
+		<description>Value</description>
+		<option>
+			<description>1</description>
+			<then>
+				<fact name="value">1</fact>
+			</then>
+		</option>
+		<option>
+			<description>2</description>
+			<then>
+				<fact name="value">2</fact>
+			</then>
+		</option>
+		<option>
+			<description>3</description>
+			<then>
+				<fact name="value">3</fact>
+			</then>
+		</option>
+	</question>
+</knowledge>

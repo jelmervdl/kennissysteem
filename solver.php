@@ -369,19 +369,18 @@ class Goal
 
 	public function answer(KnowledgeState $state)
 	{
-		$state_value = $state->value($this->name);
+		$name = $state->resolve($this->name);
+
+		$state_value = $state->value($name);
 		
 		foreach ($this->answers as $answer)
 		{
-			$answer_value = $answer->value;
-
 			// If this is the default option, return it always.
-			if ($answer_value === null)
+			if ($answer->value === null)
 				return $answer;
 
-			// If the value is a variable, try to resolve it.
-			if (KnowledgeState::is_variable($answer_value))
-				$answer_value = $state->resolve($answer_value);
+			// In case the value in the xml was a variable, resolve it first
+			$answer_value = $state->resolve($answer->value);
 
 			if ($state_value === $answer_value)
 				return $answer;
@@ -577,6 +576,19 @@ class KnowledgeState
 		$this->facts = array_merge($this->facts, $consequences);
 	}
 
+	public function initializeGoalStack()
+	{
+		foreach ($this->goals as $goal)
+		{
+			$this->goalStack->push($goal->name);
+
+			// Also push any answer values that are variables as goals to be solved.
+			foreach ($goal->answers as $answer)
+				if (KnowledgeState::is_variable($answer->value))
+					$this->goalStack->push(KnowledgeState::variable_name($answer->value));
+		}
+	}
+
 	/**
 	 * Returns the value of a fact, or null if not found. Do not call with
 	 * variables as fact_name. If $fact_name is or could be a variable, first
@@ -760,7 +772,7 @@ class Solver
 				$this->log('Inferred %s to be %s and removed it from the goal stack.', [$state->goalStack->top(), $result]);
 				// aanname: als het goal kon worden afgeleid, dan is het nu deel van
 				// de afgeleide kennis.
-				assert(isset($state->facts[$state->goalStack->top()]));
+				assert(!($state->resolve($state->goalStack->top()) instanceof Maybe));
 
 				// op naar het volgende goal.
 				$state->solved->push($state->goalStack->pop());
@@ -782,10 +794,20 @@ class Solver
 	 * @param string goal naam van het fact dat wordt afgeleid
 	 * @return TruthState | AskedQuestion
 	 */
-	public function solve(KnowledgeState $state, $goal)
+	public function solve(KnowledgeState $state, $goal_name)
 	{
 		// Forward chain until there is nothing left to derive.
 		$this->forwardChain($state);
+
+		// First make sure that if goal_name is a variable, we resolve it to a
+		// value (a real goal name).
+		$goal = $state->resolve($goal_name);
+
+		// If we can't get to the real goal name because it depends on a variable
+		// being known, KnowledgeState::resolve will give us a Maybe that tells
+		// us where to look. solveAll will add it to the goal stack.
+		if ($goal instanceof Maybe)
+			return $goal;
 
 		// Test whether the fact is already in the knowledge base and if not, if it is solely
 		// unknown because we don't know the current goal we try to prove. Because, it could
