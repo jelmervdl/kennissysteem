@@ -300,26 +300,25 @@ class FactCondition implements Condition
 
 	public function evaluate(KnowledgeState $state)
 	{
-		$state_value = $state->value($this->name);
+		$fact_name = $state->resolve($this->name);
+
+		if ($fact_name instanceof Maybe)
+			return $fact_name;
+
+		$state_value = $state->value($fact_name);
 
 		// If the fact is not in the kb, say we can't know whether this condition is true
 		if ($state_value === null)
 			return Maybe::because([$this->name]);
 
-		// If it is partially in the knowledge base (i.e. it is the value of a
-		// variable, but we don't know the value of that variable yet)
-		if (KnowledgeState::is_variable($state_value))
-			return Maybe::because([KnowledgeState::variable_name($state_value)]);
-
 		// if the value is a variable, this will resolve it to a value
 		// (or a variable if that isn't known yet to the kb!)
 		$test_value = $state->resolve($this->value);
 
-		// If it did resolve to a variable, we first need to know its value
-		if (KnowledgeState::is_variable($test_value))
-			return Maybe::because([KnowledgeState::variable_name($test_value)]);
+		if ($test_value instanceof Maybe)
+			return $test_value;
 
-		return $state_value == $test_value
+		return $state_value === $test_value
 			? Yes::because([$this->name])
 			: No::because([$this->name]);
 	}
@@ -578,9 +577,18 @@ class KnowledgeState
 		$this->facts = array_merge($this->facts, $consequences);
 	}
 
+	/**
+	 * Returns the value of a fact, or null if not found. Do not call with
+	 * variables as fact_name. If $fact_name is or could be a variable, first
+	 * use KnowledgeState::resolve on it.
+	 * 
+	 * @param string $fact_name
+	 * @return mixed
+	 */
 	public function value($fact_name)
 	{
-		$fact_name = $this->resolve($fact_name);
+		if (self::is_variable($fact_name))
+			throw new RuntimeException('Called KnowledgeState::value with variable');
 
 		if (!isset($this->facts[$fact_name]))
 			return null;
@@ -588,24 +596,24 @@ class KnowledgeState
 		return $this->resolve($this->facts[$fact_name]);
 	}
 
-	public function resolve($value)
+	public function resolve($fact_name)
 	{
 		$stack = array();
 
-		while (self::is_variable($value))
+		while (self::is_variable($fact_name))
 		{
-			if (in_array($value, $stack))
-				throw new RuntimeException("Infinite recursion when trying to retrieve fact '$value' after I retrieved " . implode(', ', $stack) . ".");
+			if (in_array($fact_name, $stack))
+				throw new RuntimeException("Infinite recursion when trying to retrieve fact '$fact_name' after I retrieved " . implode(', ', $stack) . ".");
 
-			$stack[] = $value;
+			$stack[] = $fact_name;
 
-			if (isset($this->facts[self::variable_name($value)]))
-				$value = $this->facts[self::variable_name($value)];
+			if (isset($this->facts[self::variable_name($fact_name)]))
+				$fact_name = $this->facts[self::variable_name($fact_name)];
 			else
-				return $value;
+				return Maybe::because([KnowledgeState::variable_name($fact_name)]);
 		}
 
-		return $value;
+		return $fact_name;
 	}
 
 	public function substitute_variables($text, $formatter = null)
