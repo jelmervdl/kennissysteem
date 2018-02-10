@@ -128,9 +128,9 @@ interface Condition
 /**
  * N of the conditions have to be true
  * 
- * <or>
+ * <some threshold="n">
  *     Conditions, e.g. <fact/>
- * </or>
+ * </some>
  */
 class WhenSomeCondition implements Condition
 {
@@ -143,12 +143,6 @@ class WhenSomeCondition implements Condition
 		$this->conditions = new Set();
 
 		$this->threshold = $threshold;
-	}
-
-	public function __toString()
-	{
-		return sprintf('(At least %d of these is/are true: %s)',
-			implode(' ; ', $this->threshold, $this->conditions->map('strval')));
 	}
 
 	public function addCondition(Condition $condition)
@@ -200,11 +194,6 @@ class WhenAllCondition extends WhenSomeCondition
 		parent::__construct(1);
 	}
 
-	public function __toString()
-	{
-		return sprintf('(%s)', implode(' && ', $this->conditions->map('strval')));
-	}
-
 	public function addCondition(Condition $condition)
 	{
 		parent::addCondition($condition);
@@ -226,11 +215,6 @@ class WhenAnyCondition extends WhenSomeCondition
 	{
 		parent::__construct(1);
 	}
-
-	public function __toString()
-	{
-		return sprintf('(%s)', implode(' || ', $this->conditions->map('strval')));
-	}
 }
 
 
@@ -251,11 +235,6 @@ class NegationCondition implements Condition
 	public function __construct(Condition $condition)
 	{
 		$this->condition = $condition;
-	}
-
-	public function __toString()
-	{
-		return sprintf('!%s', $this->condition);
 	}
 
 	public function evaluate(KnowledgeState $state)
@@ -287,11 +266,6 @@ class FactCondition implements Condition
 	{
 		$this->name = trim($name);
 		$this->value = trim($value);
-	}
-
-	public function __toString()
-	{
-		return sprintf('%s = %s', $this->name, $this->value);
 	}
 
 	public function evaluate(KnowledgeState $state)

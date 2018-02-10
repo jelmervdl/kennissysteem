@@ -47,23 +47,23 @@ class HTMLFormatter
 
 	public function formatCondition(Condition $condition)
 	{
-		switch (get_class($condition))
-		{
-			case 'WhenAllCondition':
-				return $this->formatWhenAllCondition($condition);
+		if ($condition instanceof WhenAllCondition)
+			return $this->formatWhenAllCondition($condition);
 
-			case 'WhenAnyCondition':
-				return $this->formatWhenAnyCondition($condition);
+		if ($condition instanceof WhenAnyCondition)
+			return $this->formatWhenAnyCondition($condition);
 
-			case 'NegationCondition':
-				return $this->formatNegationCondition($condition);
+		if ($condition instanceof WhenSomeCondition)
+			return $this->formatWhenSomeCondition($condition);
 
-			case 'FactCondition':
-				return $this->formatFactCondition($condition);
+		if ($condition instanceof NegationCondition)
+			return $this->formatNegationCondition($condition);
 
-			default:
-				return $this->formatUnknownCondition($condition);
-		}
+		if ($condition instanceof FactCondition)
+			return $this->formatFactCondition($condition);
+
+			
+		return $this->formatUnknownCondition($condition);
 	}
 
 	protected function formatUnknownCondition(Condition $condition)
@@ -87,6 +87,17 @@ class HTMLFormatter
 	{
 		return sprintf('<table class="kb-when-any-condition kb-condition evaluation-%s"><tr><th>OR</th><td><table>%s</table></td></tr></table>',
 			$this->evaluatedValue($condition),
+			implode("\n",
+				array_map(
+					function($condition) { return '<tr><td>' . $this->formatCondition($condition) . '</td></tr>'; },
+					iterator_to_array($condition->conditions))));
+	}
+
+	protected function formatWhenSomeCondition(WhenSomeCondition $condition)
+	{
+		return sprintf('<table class="kb-when-any-condition kb-condition evaluation-%s"><tr><th>%d OF</th><td><table>%s</table></td></tr></table>',
+			$this->evaluatedValue($condition),
+			$condition->threshold,
 			implode("\n",
 				array_map(
 					function($condition) { return '<tr><td>' . $this->formatCondition($condition) . '</td></tr>'; },
