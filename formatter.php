@@ -12,10 +12,10 @@ class HTMLFormatter
 	public function formatRule(Rule $rule)
 	{
 		return sprintf('
-			<table class="kb-rule">
+			<table class="kb-rule" id="rule_%d">
 				<tr>
 					<th colspan="2" class="kb-rule-description">
-						<span class="line-number">line %d</span>
+						<span class="line-number">line %1$d</span>
 						%s
 					</th>
 				</tr>

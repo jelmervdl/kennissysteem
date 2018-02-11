@@ -62,11 +62,16 @@ function red_if_zero($value) {
 			<table class="fact-analysis analysis-table">
 				<thead>
 					<tr>
+						<th></th>
+						<th colspan="2">Inferring</th>
+						<th colspan="2">Testing</th>
+					</tr>
+					<tr>
 						<th>Value</th>
-						<th><span class="hint" title="Questions that can cause the fact to become this value">Inferring questions</span></th>
-						<th><span class="hint" title="Rules that can cause the fact to become this value">Inferring rules</span></th>
-						<th><span class="hint" title="Sum of previous two columns, for determining if this value can be obtained">Inferring questions + rules</span></th>
-						<th><span class="hint" title="Rules that test for this value in their condition">Testing rules</span></th>
+						<th><span class="hint" title="Rules that can cause the fact to become this value">Rules</span></th>
+						<th><span class="hint" title="Questions that can cause the fact to become this value">Questions</span></th>
+						<th><span class="hint" title="Rules that test for this value in their condition">Rules</span></th>
+						<th><span class="hint" title="Goals that test for this value in their condition">Goals</span></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -79,10 +84,20 @@ function red_if_zero($value) {
 							<?=$this->html($value)?>
 							<?php endif ?>
 						</td>
-						<td><?=count($value_stats->inferringQuestions)?></td>
 						<td><?=count($value_stats->inferringRules)?></td>
-						<td><?=red_if_zero(count($value_stats->inferringQuestions) + count($value_stats->inferringRules))?></strong></td>
-						<td><?=red_if_zero(count($value_stats->dependingRules))?></td>
+						<td><?=count($value_stats->inferringQuestions)?></td>
+						<td>
+							<span class="has-popover">
+								<span><?=red_if_zero(count($value_stats->dependingRules))?></span>
+								<ul class="popover"><?php foreach ($value_stats->dependingRules as $rule): ?><li><a href="#rule_<?=$rule->line_number?>"><?=$this->html($rule)?></a></li><?php endforeach?></ul>
+							</span>
+						</td>
+						<td>
+							<span class="has-popover">
+								<span><?=red_if_zero(count($value_stats->dependingGoals))?></span>
+								<ul class="popover"><?php foreach ($value_stats->dependingGoals as $goal): ?><li><a href="#goal_<?=$this->id($goal->name)?>"><?=$this->html($goal->name)?></a></li><?php endforeach ?></ul>
+							</span>
+						</td>
 					</tr>
 				<?php endforeach ?>
 				</tbody>
@@ -92,7 +107,7 @@ function red_if_zero($value) {
 
 		<section id="goals">
 			<h2>Goals</h2>
-			<section>
+			<section id="goal_<?=$this->id($goal->name)?>">
 				<?php foreach ($kb->goals as $goal): ?>
 				<h3>
 					<?=$goal->description ? $this->html($goal->description) : '<em>No description</em>' ?>

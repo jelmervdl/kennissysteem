@@ -82,6 +82,10 @@ table {
 	border-spacing: 0;
 }
 
+.analysis-table {
+	width: 100%;
+}
+
 .knowledge-bases th,
 .analysis-table th {
 	text-align: left;
@@ -417,4 +421,50 @@ code.numbered pre:before {
 	text-align: right;
 	content: attr(data-lineno);
 	color: rgba(0, 0, 0, 0.4);
+}
+
+.has-popover {
+	display: inline-block;
+	position: relative;
+}
+
+.has-popover .popover {
+	position: absolute;
+	left: -15px;
+	top: 0;
+	display: none;
+	background: white;
+	border: 1px solid #ccc;
+	box-shadow: 1px 4px 4px rgba(0, 0, 0, 0.4);
+	z-index: 10;
+	width: 250px;
+}
+
+.has-popover:hover .popover {
+	display: block;
+	margin-top: 20px;
+}
+
+.has-popover:hover .popover:empty {
+	display: none;
+}
+
+.has-popover:hover .popover:not(:empty)::before,
+.has-popover:hover .popover:not(:empty)::after {
+	content: '';
+	border: 7px outset transparent;
+	border-bottom: 7px solid #ccc;
+	position: absolute;
+	left: 12px;
+	top: -14px;
+}
+
+.has-popover:hover .popover:not(:empty)::after {
+	top: -12px;
+	border-bottom: 5px solid #fff;
+}
+
+ul.popover {
+	list-style: none;
+	padding: 10px;
 }

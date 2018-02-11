@@ -36,15 +36,19 @@ class FactValueStatistics
 
 	public $dependingRules;
 
+	public $dependingGoals;
+
 	public $inferringQuestions;
 
 	public function __construct()
 	{
-		$this->inferringRules = new Set;
+		$this->inferringRules = new Set();
 
-		$this->dependingRules = new Set;
+		$this->dependingRules = new Set();
 
-		$this->inferringQuestions = new Set;
+		$this->dependingGoals = new Set();
+
+		$this->inferringQuestions = new Set();
 	}
 }
 
@@ -61,7 +65,7 @@ foreach ($state->rules as $rule)
 		$stats[$condition->name]
 			->values[$condition->value]
 			->dependingRules
-			->push($condition->value);
+			->push($rule);
 	
 	foreach ($rule->consequences as $fact_name => $value)
 		$stats[$fact_name]
@@ -81,7 +85,7 @@ foreach ($state->questions as $question)
 foreach ($state->goals as $goal)
 	foreach ($stats[$goal->name]->values as $possible_value)
 		$possible_value
-			->dependingRules
+			->dependingGoals
 			->push($goal);
 
 $template = new Template('templates/analyse.phtml');
