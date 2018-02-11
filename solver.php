@@ -502,6 +502,8 @@ class Maybe extends TruthState
  */
 class KnowledgeState
 {
+	public $algorithm;
+
 	public $title;
 
 	public $description;
@@ -520,6 +522,8 @@ class KnowledgeState
 
 	public function __construct()
 	{
+		$this->algorithm = 'backward-chaining';
+
 		$this->facts = array(
 			'undefined' => STATE_UNDEFINED
 		);

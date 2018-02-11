@@ -62,7 +62,19 @@ class WebFrontend
 			if (isset($_POST['answer']))
 				$this->state->apply(_decode($_POST['answer']));
 
+			switch ($this->state->algorithm)
+			{
+				case 'backward-chaining':
 					$step = $this->solver->backwardChain($this->state);
+					break;
+
+				case 'forward-chaining':
+					$step = $this->solver->forwardChain($this->state);
+					break;
+
+				default:
+					throw new RuntimeException("Unknown inference algorithm. Please choose 'forward-chaining' or 'backward-chaining'.");
+			}
 
 			$page = new Template('templates/layout.phtml');
 

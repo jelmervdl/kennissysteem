@@ -96,6 +96,14 @@ class KnowledgeBaseReader
 		assert($node->nodeName == "knowledge",
 			'The document root node is not a <knowledge/> element');
 
+		if ($node->hasAttribute('algorithm'))
+		{
+			if (!in_array($node->getAttribute('algorithm'), ['forward-chaining', 'backward-chaining']))
+				$this->logError("Unknown inference algorithm. Please choose 'forward-chaining' or 'backward-chaining'.");
+			else
+				$kb->algorithm = $node->getAttribute('algorithm');
+		}
+
 		foreach ($this->childElements($node) as $childNode)
 		{
 			switch ($childNode->nodeName)
