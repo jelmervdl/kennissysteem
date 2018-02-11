@@ -400,7 +400,12 @@ class KnowledgeBaseReader
 
 		$name = $node->getAttribute('name');
 		$value = $this->parseText($node);
-		return new FactCondition($name, $value);
+
+		$test = $node->hasAttribute('test')
+			? $node->getAttribute('test')
+			: 'eq';
+
+		return new FactCondition($name, $value, $test);
 	}
 
 	private function parseNegationCondition($node)

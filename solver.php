@@ -262,10 +262,13 @@ class FactCondition implements Condition
 
 	public $value;
 
-	public function __construct($name, $value)
+	public $test;
+
+	public function __construct($name, $value, $test = 'eq')
 	{
 		$this->name = trim($name);
 		$this->value = trim($value);
+		$this->test = $test;
 	}
 
 	public function evaluate(KnowledgeState $state)
@@ -288,9 +291,33 @@ class FactCondition implements Condition
 		if ($test_value instanceof Maybe)
 			return $test_value;
 
-		return $state_value === $test_value
+		return $this->compare($state_value, $test_value)
 			? Yes::because([$this->name])
 			: No::because([$this->name]);
+	}
+
+	protected function compare($lhs, $rhs)
+	{
+		switch ($this->test)
+		{
+			case 'gt':
+				return intval($lhs) > intval($rhs);
+
+			case 'gte':
+				return intval($lhs) >= intval($rhs);
+			
+			case 'lt':
+				return intval($lhs) < intval($rhs);
+
+			case 'lte':
+				return intval($lhs) <= intval($rhs);
+
+			case 'eq':
+				return $lhs === $rhs;
+
+			default:
+				throw new RuntimeException("Unknown test '{$this->test}'. Use gt, gte, lt, lte or eq.");
+		}
 	}
 
 	public function asArray()
