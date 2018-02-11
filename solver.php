@@ -80,7 +80,7 @@ class Question
 
 	public function __toString()
 	{
-		return sprintf('[Question: %s]', $this->description);
+		return $this->description;
 	}
 }
 
@@ -838,7 +838,7 @@ class Solver
 			{
 				$rule_result = $rule->evaluate($state);
 
-				$this->log("Rule '%s' results in %s", [$rule->description, $rule_result],
+				$this->log("Rule '%s' results in %s", [$rule, $rule_result],
 					$rule_result instanceof Yes or $rule_result instanceof No ? LOG_LEVEL_INFO : LOG_LEVEL_VERBOSE);
 
 				// If a rule could be applied, remove it to prevent it from being
