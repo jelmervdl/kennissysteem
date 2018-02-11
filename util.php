@@ -265,6 +265,11 @@ class Set implements IteratorAggregate, Countable
 		return new ArrayIterator($this->values);
 	}
 
+	public function map(Callable $callback)
+	{
+		return new CallbackMapIterator($this->getIterator(), $callback);
+	}
+
 	public function count()
 	{
 		return count($this->values);
