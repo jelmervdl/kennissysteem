@@ -20,6 +20,12 @@
 		<answer>No</answer>
 	</goal>
 
+	<goal name="test-lt-second">
+		<description>First value less than second value</description>
+		<answer value="pass">Yes</answer>
+		<answer>No</answer>
+	</goal>
+
 	<rule>
 		<if>
 			<fact name="value" test="gt">2</fact>
@@ -47,6 +53,15 @@
 		</then>
 	</rule>
 
+	<rule>
+		<if>
+			<fact name="value" test="lt">$second-value</fact>
+		</if>
+		<then>
+			<fact name="test-lt-second">pass</fact>
+		</then>
+	</rule>
+
 	<question>
 		<description>Value</description>
 		<option>
@@ -65,6 +80,28 @@
 			<description>3</description>
 			<then>
 				<fact name="value">3</fact>
+			</then>
+		</option>
+	</question>
+
+	<question>
+		<description>Second value</description>
+		<option>
+			<description>1</description>
+			<then>
+				<fact name="second-value">1</fact>
+			</then>
+		</option>
+		<option>
+			<description>2</description>
+			<then>
+				<fact name="second-value">2</fact>
+			</then>
+		</option>
+		<option>
+			<description>3</description>
+			<then>
+				<fact name="second-value">3</fact>
 			</then>
 		</option>
 	</question>
