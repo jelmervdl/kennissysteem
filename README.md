@@ -108,22 +108,22 @@ The knowledge base can contain rules, questions and goals to infer and is writte
 ## Interface and Solver
 The program starts in one of the interfaces, either the command line interface or webfrontend.php. The interface creates a new instance of *Solver*, which is the inference engine. It then loads the initial state (your knowledge base).
 
-You apply all the rules in your KB by calling the solver's `Solver::solveAll` with your state. This call will either return an *AskedQuestion* or *null*. 
+You apply all the rules in your KB by calling the solver's `Solver::backwardChain` with your state. This call will either return an *AskedQuestion* or *null*. 
 
 It will return an *AskedQuestion* if the goal it tries to currently solve can be solved using a question from your Knowledge Base. It is up to you to display the question and add the answer to the question to the current state. See either `www/webfrontend.php` or `main.php` for an example of an implementation of this.
 
 The solver will return *null* when there are no more questions to be asked, i.e. the solver is finished, the goal stack is empty, and there is no new knowledge to infer. Now you can display the conclusions. The webfrontend does this by looking at the initial goals defined in the knowledge base and printing the descriptions associated with the values the goal's facts received.
 
 ## Solver
-The Solver contains two important methods, `Solver::solve` and `Solver::solveAll`, but only the last one is the one you probably want to call.
+The Solver contains two important methods, `Solver::solve` and `Solver::backwardChain`, but only the last one is the one you probably want to call.
 
-`Solver::solve` implements a single step of backward chaining. It tries to find a value for a given fact name. First by applying all rules in the knowledge base (forward chaining). In this case it will return a *Yes* object, with the value of the fact.
+`Solver::solve` implements a single step of backward chaining. It tries to find a value for a given fact name. If there is a rule which can decide this value, it will apply it. In this case it will return a *Yes* object, with the value of the fact.
 
-If that does not work, it will try to infer what facts need to be known before it can apply rules that infer the fact that it was given to solve. This will result in a *Maybe* object which contains the information about what fact is necessary to infer before we can continue with the given fact. `Solver::solveAll` adds this to the top of the goal stack, thereby completing backward chaining.
+If that does not work, it will try to infer what facts need to be known before it can apply rules that infer the fact that it was given to solve. This will result in a *Maybe* object which contains the information about what fact is necessary to infer before we can continue with the given fact. `Solver::backwardChain` adds this to the top of the goal stack, thereby completing backward chaining.
 
 If there is no rule to infer a fact, Solver::solve will return *No*, and the value of that fact will be set to `$undefined`.
 
-`Solver::solveAll` complements `Solver::solve` by calling it repeatedly untill the goal stack is empty, and dealing with the *Yes*/*No*/*Maybe* results of `Solver::solve`.
+`Solver::backwardChain` complements `Solver::solve` by calling it repeatedly until the goal stack is empty, and dealing with the *Yes*/*No*/*Maybe* results of `Solver::solve`.
 
 `Solver::solve` makes use of `Solver::forwardChain`. This is a very rudimentary implementation of forward chaining. It tries to apply rules for which the condition is determinable: it is either a *Yes* or a *No*, but not a *Maybe*.
 
@@ -131,7 +131,7 @@ If the condition is *Yes*, the consequent is added to the knowledge base, overwr
 
 When it is determinable, so either *Yes* or *No*, **the rule itself is removed from the knowledge base to prevent infinite loops**.
 
-It repeats this step until non of the rules' conditions are determinable anymore, i.e. there are either no rules left, or all of their conditions yield *Maybe*.
+It repeats this step until non of the rules' conditions are determinable, i.e. there are either no rules left, or all of their conditions yield *Maybe*.
 
 ## Yes/No/Maybe
 The solver makes use of [three-valued logic](https://en.wikipedia.org/wiki/Three-valued_logic#Kleene_and_Priest_logics), namely *yes*, *no* and *I don't have enough information*. That last one is encoded using the *Maybe* object. *Yes* and *No* just behave as expected, and *Maybe* propagates:

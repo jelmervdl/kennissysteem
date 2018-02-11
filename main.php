@@ -69,7 +69,7 @@ function main($argc, $argv)
 	}
 
 	// Zo lang we nog vragen kunnen stellen, stel ze
-	while (($question = $solver->solveAll($state)) instanceof AskedQuestion)
+	while (($question = $solver->backwardChain($state)) instanceof AskedQuestion)
 	{
 		$answer = cli_ask($question);
 

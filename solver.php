@@ -636,7 +636,7 @@ class KnowledgeState
  * Solver is een forward & backward chaining implementatie die op basis van
  * een knowledge base (een berg regels, mogelijke vragen en gaandeweg feiten)
  * blijft zoeken, regels toepassen en vragen kiezen totdat alle goals opgelost
- * zijn. Gebruik Solver::solveAll(state) tot deze geen vragen meer teruggeeft.
+ * zijn. Gebruik Solver::backwardChain(state) tot deze geen vragen meer teruggeeft.
  */
 class Solver
 {
@@ -660,7 +660,7 @@ class Solver
 	 * @param KnowledgeState $knowledge begin-state
 	 * @return AskedQuestion | null
 	 */
-	public function solveAll(KnowledgeState $state)
+	public function backwardChain(KnowledgeState $state)
 	{
 		// herhaal zo lang er goals op de goal stack zitten
 		while (!$state->goalStack->isEmpty())
@@ -728,9 +728,6 @@ class Solver
 					// en markeer hem dan maar als niet waar (closed-world assumption?)
 					$state->apply(array($unsatisfied_goal => STATE_UNDEFINED));
 
-					// compute the effects of this change by applying the other rules
-					$this->forwardChain($state);
-					
 					$state->solved->push($unsatisfied_goal);
 				}
 			}
@@ -766,16 +763,13 @@ class Solver
 	 */
 	public function solve(KnowledgeState $state, $goal_name)
 	{
-		// Forward chain until there is nothing left to derive.
-		$this->forwardChain($state);
-
 		// First make sure that if goal_name is a variable, we resolve it to a
 		// value (a real goal name).
 		$goal = $state->resolve($goal_name);
 
 		// If we can't get to the real goal name because it depends on a variable
 		// being known, KnowledgeState::resolve will give us a Maybe that tells
-		// us where to look. solveAll will add it to the goal stack.
+		// us where to look. backwardChain will add it to the goal stack.
 		if ($goal instanceof Maybe)
 			return $goal;
 
@@ -788,16 +782,48 @@ class Solver
 		if ($current_value !== null)
 			return $current_value;
 
-		// Is er misschien een regel die we kunnen toepassen
+		// Search the rules for rules that may help us get to our goal
 		$relevant_rules = new CallbackFilterIterator($state->rules->getIterator(),
 			function($rule) use ($goal) { return $rule->infers($goal); });
-		
-		// Assume that all relevant rules result in maybe's. If not, something went
-		// horribly wrong in $this->forwardChain()!
-		foreach ($relevant_rules as $rule)
-			assert($rule->evaluate($state) instanceof Maybe);
 
-		// Is er misschien een directe vraag die we kunnen stellen?
+		// Also keep a list of rules that were undecided, as we can use these
+		// later on to decide which goal to solve first
+		$maybes = [];
+		
+		foreach ($relevant_rules as $rule)
+		{
+			$rule_result = $rule->evaluate($state);
+
+			$this->log("Rule '%s' results in %s", [$rule, $rule_result],
+				$rule_result instanceof Maybe ? LOG_LEVEL_VERBOSE : LOG_LEVEL_INFO);
+
+			// If it was decided as true, add the antecedent to the state
+			if ($rule_result instanceof Yes)
+			{
+				$this->log("Adding %s to the facts dictionary", [dict_to_string($rule->consequences)]);
+
+				// Update the knowledge state
+				$state->apply($rule->consequences);
+
+				// Remove the rule from this knowlege state so that we don't try
+				// to evaluate it again.
+				// TODO: Is this safe? We are still iterating over $state->rules here
+				$state->rules->remove($rule);
+
+				// no need to look to further rules, this one was true, right?
+				return $state->value($goal);
+			}
+
+			// If this rule is decided, just remove it. Once it is decided it
+			// won't magically turn to Yes after new knowledge comes in.
+			else if ($rule_result instanceof No)
+				$state->rules->remove($rule);
+
+			else
+				$maybes[] = $rule_result;
+		}
+
+		// Is there a question that might lead us to solving this goal?
 		$relevant_questions = new CallbackFilterIterator($state->questions->getIterator(),
 			function($question) use ($goal) { return $question->infers($goal); });
 
@@ -805,10 +831,8 @@ class Solver
 			iterator_count($relevant_questions)], LOG_LEVEL_VERBOSE);
 
 		// If this problem can be solved by a rule, use it!
-		if (iterator_count($relevant_rules) > 0)
-			return Maybe::because(new CallbackMapIterator($relevant_rules, function($rule) use ($state) {
-				return $rule->evaluate($state);
-			}));
+		if (count($maybes) > 0)
+			return Maybe::because($maybes);
 
 		// If not, but when we do have a question to solve it, use that instead.
 		if (iterator_count($relevant_questions) > 0)
@@ -839,21 +863,28 @@ class Solver
 				$rule_result = $rule->evaluate($state);
 
 				$this->log("Rule '%s' results in %s", [$rule, $rule_result],
-					$rule_result instanceof Yes or $rule_result instanceof No ? LOG_LEVEL_INFO : LOG_LEVEL_VERBOSE);
-
-				// If a rule could be applied, remove it to prevent it from being
-				// applied again.
-				if ($rule_result instanceof Yes or $rule_result instanceof No)
-					$state->rules->remove($rule);
+					$rule_result instanceof Maybe ? LOG_LEVEL_VERBOSE : LOG_LEVEL_INFO);
 
 				// If the rule was true, add the consequences, the inferred knowledge
 				// to the knowledge state and continue applying rules on the new knowledge.
 				if ($rule_result instanceof Yes)
 				{
+					$state->rules->remove($rule);
+
 					$this->log("Adding %s to the facts dictionary", [dict_to_string($rule->consequences)]);
 
 					$state->apply($rule->consequences);
 					continue 2;
+				}
+
+				// If the rule could not be decided due to missing facts, and that
+				// fact can be asked through a question, ask that question!
+				if ($rule_result instanceof Maybe)
+				{
+					foreach ($state->questions as $question)
+						foreach ($rule_result->causes() as $factor)
+							if ($question->infers($factor))
+								return new AskedQuestion($question, false);
 				}
 			}
 

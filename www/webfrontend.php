@@ -62,7 +62,7 @@ class WebFrontend
 			if (isset($_POST['answer']))
 				$this->state->apply(_decode($_POST['answer']));
 
-			$step = $this->solver->solveAll($this->state);
+					$step = $this->solver->backwardChain($this->state);
 
 			$page = new Template('templates/layout.phtml');
 

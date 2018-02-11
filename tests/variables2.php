@@ -21,7 +21,7 @@ $state->goalStack->push('test');
 
 $solver = new Solver();
 
-$solver->solveAll($state);
+$solver->backwardChain($state);
 
 // The fact that c is true should have been recorded
 assert('$state->value("test") == "passed"');
