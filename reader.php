@@ -93,13 +93,13 @@ class KnowledgeBaseReader
 
 	private function parseKnowledgeBase($node, $kb)
 	{
-		assert($node->nodeName == "knowledge",
-			'The document root node is not a <knowledge/> element');
+		if ($node->nodeName != "knowledge")
+			$this->logError('The document root node is not a <knowledge/> element', E_USER_WARNING);
 
 		if ($node->hasAttribute('algorithm'))
 		{
 			if (!in_array($node->getAttribute('algorithm'), ['forward-chaining', 'backward-chaining']))
-				$this->logError("Unknown inference algorithm. Please choose 'forward-chaining' or 'backward-chaining'.");
+				$this->logError("Unknown inference algorithm. Please choose 'forward-chaining' or 'backward-chaining'.", E_USER_WARNING);
 			else
 				$kb->algorithm = $node->getAttribute('algorithm');
 		}
