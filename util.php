@@ -455,11 +455,11 @@ function to_debug_string($value)
 	return strval($value);
 }
 
-function dict_to_string($dict, $pair_format = '%s: %s')
+function dict_to_string($dict, $pair_format = '%s => %s', $dict_format = '[%s]')
 {
-	return implode(', ', array_map(function($key, $value) use ($pair_format) {
+	return sprintf($dict_format, implode(', ', array_map(function($key, $value) use ($pair_format) {
 		return sprintf($pair_format, $key, $value);
-	}, array_keys($dict), array_values($dict)));
+	}, array_keys($dict), array_values($dict))));
 }
 
 define('LOG_LEVEL_WARNING', 3);
