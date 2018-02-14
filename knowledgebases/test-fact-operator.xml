@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<knowledge>
+	<title>Operator test</title>
+	
+	<goal name="test-gt-2">
+		<description>greater than 2</description>
+		<answer value="pass">Yes</answer>
+		<answer>No</answer>
+	</goal>
+
+	<goal name="test-eq-2">
+		<description>equal to 2</description>
+		<answer value="pass">Yes</answer>
+		<answer>No</answer>
+	</goal>
+
+	<goal name="test-lt-2">
+		<description>less than 2</description>
+		<answer value="pass">Yes</answer>
+		<answer>No</answer>
+	</goal>
+
+	<goal name="test-lt-second">
+		<description>First value less than second value</description>
+		<answer value="pass">Yes</answer>
+		<answer>No</answer>
+	</goal>
+
+	<rule>
+		<if>
+			<fact name="value" test="gt">2</fact>
+		</if>
+		<then>
+			<fact name="test-gt-2">pass</fact>
+		</then>
+	</rule>
+
+	<rule>
+		<if>
+			<fact name="value" test="eq">2</fact>
+		</if>
+		<then>
+			<fact name="test-eq-2">pass</fact>
+		</then>
+	</rule>
+
+	<rule>
+		<if>
+			<fact name="value" test="lt">2</fact>
+		</if>
+		<then>
+			<fact name="test-lt-2">pass</fact>
+		</then>
+	</rule>
+
+	<rule>
+		<if>
+			<fact name="value" test="lt">$second-value</fact>
+		</if>
+		<then>
+			<fact name="test-lt-second">pass</fact>
+		</then>
+	</rule>
+
+	<question>
+		<description>Value</description>
+		<option>
+			<description>1</description>
+			<then>
+				<fact name="value">1</fact>
+			</then>
+		</option>
+		<option>
+			<description>2</description>
+			<then>
+				<fact name="value">2</fact>
+			</then>
+		</option>
+		<option>
+			<description>3</description>
+			<then>
+				<fact name="value">3</fact>
+			</then>
+		</option>
+	</question>
+
+	<question>
+		<description>Second value</description>
+		<option>
+			<description>1</description>
+			<then>
+				<fact name="second-value">1</fact>
+			</then>
+		</option>
+		<option>
+			<description>2</description>
+			<then>
+				<fact name="second-value">2</fact>
+			</then>
+		</option>
+		<option>
+			<description>3</description>
+			<then>
+				<fact name="second-value">3</fact>
+			</then>
+		</option>
+	</question>
+</knowledge>

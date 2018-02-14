@@ -85,7 +85,7 @@ class Question
 
 	public function __toString()
 	{
-		return sprintf('[Question: %s]', $this->description);
+		return $this->description;
 	}
 }
 
@@ -131,19 +131,23 @@ interface Condition
 }
 
 /**
- * All conditions need to be true
+ * N of the conditions have to be true
  * 
- * <and>
+ * <some threshold="n">
  *     Conditions, e.g. <fact/>
- * </and>
+ * </some>
  */
-class WhenAllCondition implements Condition 
+class WhenSomeCondition implements Condition
 {
 	public $conditions;
 
-	public function __construct()
+	public $threshold;
+
+	public function __construct(int $threshold)
 	{
 		$this->conditions = new Set();
+
+		$this->threshold = $threshold;
 	}
 
 	public function addCondition(Condition $condition)
@@ -154,31 +158,52 @@ class WhenAllCondition implements Condition
 	public function evaluate(KnowledgeState $state)
 	{
 		// Assumption: There has to be at least one condition
-		assert(count($this->conditions) > 0);
+		assert(count($this->conditions) >= $this->threshold);
 
 		$values = array();
 		foreach ($this->conditions as $condition)
 			$values[] = $condition->evaluate($state);
 
-		// If at least one of the values is No, we no this condition
-		// if false (Maybe's don't even matter in that case anymore.)
-		$nos = array_filter_type('No', $values);
-		if (count($nos) > 0)
-			return new No($this, $nos);
-
-		// If there are maybes left in the values, we know that not yet
-		// all conditions are Yes, so, the verdict for now is also Maybe.
+		// If threre is at least one Yes, then this condition is met!
+		$yesses = array_filter_type('Yes', $values);
+		if (count($yesses) >= $this->threshold)
+			return new Yes($this, $yesses);
+		
+		// If there are still maybe's, then maybe there is still chance
+		// for a Yes. So return Maybe.
 		$maybes = array_filter_type('Maybe', $values);
-		if (count($maybes) > 0)
+		if (count($yesses) + count($maybes) >= $this->threshold)
 			return new Maybe($this, $maybes);
 
-		// And otherwise, everything evaluated to Yes, so Yes!
-		return new Yes($this, $values);
+		// Not enough yes, not enough maybe, too many no's. So no.
+		return new No($this, $values);
 	}
 
 	public function asArray()
 	{
 		return array($this, array_map_method('asArray', $this->conditions));
+	}
+}
+
+/**
+ * All conditions need to be true
+ * 
+ * <and>
+ *     Conditions, e.g. <fact/>
+ * </and>
+ */
+class WhenAllCondition extends WhenSomeCondition
+{
+	public function __construct()
+	{
+		parent::__construct(1);
+	}
+
+	public function addCondition(Condition $condition)
+	{
+		parent::addCondition($condition);
+
+		$this->threshold = count($this->conditions);
 	}
 }
 
@@ -189,49 +214,14 @@ class WhenAllCondition implements Condition
  *     Conditions, e.g. <fact/>
  * </or>
  */
-class WhenAnyCondition implements Condition
+class WhenAnyCondition extends WhenSomeCondition
 {
-	public $conditions;
-
 	public function __construct()
 	{
-		$this->conditions = new Set();
-	}
-
-	public function addCondition(Condition $condition)
-	{
-		$this->conditions->push($condition);
-	}
-
-	public function evaluate(KnowledgeState $state)
-	{
-		// Assumption: There has to be at least one condition
-		assert(count($this->conditions) > 0);
-
-		$values = array();
-		foreach ($this->conditions as $condition)
-			$values[] = $condition->evaluate($state);
-		
-		// If threre is at least one Yes, then this condition is met!
-		$yesses = array_filter_type('Yes', $values);
-		if ($yesses)
-			return new Yes($this, $yesses);
-		
-		// If there are still maybe's, then maybe there is still chance
-		// for a Yes. So return Maybe.
-		$maybes = array_filter_type('Maybe', $values);
-		if ($maybes)
-			return new Maybe($this, $maybes);
-
-		// No yes, no maybe, only no's. So no.
-		return new No($this, $values);
-	}
-
-	public function asArray()
-	{
-		return array($this, array_map_method('asArray', $this->conditions));
+		parent::__construct(1);
 	}
 }
+
 
 /**
  * Evaluates to the opposite of the condition:
@@ -277,15 +267,23 @@ class FactCondition implements Condition
 
 	public $value;
 
-	public function __construct($name, $value)
+	public $test;
+
+	public function __construct($name, $value, $test = 'eq')
 	{
 		$this->name = trim($name);
 		$this->value = trim($value);
+		$this->test = $test;
 	}
 
 	public function evaluate(KnowledgeState $state)
 	{
-		$state_value = $state->value($this->name);
+		$fact_name = $state->resolve($this->name);
+
+		if ($fact_name instanceof Maybe)
+			return $fact_name;
+
+		$state_value = $state->value($fact_name);
 
 		// If the fact is not in the kb, say we can't know whether this condition is true
 		if ($state_value === null)
@@ -300,13 +298,36 @@ class FactCondition implements Condition
 		// (or a variable if that isn't known yet to the kb!)
 		$test_value = $state->resolve($this->value);
 
-		// If it did resolve to a variable, we first need to know its value
-		if (KnowledgeState::is_variable($test_value))
-			return new Maybe($this, [KnowledgeState::variable_name($test_value)]);
+		if ($test_value instanceof Maybe)
+			return $test_value;
 
-		return $state_value == $test_value
+		return $this->compare($state_value, $test_value)
 			? new Yes($this, [$state->reason($this->name)])
 			: new No($this, [$state->reason($this->name)]);
+	}
+
+	protected function compare($lhs, $rhs)
+	{
+		switch ($this->test)
+		{
+			case 'gt':
+				return intval($lhs) > intval($rhs);
+
+			case 'gte':
+				return intval($lhs) >= intval($rhs);
+			
+			case 'lt':
+				return intval($lhs) < intval($rhs);
+
+			case 'lte':
+				return intval($lhs) <= intval($rhs);
+
+			case 'eq':
+				return $lhs === $rhs;
+
+			default:
+				throw new RuntimeException("Unknown test '{$this->test}'. Use gt, gte, lt, lte or eq.");
+		}
 	}
 
 	public function asArray()
@@ -355,19 +376,18 @@ class Goal
 
 	public function answer(KnowledgeState $state)
 	{
-		$state_value = $state->value($this->name);
+		$name = $state->resolve($this->name);
+
+		$state_value = $state->value($name);
 		
 		foreach ($this->answers as $answer)
 		{
-			$answer_value = $answer->value;
-
 			// If this is the default option, return it always.
-			if ($answer_value === null)
+			if ($answer->value === null)
 				return $answer;
 
-			// If the value is a variable, try to resolve it.
-			if (KnowledgeState::is_variable($answer_value))
-				$answer_value = $state->resolve($answer_value);
+			// In case the value in the xml was a variable, resolve it first
+			$answer_value = $state->resolve($answer->value);
 
 			if ($state_value === $answer_value)
 				return $answer;
@@ -589,6 +609,8 @@ class PredefinedConstant implements Reason
  */
 class KnowledgeState
 {
+	public $algorithm;
+
 	public $title;
 
 	public $description;
@@ -607,6 +629,8 @@ class KnowledgeState
 
 	public function __construct()
 	{
+		$this->algorithm = 'backward-chaining';
+
 		$this->facts = array(
 			'undefined' => new KnowledgeItem(STATE_UNDEFINED,
 				new PredefinedConstant('Undefined is defined as undefined'))
@@ -641,9 +665,31 @@ class KnowledgeState
 			new PredefinedConstant("There was no rule or question left to find a value for $fact_name"));
 	}
 
+	public function initializeGoalStack()
+	{
+		foreach ($this->goals as $goal)
+		{
+			$this->goalStack->push($goal->name);
+
+			// Also push any answer values that are variables as goals to be solved.
+			foreach ($goal->answers as $answer)
+				if (KnowledgeState::is_variable($answer->value))
+					$this->goalStack->push(KnowledgeState::variable_name($answer->value));
+		}
+	}
+
+	/**
+	 * Returns the value of a fact, or null if not found. Do not call with
+	 * variables as fact_name. If $fact_name is or could be a variable, first
+	 * use KnowledgeState::resolve on it.
+	 * 
+	 * @param string $fact_name
+	 * @return mixed
+	 */
 	public function value($fact_name)
 	{
-		$fact_name = $this->resolve($fact_name);
+		if (self::is_variable($fact_name))
+			throw new RuntimeException('Called KnowledgeState::value with variable');
 
 		if (!isset($this->facts[$fact_name]))
 			return null;
@@ -658,24 +704,24 @@ class KnowledgeState
 		return $this->facts[$fact_name]->reason;
 	}
 
-	public function resolve($value)
+	public function resolve($fact_name)
 	{
 		$stack = array();
 
-		while (self::is_variable($value))
+		while (self::is_variable($fact_name))
 		{
-			if (in_array($value, $stack))
-				throw new RuntimeException("Infinite recursion when trying to retrieve fact '$value' after I retrieved " . implode(', ', $stack) . ".");
+			if (in_array($fact_name, $stack))
+				throw new RuntimeException("Infinite recursion when trying to retrieve fact '$fact_name' after I retrieved " . implode(', ', $stack) . ".");
 
-			$stack[] = $value;
+			$stack[] = $fact_name;
 
-			if (isset($this->facts[self::variable_name($value)]))
-				$value = $this->facts[self::variable_name($value)]->value;
+			if (isset($this->facts[self::variable_name($fact_name)]))
+				$fact_name = $this->facts[self::variable_name($fact_name)]->value;
 			else
-				return $value;
+				return new Maybe(null, [KnowledgeState::variable_name($fact_name)]);
 		}
 
-		return $value;
+		return $fact_name;
 	}
 
 	public function substitute_variables($text, $formatter = null)
@@ -716,7 +762,7 @@ class KnowledgeState
  * Solver is een forward & backward chaining implementatie die op basis van
  * een knowledge base (een berg regels, mogelijke vragen en gaandeweg feiten)
  * blijft zoeken, regels toepassen en vragen kiezen totdat alle goals opgelost
- * zijn. Gebruik Solver::solveAll(state) tot deze geen vragen meer teruggeeft.
+ * zijn. Gebruik Solver::backwardChain(state) tot deze geen vragen meer teruggeeft.
  */
 class Solver
 {
@@ -740,7 +786,7 @@ class Solver
 	 * @param KnowledgeState $knowledge begin-state
 	 * @return AskedQuestion | null
 	 */
-	public function solveAll(KnowledgeState $state)
+	public function backwardChain(KnowledgeState $state)
 	{
 		// herhaal zo lang er goals op de goal stack zitten
 		while (!$state->goalStack->isEmpty())
@@ -808,9 +854,6 @@ class Solver
 					// en markeer hem dan maar als niet waar (closed-world assumption?)
 					$state->markUndefined($unsatisfied_goal);
 
-					// compute the effects of this change by applying the other rules
-					$this->forwardChain($state);
-					
 					$state->solved->push($unsatisfied_goal);
 				}
 			}
@@ -822,7 +865,7 @@ class Solver
 				$this->log('Inferred %s to be %s and removed it from the goal stack.', [$state->goalStack->top(), $result]);
 				// aanname: als het goal kon worden afgeleid, dan is het nu deel van
 				// de afgeleide kennis.
-				assert(isset($state->facts[$state->goalStack->top()]));
+				assert(!($state->resolve($state->goalStack->top()) instanceof Maybe));
 
 				// op naar het volgende goal.
 				$state->solved->push($state->goalStack->pop());
@@ -844,10 +887,17 @@ class Solver
 	 * @param string goal naam van het fact dat wordt afgeleid
 	 * @return TruthState | AskedQuestion
 	 */
-	public function solve(KnowledgeState $state, $goal)
+	public function solve(KnowledgeState $state, $goal_name)
 	{
-		// Forward chain until there is nothing left to derive.
-		$this->forwardChain($state);
+		// First make sure that if goal_name is a variable, we resolve it to a
+		// value (a real goal name).
+		$goal = $state->resolve($goal_name);
+
+		// If we can't get to the real goal name because it depends on a variable
+		// being known, KnowledgeState::resolve will give us a Maybe that tells
+		// us where to look. backwardChain will add it to the goal stack.
+		if ($goal instanceof Maybe)
+			return $goal;
 
 		// Test whether the fact is already in the knowledge base and if not, if it is solely
 		// unknown because we don't know the current goal we try to prove. Because, it could
@@ -858,28 +908,57 @@ class Solver
 		if ($current_value !== null)
 			return $current_value;
 
-		// Is er misschien een regel die we kunnen toepassen
+		// Search the rules for rules that may help us get to our goal
 		$relevant_rules = new CallbackFilterIterator($state->rules->getIterator(),
 			function($rule) use ($goal) { return $rule->infers($goal); });
-		
-		// Assume that all relevant rules result in maybe's. If not, something went
-		// horribly wrong in $this->forwardChain()!
-		foreach ($relevant_rules as $rule)
-			assert($rule->evaluate($state) instanceof Maybe);
 
-		// Is er misschien een directe vraag die we kunnen stellen?
+		// Also keep a list of rules that were undecided, as we can use these
+		// later on to decide which goal to solve first
+		$maybes = [];
+		
+		foreach ($relevant_rules as $rule)
+		{
+			$rule_result = $rule->evaluate($state);
+
+			$this->log("Rule '%s' results in %s", [$rule, $rule_result],
+				$rule_result instanceof Maybe ? LOG_LEVEL_VERBOSE : LOG_LEVEL_INFO);
+
+			// If it was decided as true, add the antecedent to the state
+			if ($rule_result instanceof Yes)
+			{
+				$this->log("Adding %s to the facts dictionary", [dict_to_string($rule->consequences)]);
+
+				// Update the knowledge state
+				$state->applyRule($rule, $rule_result);
+
+				// Remove the rule from this knowlege state so that we don't try
+				// to evaluate it again.
+				// TODO: Is this safe? We are still iterating over $state->rules here
+				$state->rules->remove($rule);
+
+				// no need to look to further rules, this one was true, right?
+				return $state->value($goal);
+			}
+
+			// If this rule is decided, just remove it. Once it is decided it
+			// won't magically turn to Yes after new knowledge comes in.
+			else if ($rule_result instanceof No)
+				$state->rules->remove($rule);
+
+			else
+				$maybes[] = $rule_result;
+		}
+
+		// Is there a question that might lead us to solving this goal?
 		$relevant_questions = new CallbackFilterIterator($state->questions->getIterator(),
 			function($question) use ($goal) { return $question->infers($goal); });
 
 		$this->log("Found %d rules and %s questions", [iterator_count($relevant_rules),
 			iterator_count($relevant_questions)], LOG_LEVEL_VERBOSE);
 
-		// If this problem can be solved by rules, combine all their factors and return that 
-		// to the solver. It will then determine which goal to pursue next.
-		if (iterator_count($relevant_rules) > 0)
-			return new Maybe(null, new CallbackMapIterator($relevant_rules, function($rule) use ($state) {
-				return $rule->evaluate($state);
-			}));
+		// If this problem can be solved by a rule, use it!
+		if (count($maybes) > 0)
+			return new Maybe(null, $maybes);
 
 		// If not, but when we do have a question to solve it, use that instead.
 		if (iterator_count($relevant_questions) > 0)
@@ -907,27 +986,49 @@ class Solver
 			{
 				$rule_result = $rule->evaluate($state);
 
-				$this->log("Rule '%s' results in %s", [$rule->description, $rule_result],
-					$rule_result instanceof Yes or $rule_result instanceof No ? LOG_LEVEL_INFO : LOG_LEVEL_VERBOSE);
-
-				// If a rule could be applied, remove it to prevent it from being
-				// applied again.
-				if ($rule_result instanceof Yes or $rule_result instanceof No)
-					$state->rules->remove($rule);
+				$this->log("Rule '%s' results in %s", [$rule, $rule_result],
+					$rule_result instanceof Maybe ? LOG_LEVEL_VERBOSE : LOG_LEVEL_INFO);
 
 				// If the rule was true, add the consequences, the inferred knowledge
 				// to the knowledge state and continue applying rules on the new knowledge.
 				if ($rule_result instanceof Yes)
 				{
+					$state->rules->remove($rule);
+
 					$this->log("Adding %s to the facts dictionary", [dict_to_string($rule->consequences)]);
 
 					$state->applyRule($rule, $rule_result);
 					continue 2;
 				}
+
+				// If the rule could not be decided due to missing facts, and that
+				// fact can be asked through a question, ask that question!
+				if ($rule_result instanceof Maybe)
+				{
+					foreach ($state->questions as $question)
+						foreach ($rule_result->causes() as $factor)
+							if ($question->infers($factor))
+								return new AskedQuestion($question, false);
+				}
 			}
 
 			// None of the rules changed the state: stop trying.
 			break;
+		}
+	}
+
+	public function step(KnowledgeState $state)
+	{
+		switch ($state->algorithm)
+		{
+			case 'backward-chaining':
+				return $this->backwardChain($state);
+
+			case 'forward-chaining':
+				return $this->forwardChain($state);
+
+			default:
+				throw new RuntimeException("Unknown inference algorithm. Please choose 'forward-chaining' or 'backward-chaining'.");
 		}
 	}
 

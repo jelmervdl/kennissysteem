@@ -61,7 +61,7 @@ class WebFrontend
 
 			if (isset($_POST['answer']))
 			{
-				$query = $this->solver->solveAll($this->state);
+				$query = $this->solver->step($this->state);
 				assert($query instanceof AskedQuestion);
 
 				$option = $query->question->options[$_POST['answer']];
@@ -72,7 +72,7 @@ class WebFrontend
 				$this->state->applyAnswer($query->question, $option);
 			}
 
-			$step = $this->solver->solveAll($this->state);
+			$step = $this->solver->step($this->state);
 
 			$page = new Template('templates/layout.phtml');
 
@@ -81,7 +81,7 @@ class WebFrontend
 			else
 				$page->content = $this->displayConclusions();
 		}
-		catch (Exception $e)
+		catch (Exception | Error $e)
 		{
 			$page = new Template('templates/exception.phtml');
 			$page->exception = $e;
@@ -136,15 +136,7 @@ class WebFrontend
 			foreach (explode(',', $_GET['goals']) as $goal)
 				$state->goalStack->push($goal);
 		else
-			foreach ($state->goals as $goal)
-			{
-				$state->goalStack->push($goal->name);
-
-				// Also push any answer values that are variables as goals to be solved.
-				foreach ($goal->answers as $answer)
-					if (KnowledgeState::is_variable($answer->value))
-						$state->goalStack->push(KnowledgeState::variable_name($answer->value));	
-			}
+			$state->initializeGoalStack();
 
 		return $state;
 	}

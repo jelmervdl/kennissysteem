@@ -1,11 +1,10 @@
 <section class="completed">
-	<h2>Verdict</h2>
-	
+	<h2>Conclusions</h2>
+	<dl>
 	<?php foreach ($state->goals as $goal): ?>
 		<?php if ($goal->hasAnswers() && (($answer = $goal->answer($state)) || $state->facts[$goal->name]->value != STATE_UNDEFINED)): ?>
-			<section>
-				<p><?=$goal->description?></p>
-				<p><?php
+			<dt><?=$state->substitute_variables($goal->description, ['Template', 'html'])?></dt>
+			<dd><?php
 				echo $answer
 					? $state->substitute_variables($answer->description, ['Template', 'html'])
 					: '<pre>' . $state->facts[$goal->name]->value . '</pre>';
@@ -15,5 +14,4 @@
 				</div>
 			<?php endif ?>
 	<?php endforeach ?>
-
 </section>

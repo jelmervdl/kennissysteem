@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<knowledge>
+	<title>Variable test</title>
+
+	<goal name="chosen-equal">
+		<description>The $compare and third are equal</description>
+		<answer value="true">Yes</answer>
+		<answer>No</answer>
+	</goal>
+	
+	<goal name="equal">
+		<description>The first and second are equal</description>
+		<answer value="true">Yes</answer>
+		<answer>No</answer>
+	</goal>
+
+	<rule>
+		<description>Compare the first and the second answer</description>
+		<if>
+			<fact name="first">$second</fact>
+		</if>
+		<then>
+			<fact name="equal">true</fact>
+		</then>
+	</rule>
+
+	<rule>
+		<description>Compare the answer to the chosen question (first or second
+			question) with the answer of the third and see whether they are equal</description>
+		<if>
+			<fact name="$compare">$third</fact>
+		</if>
+		<then>
+			<fact name="chosen-equal">true</fact>
+		</then>
+	</rule>
+
+	<rule>
+		<description>Short-cut rule: the second and third question will inherit
+			the answer given to the first question</description>
+		<if>
+			<fact name="shortcut">yes</fact>
+		</if>
+		<then>
+			<fact name="third">$second</fact>
+			<fact name="second">$first</fact>
+		</then>
+	</rule>
+
+	<question>
+		<description>First</description>
+		<option>
+			<description>1</description>
+			<then>
+				<fact name="first">1</fact>
+			</then>
+		</option>
+		<option>
+			<description>2</description>
+			<then>
+				<fact name="first">2</fact>
+			</then>
+		</option>
+		<option>
+			<description>3</description>
+			<then>
+				<fact name="first">3</fact>
+			</then>
+		</option>
+	</question>
+
+	<question>
+		<description>Second</description>
+		<option>
+			<description>1</description>
+			<then>
+				<fact name="second">1</fact>
+			</then>
+		</option>
+		<option>
+			<description>2</description>
+			<then>
+				<fact name="second">2</fact>
+			</then>
+		</option>
+		<option>
+			<description>3</description>
+			<then>
+				<fact name="second">3</fact>
+			</then>
+		</option>
+	</question>
+
+	<question>
+		<description>Third</description>
+		<option>
+			<description>1</description>
+			<then>
+				<fact name="third">1</fact>
+			</then>
+		</option>
+		<option>
+			<description>2</description>
+			<then>
+				<fact name="third">2</fact>
+			</then>
+		</option>
+		<option>
+			<description>3</description>
+			<then>
+				<fact name="third">3</fact>
+			</then>
+		</option>
+	</question>
+
+	<question>
+		<description>Which of the two questions should be compared to the third?</description>
+		<option>
+			<description>First</description>
+			<then>
+				<fact name="compare">first</fact>
+			</then>
+		</option>
+		<option>
+			<description>Second</description>
+			<then>
+				<fact name="compare">second</fact>
+			</then>
+		</option>
+	</question>
+
+	<question>
+		<description>Short-cut the second and third question?</description>
+		<option>
+			<description>Yes</description>
+			<then>
+				<fact name="shortcut">yes</fact>
+			</then>
+		</option>
+		<option>
+			<description>No</description>
+			<then>
+				<fact name="shortcut">no</fact>
+			</then>
+		</option>
+	</question>
+</knowledge>

@@ -43,13 +43,12 @@
 		<h3>Order of execution</h3>
 		<p><a href="https://github.com/jelmervdl/kennissysteem/blob/master/solver.php">The solver</a> uses a simple loop to infer stuff:</p>
 		<ol>
-			<li>The solver starts when <tt>solveAll()</tt> is called:</li>
+			<li>The solver starts when <tt>bachwardChain()</tt> is called:</li>
 			<ol>
 				<li>While there are still goals on the goal stack:</li>
 				<ol>
 					<li>Try to solve the top most goal (see the <tt>solve</tt> function):</li>
 					<ol>
-						<li>First apply forward chaining to infer any new facts</li>
 						<li>Check the current value of the goal</li>
 						<li>If it is already a Yes or No, (i.e. it was already inferred during the forward chaining step) continue to to the next goal in the stack.</li>
 						<li>If there are rules that can infer this fact, add those to the goal stack if they are not already in there. (These rules cannot yet infer this fact because otherwise they would already have done so during the forward chaining step.)</li>
@@ -58,7 +57,7 @@
 					</ol>
 				</ol>
 				<li>If a question was asked, show that on the screen and stop.</li>
-				<li>As soon as it is answered, add the answer to the set of facts and start again with <tt>solveAll()</tt>.</li>
+				<li>As soon as it is answered, add the answer to the set of facts and start again with <tt>bachwardChain()</tt>.</li>
 			</ol>
 		</ol>
 	</section>

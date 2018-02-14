@@ -2,8 +2,8 @@
 
 error_reporting(E_ALL);
 ini_set('display_errors', true);
+ini_set('assert.exception', '1');
 
-assert_options(ASSERT_BAIL, true);
 
 function get_error_enum($errno)
 {
@@ -265,9 +265,9 @@ class Set implements IteratorAggregate, Countable
 		return new ArrayIterator($this->values);
 	}
 
-	public function map(callable $operation)
+	public function map(Callable $callback)
 	{
-		return array_map($operation, $this->values);
+		return new CallbackMapIterator($this->getIterator(), $callback);
 	}
 
 	public function count()
@@ -455,11 +455,11 @@ function to_debug_string($value)
 	return strval($value);
 }
 
-function dict_to_string($dict, $pair_format = '%s: %s')
+function dict_to_string($dict, $pair_format = '%s => %s', $dict_format = '[%s]')
 {
-	return implode(', ', array_map(function($key, $value) use ($pair_format) {
+	return sprintf($dict_format, implode(', ', array_map(function($key, $value) use ($pair_format) {
 		return sprintf($pair_format, $key, $value);
-	}, array_keys($dict), array_values($dict)));
+	}, array_keys($dict), array_values($dict))));
 }
 
 define('LOG_LEVEL_WARNING', 3);
