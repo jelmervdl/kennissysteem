@@ -135,6 +135,21 @@ function iterator_map(Iterator $it, Callable $callback)
 	return new CallbackMapIterator($it, $callback);
 }
 
+/**
+ * Filter anything iterable (array, iterator, stack, list, etc) using a callback.
+ * Does not preserve keys.
+ */
+function filter($iterable, Callable $callback)
+{
+	$filtered = [];
+
+	foreach ($iterable as $key => $value)
+		if (call_user_func($callback, $value, $key))
+			$filtered[] = $value;
+
+	return $filtered;
+}
+
 function unequals($a, $b)
 {
 	return $a != $b;
