@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title><?=$this->html($state->title) ?></title>
+		<title><?=$this->html($domain->title) ?></title>
 		<link rel="stylesheet" href="webfrontend.css">
 	</head>
 	<body id="webfrontend">
@@ -12,8 +12,8 @@
 			<a href="#debug">Debug</a>
 		</nav>
 		<header>
-			<h1><?=$this->html($state->title)?></h1>
-			<p><?=$state->description?></p>
+			<h1><?=$this->html($domain->title)?></h1>
+			<p><?=$domain->description?></p>
 		</header>
 		<div>
 			<form method="post">
@@ -51,7 +51,7 @@
 				<h3>Rules</h3>
 				<?php $formatter = new HTMLFormatter($state); ?>
 				<ul>
-					<?php foreach($state->rules as $rule): ?>
+					<?php foreach($domain->rules as $rule): ?>
 					<li><?=$formatter->formatRule($rule)?></li>
 					<?php endforeach ?>
 				</ul>

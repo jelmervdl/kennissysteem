@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Exception!<?php if ($state) echo ' &mdash; ' . $this->html($state->title) ?></title>
+		<title>Exception!<?php if ($domain) echo ' &mdash; ' . $this->html($domain->title) ?></title>
 		<link rel="stylesheet" href="webfrontend.css">
 	</head>
 	<body id="webfrontend">
@@ -11,10 +11,10 @@
 			<a href="index.php">Upload</a>
 			<a href="#debug">Toggle debug</a>
 		</nav>
-		<?php if ($state): ?>
+		<?php if ($domain): ?>
 		<header>
-			<h1><?=$this->html($state->title)?></h1>
-			<p><?=$state->description?></p>
+			<h1><?=$this->html($domain->title)?></h1>
+			<p><?=$domain->description?></p>
 		</header>
 		<?php endif ?>
 		<section>
@@ -48,7 +48,7 @@
 				<h3>Rules</h3>
 				<?php $formatter = new HTMLFormatter($state); ?>
 				<ul>
-					<?php foreach($state->rules as $rule): ?>
+					<?php foreach($domain->rules as $rule): ?>
 					<li><?=$formatter->formatRule($rule)?></li>
 					<?php endforeach ?>
 				</ul>

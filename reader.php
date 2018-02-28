@@ -2,7 +2,7 @@
 
 /**
  * XML Reader die een knowledge base xml bestand inleest naar
- * een KnowledgeState object. Meer niet. Onbekende elementen
+ * een KnowledgeDomain object. Meer niet. Onbekende elementen
  * leveren een notice op, ontbrekende attributen en elementen
  * een error.
  *
@@ -10,7 +10,7 @@
  * <code>
  *   $reader = new KnowledgeBaseReader;
  *   $kb = $reader->parse('knowledge.xml');
- *   assert($kb instanceof KnowledgeState);
+ *   assert($kb instanceof KnowledgeDomain);
  * </code>
  */
 class KnowledgeBaseReader
@@ -25,7 +25,7 @@ class KnowledgeBaseReader
 	{
 		$doc = new DOMDocument();
 
-		$kb = new KnowledgeState;
+		$kb = new KnowledgeDomain();
 
 		// backup-titel, een <title/>-element in het bestand zal dit overschrijven.
 		$kb->title = basename($file, '.xml');

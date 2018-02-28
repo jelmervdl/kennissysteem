@@ -51,37 +51,47 @@ class WebFrontend
 
 	public function main()
 	{
-		$this->log = $this->getLog();
+		$domain = null;
 
-		$this->solver = new Solver($this->log);
+		$state = null;
+
+		$log = $this->getLog();
+		
+		$solver = new Solver($log);
 
 		try
 		{
-			$this->state = $this->getState();
+			$domain = $this->getDomain();
+
+			$state = $this->getState($domain);
 
 			if (isset($_POST['answer']))
-				$this->state->apply(_decode($_POST['answer']));
+				$state->apply(_decode($_POST['answer']));
 
-			switch ($this->state->algorithm)
+			switch ($domain->algorithm)
 			{
 				case 'backward-chaining':
-					$step = $this->solver->backwardChain($this->state);
+					$step = $solver->backwardChain($domain, $state);
 					break;
 
 				case 'forward-chaining':
-					$step = $this->solver->forwardChain($this->state);
+					$step = $solver->forwardChain($domain, $state);
 					break;
 
 				default:
 					throw new RuntimeException("Unknown inference algorithm. Please choose 'forward-chaining' or 'backward-chaining'.");
 			}
 
-			$page = new Template('templates/layout.phtml');
-
 			if ($step instanceof AskedQuestion)
-				$page->content = $this->displayQuestion($step);
+			{
+				$page = new Template('templates/question.phtml');
+				$page->question = $step->question;
+				$page->skippable = $step->skippable;
+			}
 			else
-				$page->content = $this->displayConclusions();
+			{
+				$page = new Template('templates/completed.phtml');
+			}
 		}
 		catch (Exception | Error $e)
 		{
@@ -89,61 +99,39 @@ class WebFrontend
 			$page->exception = $e;
 		}
 
-		$page->state = $this->state;
-
-		$page->log = $this->log;
+		$page->domain = $domain;
+		$page->state = $state;
+		$page->log = $log;
 
 		echo $page->render();
 	}
 
-	private function displayQuestion(AskedQuestion $query)
+	private function getDomain()
 	{
-		$template = new Template('templates/question.phtml');
-
-		$template->state = $this->state;
-
-		$template->question = $query->question;
-
-		$template->skippable = $query->skippable;
-
-		return $template->render();
+		$reader = new KnowledgeBaseReader();
+		return $reader->parse($this->kb_file);
 	}
 
-	private function displayConclusions()
-	{
-		$template = new Template('templates/completed.phtml');
-
-		$template->state = $this->state;
-
-		return $template->render();
-	}
-
-	private function getState()
+	private function getState($domain)
 	{
 		if (isset($_POST['state']))
 			return _decode($_POST['state']);
 		else
-			return $this->createNewState();
+			return $this->createNewState($domain);
 	}
 
-	private function createNewState()
+	private function createNewState($domain)
 	{
-		$state = $this->readState($this->kb_file);
+		$state = KnowledgeState::initializeForDomain($domain);
 
 		if (!empty($_GET['goals']))
+		{
+			$state->goalStack = new Stack();
+
 			foreach (explode(',', $_GET['goals']) as $goal)
 				$state->goalStack->push($goal);
-		else
-			$state->initializeGoalStack();
+		}
 
-		return $state;
-	}
-
-	private function readState($file)
-	{
-		$reader = new KnowledgeBaseReader;
-		$state = $reader->parse($file);
-		
 		return $state;
 	}
 
