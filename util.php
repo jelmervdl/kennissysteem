@@ -386,11 +386,14 @@ class Template
 
 	private $__DATA__;
 
-	public function __construct($file)
+	private $__PARENT__;
+
+	private $__BLOCK__;
+
+	public function __construct($file, array $data = [])
 	{
 		$this->__TEMPLATE__ = $file;
-
-		$this->__DATA__ = array();
+		$this->__DATA__ = $data;
 	}
 
 	public function __set($key, $value)
@@ -403,7 +406,42 @@ class Template
 		ob_start();
 		extract($this->__DATA__);
 		include $this->__TEMPLATE__;
-		return ob_get_clean();
+		
+		if ($this->__PARENT__) {
+			ob_end_clean();
+			return $this->__PARENT__->render();
+		} else {
+			return ob_get_clean();
+		}
+	}
+
+	protected function extends($template)
+	{
+		if ($this->__PARENT__)
+			throw new LogicException('Cannot call Template::extend twice from the same template');
+
+		$this->__PARENT__ = new Template(dirname($this->__TEMPLATE__) . '/' . $template, $this->__DATA__);
+	}
+
+	protected function begin($block_name)
+	{
+		if (!$this->__PARENT__)
+			throw new LogicException('You cannot begin a block while not extending a parent template');
+
+		if ($this->__BLOCK__)
+			throw new LogicException('You cannot have a block inside a block in templates');
+
+		$this->__BLOCK__ = $block_name;
+		ob_start();
+	}
+
+	protected function end()
+	{
+		if (!$this->__BLOCK__)
+			throw new LogicException('Calling Template::end while not in a block. Template::begin missing?');
+
+		$this->__PARENT__->__set($this->__BLOCK__, ob_get_clean());
+		$this->__BLOCK__ = null;
 	}
 
 	static public function html($data)
