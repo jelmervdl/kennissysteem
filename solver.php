@@ -42,8 +42,8 @@ class Rule
 
 	public function __toString()
 	{
-		return sprintf('[Rule "%s" (line %d)]',
-			$this->description,
+		return sprintf('[Rule %s(line %d)]',
+			$this->description ? sprintf('"%s" ', $this->description) : '',
 			$this->line_number);
 	}
 }
@@ -696,7 +696,9 @@ class Solver
 		// herhaal zo lang er goals op de goal stack zitten
 		while (!$state->goalStack->isEmpty())
 		{
-			$this->log('Trying to solve %s', [$state->goalStack->top()]);
+			$goal = $state->goalStack->top();
+
+			$this->log('Trying to solve %s', [$goal]);
 
 			// probeer het eerste goal op te lossen
 			$result = $this->solve($state, $state->goalStack->top());
@@ -717,7 +719,7 @@ class Solver
 				// bekend zijn, dus die willen we proberen op te lossen.
 				$causes = $result->causes();
 
-				$this->log('But I cannot, because the facts %s are not known yet', [implode(', ', $causes)]);
+				$this->log('Cannot solve %s because %s are not known yet', [$goal, $causes]);
 
 				// echo '<pre>', print_r($causes, true), '</pre>';
 
@@ -734,14 +736,9 @@ class Solver
 					if (iterator_contains($state->goalStack, $main_cause))
 						continue;
 					
-					// Het kan niet zijn dat het al eens is opgelost. Dan zou hij
-					// in facts moeten zitten.
-					assert(!$state->solved->contains($main_cause));
-
 					// zet het te bewijzen fact bovenaan op de todo-lijst.
 					$state->goalStack->push($main_cause);
-
-					$this->log('I added %s to the goal stack. The stack is now %s', [$main_cause, $state->goalStack]);
+					$this->log('Added %s to the goal stack; the stack is now %s', [$main_cause, $state->goalStack], LOG_LEVEL_VERBOSE);
 
 					// .. en spring terug naar volgende goal op goal-stack!
 					continue 2; 
@@ -750,16 +747,13 @@ class Solver
 				// Er zijn geen redenen waarom het goal niet afgeleid kon worden? Ojee!
 				if (count($causes) == 0)
 				{
-					// Haal het onbewezen fact van de todo-lijst
+					// Remove the unsatisfied goal from our todo-list as there is nothing to be done
 					$unsatisfied_goal = $state->goalStack->pop();
+					$this->log('Removing %s from the goal stack', [$unsatisfied_goal], LOG_LEVEL_VERBOSE);
 
-					$this->log('I mark %s as a STATE_UNDEFINED because I do not know its value ' .
-						'but there are also no rules or questions which I can use to infer it.', [$unsatisfied_goal], LOG_LEVEL_WARNING);
-					
-					// en markeer hem dan maar als niet waar (closed-world assumption?)
+					// Mark it as UNDEFINED so that there will be no further tries to solve it.
 					$state->apply(array($unsatisfied_goal => STATE_UNDEFINED));
-
-					$state->solved->push($unsatisfied_goal);
+					$this->log('Mark %s as a STATE_UNDEFINED as there are no options to come to a value', [$unsatisfied_goal], LOG_LEVEL_WARNING);
 				}
 			}
 
@@ -767,15 +761,15 @@ class Solver
 			// Mooi, dan kan dat van de te bewijzen stack af.
 			else
 			{
-				$this->log('Inferred %s to be %s and removed it from the goal stack.', [$state->goalStack->top(), $result]);
-				// aanname: als het goal kon worden afgeleid, dan is het nu deel van
-				// de afgeleide kennis.
+				$this->log('Found %s to be %s', [$state->goalStack->top(), $result]);
+				
+				// Assumption: the solved goal is now part of the knowledge state, and when asking
+				// its value it will not return maybe.
 				assert(!($state->resolve($state->goalStack->top()) instanceof Maybe));
 
-				// op naar het volgende goal.
-				$state->solved->push($state->goalStack->pop());
-
-				$this->log('The goal stack is now %s', [$state->goalStack]);
+				// Remove it from the goal stack.
+				$removed_goal = $state->goalStack->pop();
+				$this->log('Removing %s from the goal stack; the stack is now %s', [$removed_goal, $state->goalStack], LOG_LEVEL_VERBOSE);
 			}
 		}
 	}
@@ -825,7 +819,7 @@ class Solver
 		{
 			$rule_result = $rule->evaluate($state);
 
-			$this->log("Rule '%s' results in %s", [$rule, $rule_result],
+			$this->log("Rule %s results in %s", [$rule, $rule_result],
 				$rule_result instanceof Maybe ? LOG_LEVEL_VERBOSE : LOG_LEVEL_INFO);
 
 			// If it was decided as true, add the antecedent to the state
@@ -893,7 +887,7 @@ class Solver
 			{
 				$rule_result = $rule->evaluate($state);
 
-				$this->log("Rule '%s' results in %s", [$rule, $rule_result],
+				$this->log("Rule %s results in %s", [$rule, $rule_result],
 					$rule_result instanceof Maybe ? LOG_LEVEL_VERBOSE : LOG_LEVEL_INFO);
 
 				// If the rule was true, add the consequences, the inferred knowledge
