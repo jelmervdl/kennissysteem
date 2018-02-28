@@ -1,3 +1,6 @@
+<?php $this->extends('layout.phtml') ?>
+
+<?php $this->begin('content') ?>
 <section class="question">
 	<p><?=$state->substitute_variables($question->description, ['Template', 'html'])?></p>
 
@@ -22,3 +25,4 @@
 
 	<button type="submit">Continue…</button>
 </section>
+<?php $this->end() ?>
