@@ -196,28 +196,6 @@ table {
 	overflow-x: hidden;
 }
 
-#debug-info button.close {
-	position: absolute;
-	top: 0.5em;
-	right: 0.5em;
-	cursor: pointer;
-	z-index: 10;
-	background: rgb(255, 128, 128);
-	color: transparent;
-	border: 1px solid rgba(0, 0, 0, 0.2);
-	border-radius: 50%;
-	width: 14px;
-	height: 14px;
-	line-height: 8px;
-	font-size: 14px;
-	font-weight: strong;
-	padding: 0;
-}
-
-#debug-info button.close:hover {
-	color: rgba(0, 0, 0, 0.8);
-}
-
 #debug-info .grippy {
 	position: fixed;
 	top: 0;
@@ -260,6 +238,20 @@ table {
 
 .fact-state dd small:after {
 	content: '';
+}
+
+.log tt:not(:empty)::before {
+	content: '≪';
+	color: #666;
+}
+
+.log tt:not(:empty)::after {
+	content: '≫';
+	color: #666;
+}
+
+.log tt:empty::before {
+	content: '∅';
 }
 
 .action a,

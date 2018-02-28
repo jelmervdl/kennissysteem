@@ -23,18 +23,11 @@
 			</form>
 		</div>
 		<aside id="debug-info">
-			<button class="close" title="Close debug panel">&times;</button>
-
 			<section class="state-info fact-state">
 				<h3>Facts</h3>
-				<select id="fact-filter">
-					<option value="user-fact">User defined only</option>
-					<option value="default-fact">System defined only</option>
-					<option value="all">All</option>
-				</select>
 				<dl>
 					<?php foreach($state->facts as $name => $value): ?>
-					<dt class="all <?=KnowledgeState::is_default_fact($name) ? 'default-fact' : 'user-fact'?>"><?=$name?></dt>
+					<dt><?=$name?></dt>
 					<dd>
 						<?=$this->html($value)?>
 						<?php if (KnowledgeState::is_variable($value) && $state->resolve($value) != $value): ?>
@@ -125,11 +118,6 @@
 			updateDebugPanelVisibility();
 		});
 
-		$('#debug-info > .close').click(function() {
-			localStorage.debug = 0;
-			updateDebugPanelVisibility();
-		});
-
 		function resizeDebugPanel(e) {
 			localStorage.debugPanelWidth = Math.max(document.body.clientWidth - e.clientX + delta, 300);
 			panel.css('width', localStorage.debugPanelWidth);
@@ -163,21 +151,6 @@
 			.val(localStorage.logLevel || <?=LOG_LEVEL_INFO?>);
 
 		updateLogLevel();
-
-		function updateFactFilter() {
-			var filter = $('#fact-filter').val();
-			localStorage.factFilter = filter;
-
-			$('.fact-state dt').each(function() {
-				$(this).add($(this).next('dd')).toggle(!filter || $(this).hasClass(filter));
-			});
-		}
-
-		$('#fact-filter')
-			.change(updateFactFilter)
-			.val(localStorage.factFilter || 'all');
-
-		updateFactFilter();
 		</script>
 	</body>
 </html>
