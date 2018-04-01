@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title><?=$this->html($state->title) ?></title>
+		<title><?=$this->html($domain->title) ?></title>
 		<link rel="stylesheet" href="webfrontend.css">
 	</head>
 	<body id="webfrontend">
@@ -12,8 +12,8 @@
 			<a href="#debug">Debug</a>
 		</nav>
 		<header>
-			<h1><?=$this->html($state->title)?></h1>
-			<p><?=$state->description?></p>
+			<h1><?=$this->html($domain->title)?></h1>
+			<p><?=$domain->description?></p>
 		</header>
 		<div>
 			<form method="post">
@@ -23,18 +23,11 @@
 			</form>
 		</div>
 		<aside id="debug-info">
-			<button class="close" title="Close debug panel">&times;</button>
-
 			<section class="state-info fact-state">
 				<h3>Facts</h3>
-				<select id="fact-filter">
-					<option value="user-fact">User defined only</option>
-					<option value="default-fact">System defined only</option>
-					<option value="all">All</option>
-				</select>
 				<dl>
 					<?php foreach($state->facts as $name => $item): ?>
-					<dt class="all <?=KnowledgeState::is_default_fact($name) ? 'default-fact' : 'user-fact'?>"><?=$name?></dt>
+					<dt><?=$name?></dt>
 					<dd>
 						<?=$this->html($item->value)?>
 						<?php if (KnowledgeState::is_variable($item->value)): ?>
@@ -61,7 +54,7 @@
 				<h3>Rules</h3>
 				<?php $formatter = new HTMLFormatter($state); ?>
 				<ul>
-					<?php foreach($state->rules as $rule): ?>
+					<?php foreach($domain->rules as $rule): ?>
 					<li><?=$formatter->formatRule($rule)?></li>
 					<?php endforeach ?>
 				</ul>
@@ -128,11 +121,6 @@
 			updateDebugPanelVisibility();
 		});
 
-		$('#debug-info > .close').click(function() {
-			localStorage.debug = 0;
-			updateDebugPanelVisibility();
-		});
-
 		function resizeDebugPanel(e) {
 			localStorage.debugPanelWidth = Math.max(document.body.clientWidth - e.clientX + delta, 300);
 			panel.css('width', localStorage.debugPanelWidth);
@@ -166,21 +154,6 @@
 			.val(localStorage.logLevel || <?=LOG_LEVEL_INFO?>);
 
 		updateLogLevel();
-
-		function updateFactFilter() {
-			var filter = $('#fact-filter').val();
-			localStorage.factFilter = filter;
-
-			$('.fact-state dt').each(function() {
-				$(this).add($(this).next('dd')).toggle(!filter || $(this).hasClass(filter));
-			});
-		}
-
-		$('#fact-filter')
-			.change(updateFactFilter)
-			.val(localStorage.factFilter || 'all');
-
-		updateFactFilter();
 		</script>
 	</body>
 </html>

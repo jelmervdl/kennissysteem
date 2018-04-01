@@ -1,17 +1,24 @@
+<?php $this->extends('layout.phtml') ?>
+
+<?php $this->begin('content') ?>
 <section class="completed">
 	<h2>Conclusions</h2>
 	<dl>
-	<?php foreach ($state->goals as $goal): ?>
-		<?php if ($goal->hasAnswers() && (($answer = $goal->answer($state)) || $state->facts[$goal->name]->value != STATE_UNDEFINED)): ?>
+	<?php foreach ($domain->goals as $goal): ?>
+		<?php $real_goal_name = $state->resolve($goal->name); ?>
+		<?php if ($goal->hasAnswers() && (($answer = $goal->answer($state)) || $state->value($real_goal_name) != STATE_UNDEFINED)): ?>
 			<dt><?=$state->substitute_variables($goal->description, ['Template', 'html'])?></dt>
 			<dd><?php
 				echo $answer
 					? $state->substitute_variables($answer->description, ['Template', 'html'])
-					: '<pre>' . $state->facts[$goal->name]->value . '</pre>';
+					: '<pre>' . $state->value($real_goal_name) . '</pre>';
 				?></p>
-				<div class="explanation">
-					<ol><?= $formatter->formatReason($state->facts[$goal->name]->reason) ?></ol>
-				</div>
+				<?php if ($state->reason($real_goal_name) !== null): ?>
+					<div class="explanation">
+						<ol><?= (new HTMLFormatter($state))->formatReason($state->reason($real_goal_name)) ?></ol>
+					</div>
+				<?php endif ?>
 			<?php endif ?>
 	<?php endforeach ?>
 </section>
+<?php $this->end() ?>

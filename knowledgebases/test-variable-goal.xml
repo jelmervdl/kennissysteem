@@ -4,8 +4,8 @@
 
 	<goal name="$goal">
 		<description>The goal ($goal) was reached with value $value</description>
-		<answer value="true">Yes</answer>
-		<answer>No</answer>
+		<answer value="true">The goal is true</answer>
+		<answer>The goal is false</answer>
 	</goal>
 	
 	<rule>

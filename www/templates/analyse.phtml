@@ -78,8 +78,8 @@ function red_if_zero($value) {
 				<?php foreach ($fact->values as $value => $value_stats): ?>
 					<tr>
 						<td>
-							<?php if (KnowledgeState::is_variable($value)): ?>
-							<a href="#var_<?=$this->id(KnowledgeState::variable_name($value))?>"><?=$this->html($value)?></a>
+							<?php if (KnowledgeDomain::is_variable($value)): ?>
+							<a href="#var_<?=$this->id(KnowledgeDomain::variable_name($value))?>"><?=$this->html($value)?></a>
 							<?php else: ?>
 							<?=$this->html($value)?>
 							<?php endif ?>

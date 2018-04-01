@@ -163,10 +163,24 @@ class HTMLFormatter
 
 	protected function formatFactCondition(FactCondition $condition)
 	{
-		return sprintf('<table class="kb-fact-condition kb-condition evaluation-%s"><tr><td>%s</td><th>=</th><td>%s</td></tr></table>',
+		return sprintf('<table class="kb-fact-condition kb-condition evaluation-%s"><tr><td>%s</td><th>%s</th><td>%s</td></tr></table>',
 			$this->evaluatedValue($condition),
 			$this->escape($condition->name),
+			$this->escape($this->formatTest($condition->test)),
 			$this->escape($condition->value));
+	}
+
+	protected function formatTest($test)
+	{
+		$mapping = [
+			'gt' => '>',
+			'gte' => '>=',
+			'lt' => '<',
+			'lte' => '<=',
+			'eq' => '='
+		];
+
+		return isset($mapping[$test]) ? $mapping[$test] : $test;
 	}
 
 	protected function evaluatedValue(Condition $condition)
