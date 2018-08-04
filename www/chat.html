@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title></title>
+		<style>
+			body {
+				font: 12px/16px sans-serif;
+				background: #eee;
+			}
+
+			#chat {
+				max-width: 400px;
+				margin: 1em auto;
+				background: white;
+			}
+
+			.chat-bubble {
+				display: block;
+			}
+
+			.chat-bubble > span,
+			.chat-option {
+				display: inline-block;
+				text-align: left;
+				font: inherit;
+				background: hsl(215, 100%, 78%);
+				margin: 0.5em;
+				padding: 0.5em;
+				border-radius: 4px;
+				border: 0;
+			}
+
+			.chat-option {
+				background: #ddd;
+				cursor: pointer;
+			}
+
+			.chat-bubble.they > span {
+				border-bottom-left-radius: 0;
+			}
+
+			.chat-bubble.me {
+				text-align: right;
+			}
+
+			.chat-bubble.me > span {
+				border-bottom-right-radius: 0;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="chat"></div>
+		<script src="chat.js"></script>
+		<script>
+			const chat = new Chat(document.getElementById('chat'), 'knowledge.xml');
+			chat.start();
+		</script>
+	</body>
+</html>

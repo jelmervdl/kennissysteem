@@ -82,28 +82,43 @@ class WebFrontend
 					throw new RuntimeException("Unknown inference algorithm. Please choose 'forward-chaining' or 'backward-chaining'.");
 			}
 
-			if ($step instanceof AskedQuestion)
-			{
-				$page = new Template('templates/question.phtml');
-				$page->question = $step->question;
-				$page->skippable = $step->skippable;
+			if ($step instanceof AskedQuestion) {
+				$page = [
+					'question' => (array) $step->question,
+					'skippable' => $step->skippable
+				];
+
+				foreach ($page['question']['options'] as &$option) {
+					$option = [
+						'consequences' => _encode($option->consequences),
+						'description' => $state->substitute_variables($option->description)
+					];
+				}
 			}
 			else
 			{
-				$page = new Template('templates/completed.phtml');
+				$page = [
+					'goals' => array_map(function($goal) use ($state) {
+						return ($answer = $goal->answer($state))
+							? $state->substitute_variables($answer->description)
+							: $state->facts[$goal->name];
+					}, array_filter(iterator_to_array($domain->goals), function($goal) use ($state) {
+						return $goal->hasAnswers() && ($goal->answer($state) || $state->facts[$goal->name] != STATE_UNDEFINED);
+					}))
+				];
 			}
 		}
 		catch (Exception | Error $e)
 		{
-			$page = new Template('templates/exception.phtml');
-			$page->exception = $e;
+			$page = ['error' => (string) $e];
 		}
 
-		$page->domain = $domain;
-		$page->state = $state;
-		$page->log = $log;
+		$page['domain'] = $domain;
+		$page['state'] = _encode($state);
+		$page['log'] = _encode($log);
 
-		echo $page->render();
+		header('Content-Type: application/json');
+		echo json_encode($page);
 	}
 
 	private function getDomain()
