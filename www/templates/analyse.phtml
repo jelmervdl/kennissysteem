@@ -24,6 +24,10 @@ function red_if_zero($value) {
 				border-bottom: 1px dashed black;
 			}
 
+			section:target {
+				background: rgba(251, 219, 101, 0.25);
+			}
+
 		</style>
 	</head>
 	<body>
@@ -55,72 +59,74 @@ function red_if_zero($value) {
 			<h2>Domain</h2>
 
 			<?php foreach ($stats as $fact): ?>
-			<h3 id="var_<?=$this->id($fact->name)?>">
-				<?=$this->html($fact->name)?>
-				<small>(<a href="webfrontend.php?kb=<?=urlencode($_GET['kb'])?>&amp;goals=<?=urlencode($fact->name)?>">try to infer this fact</a>)</small>
-			</h3>
-			<table class="fact-analysis analysis-table">
-				<thead>
-					<tr>
-						<th></th>
-						<th colspan="2">Inferring</th>
-						<th colspan="2">Testing</th>
-					</tr>
-					<tr>
-						<th>Value</th>
-						<th><span class="hint" title="Rules that can cause the fact to become this value">Rules</span></th>
-						<th><span class="hint" title="Questions that can cause the fact to become this value">Questions</span></th>
-						<th><span class="hint" title="Rules that test for this value in their condition">Rules</span></th>
-						<th><span class="hint" title="Goals that test for this value in their condition">Goals</span></th>
-					</tr>
-				</thead>
-				<tbody>
-				<?php foreach ($fact->values as $value => $value_stats): ?>
-					<tr>
-						<td>
-							<?php if (KnowledgeState::is_variable($value)): ?>
-							<a href="#var_<?=$this->id(KnowledgeState::variable_name($value))?>"><?=$this->html($value)?></a>
-							<?php else: ?>
-							<?=$this->html($value)?>
-							<?php endif ?>
-						</td>
-						<td><?=count($value_stats->inferringRules)?></td>
-						<td><?=count($value_stats->inferringQuestions)?></td>
-						<td>
-							<span class="has-popover">
-								<span><?=red_if_zero(count($value_stats->dependingRules))?></span>
-								<ul class="popover"><?php foreach ($value_stats->dependingRules as $rule): ?><li><a href="#rule_<?=$rule->line_number?>"><?=$this->html($rule)?></a></li><?php endforeach?></ul>
-							</span>
-						</td>
-						<td>
-							<span class="has-popover">
-								<span><?=red_if_zero(count($value_stats->dependingGoals))?></span>
-								<ul class="popover"><?php foreach ($value_stats->dependingGoals as $goal): ?><li><a href="#goal_<?=$this->id($goal->name)?>"><?=$this->html($goal->name)?></a></li><?php endforeach ?></ul>
-							</span>
-						</td>
-					</tr>
-				<?php endforeach ?>
-				</tbody>
-			</table>
+			<section id="var_<?=$this->id($fact->name)?>">
+				<h3>
+					<?=$this->html($fact->name)?>
+					<small>(<a href="webfrontend.php?kb=<?=urlencode($_GET['kb'])?>&amp;goals=<?=urlencode($fact->name)?>">try to infer this fact</a>)</small>
+				</h3>
+				<table class="fact-analysis analysis-table">
+					<thead>
+						<tr>
+							<th></th>
+							<th colspan="2">Inferring</th>
+							<th colspan="2">Testing</th>
+						</tr>
+						<tr>
+							<th>Value</th>
+							<th><span class="hint" title="Rules that can cause the fact to become this value">Rules</span></th>
+							<th><span class="hint" title="Questions that can cause the fact to become this value">Questions</span></th>
+							<th><span class="hint" title="Rules that test for this value in their condition">Rules</span></th>
+							<th><span class="hint" title="Goals that test for this value in their condition">Goals</span></th>
+						</tr>
+					</thead>
+					<tbody>
+					<?php foreach ($fact->values as $value => $value_stats): ?>
+						<tr>
+							<td>
+								<?php if (KnowledgeState::is_variable($value)): ?>
+								<a href="#var_<?=$this->id(KnowledgeState::variable_name($value))?>"><?=$this->html($value)?></a>
+								<?php else: ?>
+								<?=$this->html($value)?>
+								<?php endif ?>
+							</td>
+							<td><?=count($value_stats->inferringRules)?></td>
+							<td><?=count($value_stats->inferringQuestions)?></td>
+							<td>
+								<span class="has-popover">
+									<span><?=red_if_zero(count($value_stats->dependingRules))?></span>
+									<ul class="popover"><?php foreach ($value_stats->dependingRules as $rule): ?><li><a href="#rule_<?=$rule->line_number?>"><?=$this->html($rule)?></a></li><?php endforeach?></ul>
+								</span>
+							</td>
+							<td>
+								<span class="has-popover">
+									<span><?=red_if_zero(count($value_stats->dependingGoals))?></span>
+									<ul class="popover"><?php foreach ($value_stats->dependingGoals as $goal): ?><li><a href="#goal_<?=$this->id($goal->name)?>"><?=$this->html($goal->name)?></a></li><?php endforeach ?></ul>
+								</span>
+							</td>
+						</tr>
+					<?php endforeach ?>
+					</tbody>
+				</table>
+			</section>
 			<?php endforeach ?>
 		</section>
 
 		<section id="goals">
 			<h2>Goals</h2>
-			<section id="goal_<?=$this->id($goal->name)?>">
-				<?php foreach ($kb->goals as $goal): ?>
+			<?php foreach ($kb->goals as $goal): ?>
+			<section id="goal_<?=$this->id($goal->name)?>">	
 				<h3>
 					<?=$goal->description ? $this->html($goal->description) : '<em>No description</em>' ?>
-					<small>(<a href="#var_<?=$this->id($goal->name)?>"><?=$this->html($goal->name)?></a>)</small>
+					<small>(determined by: <a href="#var_<?=$this->id($goal->name)?>"><?=$this->html($goal->name)?></a>)</small>
 				</h3>
-				<dd>
+				<dl>
 					<?php foreach ($goal->answers as $answer): ?>
 						<dt><?=is_null($answer->value) ? '<em>other</em>' : $this->html($answer->value)?></dt>
 						<dd><?=$this->html($answer->description)?></dd>
 					<?php endforeach ?>
-				</dd>
-				<?php endforeach?>
-			</dl>
+				</dl>
+			</section>
+			<?php endforeach?>
 		</section>
 
 		<section id="rules">
