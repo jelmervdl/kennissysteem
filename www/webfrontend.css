@@ -415,72 +415,9 @@ code.numbered pre:before {
 	color: rgba(0, 0, 0, 0.4);
 }
 
-<<<<<<< HEAD
-/* Explanation elements */
-
-.explanation .answered-question .question {
-	max-width: none;
-	margin: 0;
+.reason .question,
+.reason .answer {
 	font-style: italic;
-}
-
-.explanation .answered-question .answer {
-	display: block;
-}
-
-.explanation .answered-question .answer::before {
-	content: 'Answer:';
-	padding-right: 4px;
-	display: inline-block;
-	/*width: 1.25em;*/
-	opacity: 0.5;
-}
-
-/* Explanation tree */
-
-.explanation ol,
-.explanation ol ol {
-	list-style: none;
-	margin: 0;
-	padding: 0;
-}
-
-.explanation ol ol {
-	margin-left: 10px;
-}
-
-.explanation ol li {
-	position: relative;
-	margin: 0;
-	padding: 4px 0 4px 18px;
-	border-left: 1px solid #333;
-}
-
-.explanation ol li:last-child {
-	border-left: none;
-}
-
-.explanation ol li:before {
-	position: absolute;
-	top: 0;
-	left: 0;
-	height: 1em;
-	width: 12px;
-	border-bottom: 1px solid #333;
-	content: "";
-	display: inline-block;
-}
-
-.explanation ol li:last-child:before {
-	border-left: 1px solid #333;   
-}
-
-.explanation > ol > li {
-	padding-left: 0;
-}
-
-.explanation > ol > li::before {
-	content: none;
 }
 
 .has-popover {
