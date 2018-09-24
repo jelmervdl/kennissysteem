@@ -20,6 +20,16 @@ pre {
 	tab-size: 4;
 }
 
+ul.inline {
+	padding: 0;
+	display: inline;
+	list-style-position: inside;
+}
+
+ul.inline li {
+	display: inline;
+}
+
 .site-nav {
 	position: fixed;
 	top: 0;

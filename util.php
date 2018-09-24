@@ -497,15 +497,17 @@ function first_found_path(array $possible_paths)
 	return null;
 }
 
-function to_debug_string($value)
+function to_debug_string($value, $formatter = 'strval')
 {
 	if ($value instanceof Traversable)
 		$value = iterator_to_array($value);
 
 	if (is_array($value))
-		return implode(', ', array_map('to_debug_string', $value));
+		return implode(', ', array_map(function($value) use ($formatter) {
+			return to_debug_string($value, $formatter);
+		}, $value));
 
-	return strval($value);
+	return $formatter($value);
 }
 
 function dict_to_string($dict, $pair_format = '%s => %s', $dict_format = '[%s]')

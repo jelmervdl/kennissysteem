@@ -15,7 +15,7 @@
 				?></p>
 				<?php if ($state->reason($real_goal_name) !== null): ?>
 					<div class="explanation">
-						<ol><?= (new HTMLFormatter($state))->formatReason($state->reason($real_goal_name)) ?></ol>
+						Explanation: <?= (new HTMLFormatter($state))->formatReason($state->reason($real_goal_name)) ?>
 					</div>
 				<?php endif ?>
 			<?php endif ?>

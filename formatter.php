@@ -16,15 +16,17 @@ class HTMLFormatter
 
 		if ($reason instanceof AnsweredQuestion)
 			return $this->formatAnsweredQuestion($reason);
+
+		if ($reason instanceof PredefinedConstant)
+			return $this->formatPredefinedConstant($reason);
 	}
 
 	public function formatAnsweredQuestion(AnsweredQuestion $reason)
 	{
 		return sprintf('
-			<li class="answered-question">
-				<span class="question">%s</span>
-				<span class="option answer">%s</span>
-			</li>',
+			<span class="answered-question">
+				the question <span class="question">%s</span> was answered with <span class="option answer">%s</span>.
+			</span>',
 				$this->state->substitute_variables($reason->question->description, ['Template', 'html']),
 				$this->state->substitute_variables($reason->answer->description, ['Template', 'html']));
 	}
@@ -32,15 +34,20 @@ class HTMLFormatter
 	public function formatInferredRule(InferredRule $reason)
 	{
 		return sprintf('
-			<li class="inferred-rule">
-				<span class="rule-description">%s</span>
+			<span class="inferred-rule">
+				the rule <span class="rule-description">%s</span> was applicable because:
 				<ol class="truth-state %s">
 					%s
 				</ol>
-			</li>',
+			</span>',
 				$this->escape($reason->rule->description),
 				get_class($reason->truthValue),
 				implode("\n", $this->formatTruthValue($reason->truthValue)));
+	}
+
+	public function formatPredefinedConstant(PredefinedConstant $reason)
+	{
+		return $reason->explanation;
 	}
 
 	public function formatTruthValue(TruthState $value)
@@ -51,7 +58,7 @@ class HTMLFormatter
 			if ($factor instanceof TruthState)
 				$factors = array_merge($factors, $this->formatTruthValue($factor));
 			elseif ($factor instanceof Reason)
-				$factors[] = $this->formatReason($factor);
+				$factors[] = sprintf('<li>%s</li>', $this->formatReason($factor));
 			else {
 				throw new InvalidArgumentException("Unknown type of factor. Expected ThruthState or Reason, got " . gettype($factor));
 			}
@@ -62,10 +69,10 @@ class HTMLFormatter
 	public function formatRule(Rule $rule)
 	{
 		return sprintf('
-			<table class="kb-rule" id="rule_%d">
+			<table class="kb-rule evaluation-%s" id="rule_%d">
 				<tr>
 					<th colspan="2" class="kb-rule-description">
-						<span class="line-number">line %1$d</span>
+						<span class="line-number">line %2$d</span>
 						%s
 					</th>
 				</tr>
@@ -78,6 +85,7 @@ class HTMLFormatter
 					<td>%s</td>
 				</tr>
 			</table>',
+				$this->evaluatedValue($rule->condition),
 				$rule->line_number,
 				$this->escape($rule->description),
 				$this->formatCondition($rule->condition),

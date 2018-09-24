@@ -23,18 +23,19 @@
 			</form>
 		</div>
 		<aside id="debug-info">
+			<?php $formatter = new HTMLFormatter($state); ?>
 			<section class="state-info fact-state">
 				<h3>Facts</h3>
 				<dl>
 					<?php foreach($state->facts as $name => $item): ?>
 					<dt><?=$name?></dt>
 					<dd>
-						<?=$this->html($item->value)?>
+						<tt><?=$this->html($item->value)?></tt>
 						<?php if (KnowledgeState::is_variable($item->value)): ?>
-							<small><?=$this->html($state->resolve($item->value)) ?></small>
+							<small><tt><?=$this->html($state->resolve($item->value)) ?></tt></small>
 						<?php endif ?>
 						<?php if ($item->reason): ?>
-							<?=$this->html($item->reason) ?>
+							<span class="reason">because <?=$formatter->formatReason($item->reason) ?></span>
 						<?php endif ?>
 					</dd>
 					<?php endforeach ?>
