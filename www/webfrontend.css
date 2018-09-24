@@ -240,6 +240,20 @@ table {
 	content: '';
 }
 
+.log ol {
+	list-style: none;
+	padding-left: 0;
+}
+
+.log ol ol {
+	list-style: decimal;
+	padding-left: 1.5em;
+}
+
+.log tt:not(:empty) {
+	background: rgba(0, 0, 0, 0.05);
+}
+
 .log tt:not(:empty)::before {
 	content: '≪';
 	color: #666;
