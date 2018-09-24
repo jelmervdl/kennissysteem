@@ -89,7 +89,12 @@ function red_if_zero($value) {
 								<?=$this->html($value)?>
 								<?php endif ?>
 							</td>
-							<td><?=count($value_stats->inferringRules)?></td>
+							<td>
+								<span class="has-popover">
+									<span><?=count($value_stats->inferringRules)?></span>
+									<ul class="popover"><?php foreach ($value_stats->inferringRules as $rule): ?><li><a href="#rule_<?=$rule->line_number?>"><?=$this->html($rule)?></a></li><?php endforeach ?></ul>
+								</span>
+							</td>
 							<td><?=count($value_stats->inferringQuestions)?></td>
 							<td>
 								<span class="has-popover">
