@@ -52,7 +52,12 @@
 			
 			<section class="state-info rule-state">
 				<h3>Rules</h3>
-				<?php $formatter = new HTMLFormatter($state); ?>
+				<select id="rule-state-selector">
+					<option value="" selected>All</option>
+					<option value="maybe">Undecided only</option>
+					<option value="true">True</option>
+					<option value="false">False</option>
+				</select>
 				<ul>
 					<?php foreach($domain->rules as $rule): ?>
 					<li><?=$formatter->formatRule($rule)?></li>
@@ -149,11 +154,28 @@
 			});
 		}
 
+		function updateRuleState() {
+			var ruleState = $('#rule-state-selector').val();
+			localStorage.ruleState = ruleState;
+
+			$('.state-info.rule-state li > .kb-rule').each(function() {
+				var state = this.className.match(/evaluation-(true|false|maybe)/);
+				console.log(state);
+				$(this).closest('li').toggle(!state || !ruleState || state[1] == ruleState);
+			});
+		}
+
 		$('#log-level-selector')
 			.change(updateLogLevel)
 			.val(localStorage.logLevel || <?=LOG_LEVEL_INFO?>);
 
+		$('#rule-state-selector')
+			.change(updateRuleState)
+			.val(localStorage.ruleState || '');
+
 		updateLogLevel();
+
+		updateRuleState();
 		</script>
 	</body>
 </html>
