@@ -87,10 +87,14 @@ class WebFrontend
 				$query = $this->step($solver, $domain, $state);
 				assert($query instanceof AskedQuestion);
 				
-				$option = $query->question->options[$_POST['answer']];
-				assert($option instanceof Option);
+				if ($_POST['answer'] !== '') {// the Skip option
+					$option = $query->question->options[$_POST['answer']];
+					assert($option instanceof Option);
 
-				$state->applyAnswer($query->question, $option);
+					$state->applyAnswer($query->question, $option);
+				}
+
+				$state->removeQuestion($query->question);
 			}
 
 			$step = $this->step($solver, $domain, $state);

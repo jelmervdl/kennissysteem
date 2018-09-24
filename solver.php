@@ -616,6 +616,8 @@ class KnowledgeState
 {
 	public $facts;
 
+	public $questions;
+
 	public $goalStack;
 
 	public function __construct()
@@ -625,6 +627,8 @@ class KnowledgeState
 				new PredefinedConstant('Undefined is defined as undefined'))
 		);
 
+		$this->questions = new Set();
+
 		$this->goalStack = new Stack();
 	}
 
@@ -633,6 +637,8 @@ class KnowledgeState
 		$state = new static();
 
 		$state->facts = array_merge($state->facts, $domain->facts);
+
+		$state->questions = clone $domain->questions;
 
 		foreach ($domain->goals as $goal)
 		{
@@ -647,6 +653,11 @@ class KnowledgeState
 		}
 
 		return $state;
+	}
+
+	public function removeQuestion(Question $question)
+	{
+		$this->questions->remove($question);
 	}
 
 	public function applyAnswer(Question $question, Option $answer)
@@ -944,8 +955,8 @@ class Solver
 		$relevant_rules = filter($domain->rules,
 			function($rule) use ($goal) { return $rule->infers($goal); });
 
-		// Is there a question that might lead us to solving this goal?
-		$relevant_questions = filter($domain->questions,
+		// Is there a question (remaining) that might lead us to solving this goal?
+		$relevant_questions = filter($state->questions,
 			function($question) use ($goal) { return $question->infers($goal); });
 
 		$this->log("Found %s rules and %s questions",
