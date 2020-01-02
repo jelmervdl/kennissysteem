@@ -27,8 +27,8 @@ class HTMLFormatter
 			<span class="answered-question">
 				the question <span class="question">%s</span> was answered with <span class="option answer">%s</span>.
 			</span>',
-				$this->state->substitute_variables($reason->question->description, ['Template', 'html']),
-				$this->state->substitute_variables($reason->answer->description, ['Template', 'html']));
+				$this->state->substitute_variables($reason->question->description, [$this, 'escape']),
+				$this->state->substitute_variables($reason->answer->description, [$this, 'escape']));
 	}
 
 	public function formatInferredRule(InferredRule $reason)

@@ -8,16 +8,19 @@
 		<?php $real_goal_name = $state->resolve($goal->name); ?>
 		<?php if ($goal->hasAnswers() && (($answer = $goal->answer($state)) || $state->value($real_goal_name) != STATE_UNDEFINED)): ?>
 			<dt><?=$state->substitute_variables($goal->description, ['Template', 'html'])?></dt>
-			<dd><?php
-				echo $answer
-					? $state->substitute_variables($answer->description, ['Template', 'html'])
-					: '<pre>' . $state->value($real_goal_name) . '</pre>';
-				?></p>
-				<?php if ($state->reason($real_goal_name) !== null): ?>
-					<div class="explanation">
-						Explanation: <?= (new HTMLFormatter($state))->formatReason($state->reason($real_goal_name)) ?>
-					</div>
-				<?php endif ?>
+			<dd>
+				<details>
+					<summary><?php
+					echo $answer
+						? $state->substitute_variables($answer->description, ['Template', 'html'])
+						: '<pre>' . $state->value($real_goal_name) . '</pre>';
+					?></summary>
+					<?php if ($state->reason($real_goal_name) !== null): ?>
+						<div class="explanation">
+							Explanation: <?= (new HTMLFormatter($state))->formatReason($state->reason($real_goal_name)) ?>
+						</div>
+					<?php endif ?>
+				</details>
 			<?php endif ?>
 	<?php endforeach ?>
 </section>

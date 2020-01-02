@@ -88,6 +88,27 @@ footer p, footer p > * {
 	color: silver;
 }
 
+details {
+	border: 1px solid silver;
+	border-radius: 4px;
+	padding: .5em .5em 0;
+}
+
+summary {
+	font-weight: bold;
+	margin: -.5em -.5em 0;
+	padding: .5em;
+}
+
+details[open] {
+	padding: .5em;
+}
+
+details[open] summary {
+	border-bottom: 1px solid silver;
+	margin-bottom: .5em;
+}
+
 table {
 	border-spacing: 0;
 }
@@ -440,8 +461,15 @@ code.numbered pre:before {
 }
 
 .reason .question,
-.reason .answer {
+.reason .answer,
+.explanation .rule-description {
 	font-style: italic;
+}
+
+.explanation .question,
+.explanation .answer,
+.explanation .rule-description {
+	background: #ffc;
 }
 
 .has-popover {
