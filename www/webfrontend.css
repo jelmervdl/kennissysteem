@@ -6,7 +6,8 @@ form {
 
 body {
 	font: 14px/1.6 "Lucida Grande", Lucida, Verdana, sans-serif;
-	margin-top: 36px;
+	margin-top: 3.4em;
+	box-sizing: border-box;
 }
 
 @media(min-width: 800px) {
@@ -35,7 +36,7 @@ ul.inline li {
 	top: 0;
 	left: 0;
 	width: 100%;
-	height: 24px;
+	line-height: 2.4em;
 	background: black;
 	box-shadow: 0 0 4px #333;
 	z-index: 10;
@@ -47,22 +48,6 @@ ul.inline li {
 	text-shadow: 0 1px 0 #333;
 	text-decoration: none;
 	padding: 0 12px;
-}
-
-header > * {
-	display: none;
-}
-
-header > h1 {
-	display: inline-block;
-	position: fixed;
-	top: 0;
-	right: 12px;
-	font-size: 1em;
-	margin: 0;
-	padding: 0;
-	color: #eee;
-	font-weight: normal;
 }
 
 .site-nav a:hover {
@@ -148,12 +133,6 @@ table {
 	width: 200px;
 }
 
-.knowledge-bases,
-.completed {
-	max-width: 900px;
-	margin: 0 auto;
-}
-
 .completed dt {
 	font-size: 1.2em;
 }
@@ -162,11 +141,6 @@ table {
 	margin: 0 1em 2em 1em;
 	padding: 0 1em;
 	border-left: 1px solid silver;
-}
-
-.question {
-	max-width: 600px;
-	margin: 0 auto;
 }
 
 .question p {
@@ -210,21 +184,31 @@ table {
 }
 
 #debug-info {
-	display: none;
+	position: fixed;
+	top: 0;
+	right: 0;
+	bottom: -1em;
+	width: 33%;
+	padding: 2.4em 0 1em 0;
+	background: rgba(255, 255, 255, 0.8);
+	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
+	border-left: 1px solid silver;
+	overflow: hidden;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.0);
+	transform: translateX(100%);
+	transition: transform ease-in-out 300ms;
+	display: flex;
 }
 
 .show-debug-info #debug-info {
-	display: block;
-	position: fixed;
-	top: 0;
-	bottom: 0;
-	right: 0;
-	width: 33%;
-	background: #eee;
-	border-left: 1px solid #ccc;
-	box-shadow: 0 0 10px #000;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+	transform: translateX(0);
+}
+
+#debug-info .content {
+	flex: 1 1 auto;
 	overflow-y: auto;
-	overflow-x: hidden;
 }
 
 #debug-info .grippy {
@@ -396,10 +380,19 @@ form > div > label {
 }
 
 body > section,
-body > .page-nav {
+body > header,
+body > .page-nav,
+.knowledge-bases,
+.completed,
+.question {
 	max-width: 800px;
 	margin: 1em auto;
 	padding: 1em;
+}
+
+body > header {
+	margin: 0 auto;
+	padding: 0 1em;
 }
 
 .upload-knowledge-base-form button {

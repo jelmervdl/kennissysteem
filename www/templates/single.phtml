@@ -6,12 +6,9 @@
 	</head>
 	<body id="kennisbanken">
 		<nav class="site-nav">
-			<!-- what should come here? -->
+			<a href="index.php">Home</a>
 		</nav>
-		<header>
-			<h1>Inference engine</h1>
-		</header>
-
+		
 		<?php if ($errors): ?>
 		<section class="status-update">
 			<p>The following errors occurred:</p>
@@ -41,14 +38,14 @@
 		<?php include dirname(__FILE__) . '/reference.phtml' ?>
 
 		<footer>
-			<p>Source code available on <a href="https://github.com/jelmervdl/kennissysteem">Github</a>.</p>
+			<p><a href="https://github.com/jelmervdl/kennissysteem">Source code available on Github</a>.</p>
 		</footer>
 
 		<script>
+			// When you click a link to a section in this page, highlight it.
 			Array.prototype.forEach.call(
 				document.querySelectorAll("a[href^='#']"),
 				function(el) {
-					console.log(el);
 					el.addEventListener('click', function() {
 						var hash = el.href.substring(el.href.indexOf('#') + 1);
 						var ref = document.getElementById(hash);

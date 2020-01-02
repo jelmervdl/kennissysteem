@@ -6,9 +6,9 @@
 	</head>
 	<body id="webfrontend">
 		<nav class="site-nav">
+			<a href="index.php">Documentation</a>
 			<a href="<?=$this->attr($_SERVER['REQUEST_URI'])?>">Start over</a>
 			<a href="analyse.php?kb=<?=rawurlencode($_GET['kb'])?>">Analyse</a>
-			<a href="index.php">Upload</a>
 			<a href="#debug">Debug</a>
 		</nav>
 		<header>
@@ -23,6 +23,7 @@
 			</form>
 		</div>
 		<aside id="debug-info">
+			<div class="content">
 			<?php $formatter = new HTMLFormatter($state); ?>
 			<section class="state-info fact-state">
 				<h3>Facts</h3>
@@ -86,6 +87,7 @@
 				<?php endforeach ?>
 				</ol>
 			</section>
+			</div>
 		</aside>
 
 		<script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
