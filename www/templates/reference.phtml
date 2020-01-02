@@ -23,13 +23,13 @@
 
 <section id="how-it-works" class="help">
 	<h2>How it works</h2>
-	<p>After uploading your knowledge base, the program uses it to ask questions and come to a conclusion. It works like a simple <abbr title="Question answering">QA</abbr>-system. At anytime you can open the debug panel to view the current state of facts, questions, rules etc.</p>
+	<p>After uploading your knowledge base, the program uses it to ask questions and come to a conclusion. It works like a simple <abbr title="Question answering">QA</abbr>-system. At any time you can open the debug panel to view the current state of facts, questions, rules etc.</p>
 
 	<p>A knowledge base used by this program consists of <a href="#rule">rules</a>, <a href="#question">questions</a> and one or multiple <a href="#goal">goals</a>. Both rules and questions can yield knowledge which is stored in <a href="#fact">facts</a>.</p>
 
 	<p>The program will try to infer the value of goals by looking for rules it can apply using the knowledge it already has. If it doesn't find any rules for which all the facts in the <tt>&lt;if&gt;</tt>-clause are known, it will add the unknown facts to the goal stack. It will also look for questions that could yield the facts looked for and will ask the one that has the most impact on the state of the knowledge base.</p>
 
-	<p id="closed-world-assumption">Note that this program uses a closed world assumption: if it cannot decide the value of a fact based on rules or questions, it will assign it the value <tt>undefined</tt>. You should never use that litteraly in your knowledge base, but you can make use of the fact that <tt>undefined</tt> is not equal to <tt>yes</tt> or some other value.</p>
+	<p id="closed-world-assumption">Note that this program uses a closed world assumption: if it cannot decide the value of a fact based on rules or questions, it will assign it the value <tt>undefined</tt>. You should never use that literally in your knowledge base, but you can make use of the fact that <tt>undefined</tt> is not equal to <tt>yes</tt> or some other value.</p>
 
 	<section id="tools">
 		<h3>Tools</h3>

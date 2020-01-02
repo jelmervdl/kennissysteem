@@ -6,9 +6,9 @@
 	</head>
 	<body id="webfrontend">
 		<nav class="site-nav">
+			<a href="index.php">Documentation</a>
 			<a href="<?=$this->attr($_SERVER['REQUEST_URI'])?>">Start over</a>
 			<a href="analyse.php?kb=<?=rawurlencode($_GET['kb'])?>">Analyse</a>
-			<a href="index.php">Upload</a>
 			<a href="#debug">Debug</a>
 		</nav>
 		<header>
@@ -23,60 +23,62 @@
 			</form>
 		</div>
 		<aside id="debug-info">
-			<section class="state-info fact-state">
-				<h3>Facts</h3>
-				<dl>
-					<?php foreach($state->facts as $name => $value): ?>
-					<dt><?=$name?></dt>
-					<dd>
-						<?=$this->html($value)?>
-						<?php if (KnowledgeState::is_variable($value) && $state->resolve($value) != $value): ?>
-							<small><?=$this->html($state->resolve($value)) ?></small>
-						<?php endif ?>
-					</dd>
-					<?php endforeach ?>
-				</dl>
-			</section>
-			
-			<section class="state-info goal-stack">
-				<h3>Goal stack</h3>
-				<ol>
-					<?php foreach ($state->goalStack as $goal): ?>
-					<li><?=$goal?></li>
-					<?php endforeach ?>
-				</ol>
-			</section>
-			
-			<section class="state-info rule-state">
-				<h3>Rules</h3>
-				<?php $formatter = new HTMLFormatter($state); ?>
-				<ul>
-					<?php foreach($domain->rules as $rule): ?>
-					<li><?=$formatter->formatRule($rule)?></li>
-					<?php endforeach ?>
-				</ul>
-			</section>
-
-			<section class="state-info log">
-				<h3>Step by step</h3>
-				<select id="log-level-selector">
-					<option value="<?=LOG_LEVEL_WARNING?>">Warnings only</option>
-					<option value="<?=LOG_LEVEL_INFO?>">Useful</option>
-					<option value="<?=LOG_LEVEL_VERBOSE?>">Everything</option>
-				</select>
-				<ol>
-				<?php foreach($log->messages as $step_i => $step): ?>
-					<li>Step <?=$step_i?></li>
+			<div class="content">
+				<section class="state-info fact-state">
+					<h3>Facts</h3>
+					<dl>
+						<?php foreach($state->facts as $name => $value): ?>
+						<dt><?=$name?></dt>
+						<dd>
+							<?=$this->html($value)?>
+							<?php if (KnowledgeState::is_variable($value) && $state->resolve($value) != $value): ?>
+								<small><?=$this->html($state->resolve($value)) ?></small>
+							<?php endif ?>
+						</dd>
+						<?php endforeach ?>
+					</dl>
+				</section>
+				
+				<section class="state-info goal-stack">
+					<h3>Goal stack</h3>
 					<ol>
-					<?php foreach ($step as list($level, $message)): ?>
-						<li class="log-level-<?=$level?>">
-							<?=$message?>
-						</li>
+						<?php foreach ($state->goalStack as $goal): ?>
+						<li><?=$goal?></li>
+						<?php endforeach ?>
+					</ol>
+				</section>
+				
+				<section class="state-info rule-state">
+					<h3>Rules</h3>
+					<?php $formatter = new HTMLFormatter($state); ?>
+					<ul>
+						<?php foreach($domain->rules as $rule): ?>
+						<li><?=$formatter->formatRule($rule)?></li>
+						<?php endforeach ?>
+					</ul>
+				</section>
+
+				<section class="state-info log">
+					<h3>Step by step</h3>
+					<select id="log-level-selector">
+						<option value="<?=LOG_LEVEL_WARNING?>">Warnings only</option>
+						<option value="<?=LOG_LEVEL_INFO?>">Useful</option>
+						<option value="<?=LOG_LEVEL_VERBOSE?>">Everything</option>
+					</select>
+					<ol>
+					<?php foreach($log->messages as $step_i => $step): ?>
+						<li>Step <?=$step_i?></li>
+						<ol>
+						<?php foreach ($step as list($level, $message)): ?>
+							<li class="log-level-<?=$level?>">
+								<?=$message?>
+							</li>
+						<?php endforeach ?>
+						</ol>
 					<?php endforeach ?>
 					</ol>
-				<?php endforeach ?>
-				</ol>
-			</section>
+				</section>
+			</div>
 		</aside>
 
 		<script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
