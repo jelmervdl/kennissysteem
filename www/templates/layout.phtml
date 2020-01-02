@@ -45,11 +45,15 @@
 				
 				<section class="state-info goal-stack">
 					<h3>Goal stack</h3>
-					<ol>
-						<?php foreach ($state->goalStack as $goal): ?>
-						<li><?=$goal?></li>
-						<?php endforeach ?>
-					</ol>
+					<?php if ($state->goalStack->isEmpty()): ?>
+						<em>Goal stack is empty</em>
+					<?php else: ?>
+						<ol>
+							<?php foreach ($state->goalStack as $goal): ?>
+							<li><?=$goal?></li>
+							<?php endforeach ?>
+						</ol>
+					<?php endif ?>
 				</section>
 				
 				<section class="state-info rule-state">

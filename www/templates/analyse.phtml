@@ -11,7 +11,11 @@ function red_if_zero($value) {
 		<style>
 			h3 {
 				border-top: 1px solid black;
-				padding: 1em 0;
+				padding: 1em 0 0 0;
+			}
+
+			section:first-of-type > h3 {
+				border-top: none;
 			}
 
 			h3 small {
@@ -39,6 +43,8 @@ function red_if_zero($value) {
         <header>
                 <h1>Analysis of <?=$this->html($kb->title)?></h1>
                 <p>Summary of all the facts, rules, questions in the knowledge base.</p>
+                <p>This page gives you an overview and tallies of how many elements from your knowledge base are used. Generally, each row in your domain (each possible value for a fact) should have at least one inferring and one testing rule or question, unless you are counting on them becoming undefined and are using that as a mechanic in your rules.</p>
+                <p>The tallies made here are rather simplified. If you use variables in your rules, they might be incomplete.</p>
         </header>
 		
 		<section id="summary">
@@ -57,6 +63,8 @@ function red_if_zero($value) {
 		
 		<section id="domain">
 			<h2>Domain</h2>
+
+			<p>This is a list of all the facts inside your rules &amp; questions, and all their possible values.</p>
 
 			<?php foreach ($stats as $fact): ?>
 			<section id="var_<?=$this->id($fact->name)?>">
@@ -118,6 +126,9 @@ function red_if_zero($value) {
 
 		<section id="goals">
 			<h2>Goals</h2>
+	
+			<p>A list of all possible outcomes for each of the goals you mentioned in your knowledge base. Each goal mentions which fact determines its outcome.</p>
+
 			<?php foreach ($kb->goals as $goal): ?>
 			<section id="goal_<?=$this->id($goal->name)?>">	
 				<h3>
@@ -136,6 +147,9 @@ function red_if_zero($value) {
 
 		<section id="rules">
 			<h2>Rules</h2>
+
+			<p>A list of all rules in your knowledge base, formatted to capture their condition.</p>
+			<p>Hint: It's more useful to look at these in the <em>Debug</em> panel while going through your knowledge base as it will then also tell you which conditions are matched, and which are not.</p>
 
 			<?php foreach ($kb->rules as $rule): ?>
 			<section>

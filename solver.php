@@ -624,7 +624,7 @@ class KnowledgeState
 	{
 		$this->facts = array(
 			'undefined' => new KnowledgeItem(STATE_UNDEFINED,
-				new PredefinedConstant('undefined is defined as undefined'))
+				new PredefinedConstant('undefined is a built-in fact that is always undefined.'))
 		);
 
 		$this->questions = new Set();

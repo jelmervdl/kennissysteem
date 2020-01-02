@@ -25,7 +25,7 @@ class HTMLFormatter
 	{
 		return sprintf('
 			<span class="answered-question">
-				the question <span class="question">%s</span> was answered with <span class="option answer">%s</span>.
+				the question <span class="question-ref">%s</span> was answered with <span class="option answer-ref">%s</span>.
 			</span>',
 				$this->state->substitute_variables($reason->question->description, [$this, 'escape']),
 				$this->state->substitute_variables($reason->answer->description, [$this, 'escape']));
@@ -35,7 +35,7 @@ class HTMLFormatter
 	{
 		return sprintf('
 			<span class="inferred-rule">
-				the rule <span class="rule-description">%s</span> was applicable because:
+				the rule <span class="rule-ref">%s</span> was applicable because:
 				<ol class="truth-state %s">
 					%s
 				</ol>
@@ -97,7 +97,7 @@ class HTMLFormatter
 		$rows = array();
 
 		foreach ($consequences as $name => $value)
-			$rows[] = sprintf('<tr><td>%s</td><th>:=</th><td>%s</td></tr>',
+			$rows[] = sprintf('<tr><td>%s</td><th>is set to</th><td>%s</td></tr>',
 				$this->escape($name), $this->escape($value));
 
 		return sprintf('<table class="kb-consequence">%s</table>', implode("\n", $rows));
