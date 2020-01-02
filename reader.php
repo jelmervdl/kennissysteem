@@ -147,7 +147,7 @@ class KnowledgeBaseReader
 					$this->logError("KnowledgeBaseReader::parseKnowledgeBase: "
 						. "Skipping unknown element {$childNode->nodeName}",
 						E_USER_NOTICE);
-					continue;
+					continue 2;
 			}
 		}
 	}
@@ -181,7 +181,7 @@ class KnowledgeBaseReader
 					$this->logError("KnowledgeBaseReader::parseRule: "
 						. "Skipping unknown element {$childNode->nodeName}",
 						E_USER_NOTICE);
-					continue;
+					continue 2;
 			}
 		}
 
@@ -227,7 +227,7 @@ class KnowledgeBaseReader
 					$this->logError("KnowledgeBaseReader::parseQuestion: "
 						. "Skipping unknown element '{$childNode->nodeName}'",
 						E_USER_NOTICE);
-					continue;
+					continue 2;
 			}
 		}
 
@@ -278,7 +278,7 @@ class KnowledgeBaseReader
 					$this->logError("KnowledgeBaseReader::parseGoal: "
 						. "Skipping unknown element '{$childNode->nodeName}'",
 						E_USER_NOTICE);
-					continue;
+					continue 2;
 			}
 		}
 
@@ -385,7 +385,7 @@ class KnowledgeBaseReader
 					. "Skipping unknown element '{$node->nodeName}'",
 					E_USER_NOTICE);
 				$condition = null;
-				continue;
+				break;
 		}
 
 		return $condition;
@@ -445,7 +445,7 @@ class KnowledgeBaseReader
 				$this->logError("KnowledgeBaseReader::parseFact: "
 					. "Skipping unknown element '{$node->nodeName}'",
 					E_USER_NOTICE);
-				continue;
+				break;
 		}
 	}
 
@@ -469,7 +469,7 @@ class KnowledgeBaseReader
 					$this->logError("KnowledgeBaseReader::parseOption: "
 						. "Skipping unknown element '{$childNode->nodeName}'",
 						E_USER_NOTICE);
-					continue;
+					continue 2;
 			}
 		}
 
