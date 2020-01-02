@@ -24,69 +24,69 @@
 		</div>
 		<aside id="debug-info">
 			<div class="content">
-			<?php $formatter = new HTMLFormatter($state); ?>
-			<section class="state-info fact-state">
-				<h3>Facts</h3>
-				<dl>
-					<?php foreach($state->facts as $name => $item): ?>
-					<dt><?=$name?></dt>
-					<dd>
-						<tt><?=$this->html($item->value)?></tt>
-						<?php if (KnowledgeState::is_variable($item->value)): ?>
-							<small><tt><?=$this->html($state->resolve($item->value)) ?></tt></small>
-						<?php endif ?>
-						<?php if ($item->reason): ?>
-							<span class="reason">because <?=$formatter->formatReason($item->reason) ?></span>
-						<?php endif ?>
-					</dd>
-					<?php endforeach ?>
-				</dl>
-			</section>
-			
-			<section class="state-info goal-stack">
-				<h3>Goal stack</h3>
-				<ol>
-					<?php foreach ($state->goalStack as $goal): ?>
-					<li><?=$goal?></li>
-					<?php endforeach ?>
-				</ol>
-			</section>
-			
-			<section class="state-info rule-state">
-				<h3>Rules</h3>
-				<select id="rule-state-selector">
-					<option value="" selected>All</option>
-					<option value="maybe">Undecided only</option>
-					<option value="true">True</option>
-					<option value="false">False</option>
-				</select>
-				<ul>
-					<?php foreach($domain->rules as $rule): ?>
-					<li><?=$formatter->formatRule($rule)?></li>
-					<?php endforeach ?>
-				</ul>
-			</section>
-
-			<section class="state-info log">
-				<h3>Step by step</h3>
-				<select id="log-level-selector">
-					<option value="<?=LOG_LEVEL_WARNING?>">Warnings only</option>
-					<option value="<?=LOG_LEVEL_INFO?>">Useful</option>
-					<option value="<?=LOG_LEVEL_VERBOSE?>">Everything</option>
-				</select>
-				<ol>
-				<?php foreach($log->messages as $step_i => $step): ?>
-					<li>Step <?=$step_i?></li>
+				<?php $formatter = new HTMLFormatter($state); ?>
+				<section class="state-info fact-state">
+					<h3>Facts</h3>
+					<dl>
+						<?php foreach($state->facts as $name => $item): ?>
+						<dt><?=$name?></dt>
+						<dd>
+							<tt><?=$this->html($item->value)?></tt>
+							<?php if (KnowledgeState::is_variable($item->value)): ?>
+								<small><tt><?=$this->html($state->resolve($item->value)) ?></tt></small>
+							<?php endif ?>
+							<?php if ($item->reason): ?>
+								<span class="reason">because <?=$formatter->formatReason($item->reason) ?></span>
+							<?php endif ?>
+						</dd>
+						<?php endforeach ?>
+					</dl>
+				</section>
+				
+				<section class="state-info goal-stack">
+					<h3>Goal stack</h3>
 					<ol>
-					<?php foreach ($step as list($level, $message)): ?>
-						<li class="log-level-<?=$level?>">
-							<?=$message?>
-						</li>
+						<?php foreach ($state->goalStack as $goal): ?>
+						<li><?=$goal?></li>
+						<?php endforeach ?>
+					</ol>
+				</section>
+				
+				<section class="state-info rule-state">
+					<h3>Rules</h3>
+					<select id="rule-state-selector">
+						<option value="" selected>All</option>
+						<option value="maybe">Undecided only</option>
+						<option value="true">True</option>
+						<option value="false">False</option>
+					</select>
+					<ul>
+						<?php foreach($domain->rules as $rule): ?>
+						<li><?=$formatter->formatRule($rule)?></li>
+						<?php endforeach ?>
+					</ul>
+				</section>
+
+				<section class="state-info log">
+					<h3>Step by step</h3>
+					<select id="log-level-selector">
+						<option value="<?=LOG_LEVEL_WARNING?>">Warnings only</option>
+						<option value="<?=LOG_LEVEL_INFO?>">Useful</option>
+						<option value="<?=LOG_LEVEL_VERBOSE?>">Everything</option>
+					</select>
+					<ol>
+					<?php foreach($log->messages as $step_i => $step): ?>
+						<li>Step <?=$step_i?></li>
+						<ol>
+						<?php foreach ($step as list($level, $message)): ?>
+							<li class="log-level-<?=$level?>">
+								<?=$message?>
+							</li>
+						<?php endforeach ?>
+						</ol>
 					<?php endforeach ?>
 					</ol>
-				<?php endforeach ?>
-				</ol>
-			</section>
+				</section>
 			</div>
 		</aside>
 
