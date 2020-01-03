@@ -30,17 +30,17 @@ class Rule
 		$this->inferred_facts = new Set();
 	}
 
-	public function infers($fact)
+	public function infers($fact): bool
 	{
 		return $this->inferred_facts->contains($fact);
 	}
 
-	public function evaluate(KnowledgeState $state)
+	public function evaluate(KnowledgeState $state): TruthState
 	{
 		return $this->condition->evaluate($state);
 	}
 
-	public function __toString()
+	public function __toString(): string
 	{
 		return sprintf('[Rule %s(line %d)]',
 			$this->description ? sprintf('"%s" ', $this->description) : '',
@@ -73,17 +73,17 @@ class Question
 		$this->inferred_facts = new Set();
 	}
 
-	public function addOption(Option $option)
+	public function addOption(Option $option): void
 	{
 		$this->options[] = $option;
 	}
 
-	public function infers($fact)
+	public function infers($fact): bool
 	{
 		return $this->inferred_facts->contains($fact);
 	}
 
-	public function __toString()
+	public function __toString(): string
 	{
 		return $this->description;
 	}
@@ -102,14 +102,14 @@ class AskedQuestion
 		$this->skippable = $skippable;
 	}
 
-	public function __toString()
+	public function __toString(): string
 	{
 		return sprintf('%s (%s)', $this->question->__toString(), $this->skippable ? 'skippable' : 'not skippable');
 	}
 }
 
 /**
- * Een mogelijk antwoord op een Question.
+ * One of the multiple choice options to a question.
  *
  * <option>
  *     <description/>
@@ -123,15 +123,19 @@ class Option
 	public $consequences = array();
 }
 
+/**
+ * Internal interface for all classes that behave like a condition.
+ */
 interface Condition
 {
-	public function evaluate(KnowledgeState $state);
+	public function evaluate(KnowledgeState $state): TruthState;
 
-	public function asArray();
+	public function asArray(): array;
 }
 
 /**
- * N of the conditions have to be true
+ * N of the conditions have to be true. WhenAll and WhenAny are both based on 
+ * this class as WhenAll translates to N = len(conditions) and WhenAny to N=1.
  * 
  * <some threshold="n">
  *     Conditions, e.g. <fact/>
@@ -150,12 +154,12 @@ class WhenSomeCondition implements Condition
 		$this->threshold = $threshold;
 	}
 
-	public function addCondition(Condition $condition)
+	public function addCondition(Condition $condition): void
 	{
 		$this->conditions->push($condition);
 	}
 
-	public function evaluate(KnowledgeState $state)
+	public function evaluate(KnowledgeState $state): TruthState
 	{
 		// Assumption: There has to be at least one condition
 		assert(count($this->conditions) >= $this->threshold);
@@ -179,7 +183,7 @@ class WhenSomeCondition implements Condition
 		return new No($this, $values);
 	}
 
-	public function asArray()
+	public function asArray(): array
 	{
 		return array($this, array_map_method('asArray', $this->conditions));
 	}
@@ -199,7 +203,7 @@ class WhenAllCondition extends WhenSomeCondition
 		parent::__construct(1);
 	}
 
-	public function addCondition(Condition $condition)
+	public function addCondition(Condition $condition): void
 	{
 		parent::addCondition($condition);
 
@@ -242,12 +246,12 @@ class NegationCondition implements Condition
 		$this->condition = $condition;
 	}
 
-	public function evaluate(KnowledgeState $state)
+	public function evaluate(KnowledgeState $state): TruthState
 	{
 		return $this->condition->evaluate($state)->negate($this);
 	}
 
-	public function asArray()
+	public function asArray(): array
 	{
 		return array($this, $this->condition->asArray());
 	}
@@ -269,14 +273,14 @@ class FactCondition implements Condition
 
 	public $test;
 
-	public function __construct($name, $value, $test = 'eq')
+	public function __construct(string $name, string $value, string $test = 'eq')
 	{
 		$this->name = trim($name);
 		$this->value = trim($value);
 		$this->test = $test;
 	}
 
-	public function evaluate(KnowledgeState $state)
+	public function evaluate(KnowledgeState $state): TruthState
 	{
 		$fact_name = $state->resolve($this->name);
 
@@ -301,12 +305,13 @@ class FactCondition implements Condition
 		if ($test_value instanceof Maybe)
 			return $test_value;
 
-		return $this->compare($state_value, $test_value)
-			? new Yes($this, [$state->reason($this->name)])
-			: new No($this, [$state->reason($this->name)]);
+		if ($this->compare($state_value, $test_value))
+			return new Yes($this, [$state->reason($this->name)]);
+		else
+			return new No($this, [$state->reason($this->name)]);
 	}
 
-	protected function compare($lhs, $rhs)
+	protected function compare($lhs, $rhs): bool
 	{
 		switch ($this->test)
 		{
@@ -330,7 +335,7 @@ class FactCondition implements Condition
 		}
 	}
 
-	public function asArray()
+	public function asArray(): array
 	{
 		return array($this);
 	}
@@ -369,12 +374,12 @@ class Goal
 		$this->answers = new Set();
 	}
 
-	public function hasAnswers()
+	public function hasAnswers(): bool
 	{
 		return count($this->answers) > 0;
 	}
 
-	public function answer(KnowledgeState $state)
+	public function answer(KnowledgeState $state): ?Answer
 	{
 		$name = $state->resolve($this->name);
 
@@ -442,19 +447,19 @@ abstract class TruthState
 		$this->reason = $reason;
 	}
 
-	public function __toString()
+	public function __toString(): string
 	{
 		return sprintf("[%s because: %s]",
 			get_class($this),
 			implode(', ', array_map('strval', $this->factors)));
 	}
 
-	abstract public function negate(object $reason);
+	abstract public function negate(object $reason): TruthState;
 }
 
 class Yes extends TruthState
 {
-	public function negate(object $reason)
+	public function negate(object $reason): TruthState
 	{
 		return new No($reason, [$this]);
 	}
@@ -462,7 +467,7 @@ class Yes extends TruthState
 
 class No extends TruthState
 {
-	public function negate(object $reason)
+	public function negate(object $reason): TruthState
 	{
 		return new Yes($reason, [$this]);
 	}
@@ -470,12 +475,12 @@ class No extends TruthState
 
 class Maybe extends TruthState 
 {
-	public function negate(object $reason)
+	public function negate(object $reason): TruthState
 	{
 		return new Maybe($reason, [$this]);
 	}
 
-	public function unknownFacts()
+	public function unknownFacts(): array
 	{
 		// This is where the order of the questions is effectively determined.
 		// It does this by dividing an "amount of contribution" (1.0 here) among
@@ -502,7 +507,7 @@ class Maybe extends TruthState
 		return array_keys($causes);
 	}
 
-	private function divideAmong($percentage, array $factors)
+	private function divideAmong(float $percentage, array $factors): Map
 	{
 		$effects = new Map(0.0);
 
@@ -538,11 +543,25 @@ class Maybe extends TruthState
 	}
 }
 
+/**
+ * To keep track of how we came to certain conclusions, we add reasons to each
+ * derived KnowledgeItem (i.e. a derived fact). This helps with debugging and
+ * with coming up with an explanation.
+ *
+ * The Reason interface is pretty simple: it just has to produce a string, a
+ * human readable description of how it came to be. The HTMLFormatter may
+ * provide more elaborate methods of displaying a reason, but through this
+ * interface it can at least always provide a fallback reason.
+ */
 interface Reason
 {
 	public function __toString();
 }
 
+/**
+ * A knowledge item is a derived value of a fact. It combines the derived value
+ * and a hint (the reason) it came to this value.
+ */
 class KnowledgeItem
 {
 	public $value;
@@ -557,6 +576,10 @@ class KnowledgeItem
 	}
 }
 
+/**
+ * Answering a question in a certain way can be a reason for a fact to become
+ * a certain value. This class represent such reasons.
+ */
 class AnsweredQuestion implements Reason
 {
 	public $question;
@@ -576,6 +599,14 @@ class AnsweredQuestion implements Reason
 	}
 }
 
+/**
+ * Inferring a rule in a certain way can be a reason for a fact to become a
+ * certain value. This class represents these reasons. It remembers the rule
+ * that was triggered, and the 'Yes' that came out of it as that TruthState
+ * itself as well as that will have a reason for becoming yes. I.e. by going
+ * through the reasons hidden inside the reason for the Yes you should be able
+ * to derive exactly how that Yes came to be.
+ */
 class InferredRule implements Reason
 {
 	public $rule;
@@ -595,6 +626,12 @@ class InferredRule implements Reason
 	}
 }
 
+/**
+ * The solver expects certain values to be predefined (more specifically, the
+ * fact 'undefined'). The reason for such knowledge items is then that they
+ * are predefined. But because everything needs a reason, so do these predefined
+ * facts.
+ */
 class PredefinedConstant implements Reason
 {
 	public function __construct($explanation)
@@ -609,8 +646,8 @@ class PredefinedConstant implements Reason
 }
 
 /**
- * KnowledgeState represents the knowledge base at a certain moment: used rules
- * are removed, facts are added, etc.
+ * KnowledgeState represents the knowledge base at a certain moment: asked
+ * questions are removed, facts are added, current goal stack, etc.
  */
 class KnowledgeState
 {
@@ -632,7 +669,7 @@ class KnowledgeState
 		$this->goalStack = new Stack();
 	}
 
-	static public function initializeForDomain(KnowledgeDomain $domain)
+	static public function initializeForDomain(KnowledgeDomain $domain): self
 	{
 		$state = new static();
 
@@ -655,24 +692,24 @@ class KnowledgeState
 		return $state;
 	}
 
-	public function removeQuestion(Question $question)
+	public function removeQuestion(Question $question): void
 	{
 		$this->questions->remove($question);
 	}
 
-	public function applyAnswer(Question $question, Option $answer)
+	public function applyAnswer(Question $question, Option $answer): void
 	{
 		foreach ($answer->consequences as $name => $value)
 			$this->facts[$name] = new KnowledgeItem($value, new AnsweredQuestion($question, $answer));
 	}
 
-	public function applyRule(Rule $rule, Yes $evaluation)
+	public function applyRule(Rule $rule, Yes $evaluation): void
 	{
 		foreach ($rule->consequences as $name => $value)
 			$this->facts[$name] = new KnowledgeItem($value, new InferredRule($rule, $evaluation));
 	}
 
-	public function markUndefined($fact_name)
+	public function markUndefined(string $fact_name): void
 	{
 		$this->facts[$fact_name] = new KnowledgeItem(STATE_UNDEFINED,
 			new PredefinedConstant("There was no rule or question left to find a value for $fact_name"));
@@ -681,20 +718,15 @@ class KnowledgeState
 	/**
 	 * Returns the value of a fact, or null if not found. Do not call with
 	 * variables as fact_name. If $fact_name is or could be a variable, first
-	 * use KnowledgeState::resolve on it.
-	 * 
-	 * @param string $fact_name
-	 * @return mixed
+	 * use KnowledgeState::resolve it.
 	 */
-	public function fact($fact_name)
+	public function fact(string $fact_name): ?KnowledgeItem
 	{
 		if (static::is_variable($fact_name))
-			throw new RuntimeException('Called KnowledgeState::value with variable');
+			throw new InvalidArgumentException('Called KnowledgeState::fact with variable');
 
 		if (!isset($this->facts[$fact_name]))
 			return null;
-
-		assert($this->facts[$fact_name] instanceof KnowledgeItem);
 
 		return $this->facts[$fact_name];
 	}
@@ -707,7 +739,7 @@ class KnowledgeState
 		return $this->resolve($fact->value);
 	}
 
-	public function reason($fact_name)
+	public function reason(string $fact_name): ?Reason
 	{
 		// Todo: KnowledgeState::value returns the resolved fact, but this returns
 		// the reason of only the resolved fact. Maybe we should create an explanation
@@ -744,7 +776,11 @@ class KnowledgeState
 		return $fact_name;
 	}
 
-	public function substitute_variables($text, $formatter = null)
+	/**
+	 * Helper function to substitute variables in text (e.g. the description of
+	 * a rule) with the values of facts.
+	 */
+	public function substitute_variables(string $text, $formatter = null): string
 	{
 		$callback = function($match) use ($formatter) {
 			$value = $this->value($match[1]);
@@ -761,12 +797,12 @@ class KnowledgeState
 		return preg_replace_callback('/\$([a-z][a-z0-9_]*)\b/i', $callback, $text);
 	}
 
-	static public function is_variable($fact_name)
+	static public function is_variable($fact_name): bool
 	{
-		return substr($fact_name, 0, 1) == '$';
+		return is_string($fact_name) && substr($fact_name, 0, 1) == '$';
 	}
 
-	static public function variable_name($fact_name)
+	static public function variable_name(string $fact_name): string
 	{
 		return substr($fact_name, 1); // strip of the $
 	}
@@ -807,10 +843,18 @@ class KnowledgeDomain
 }
 
 /**
- * Solver is een forward & backward chaining implementatie die op basis van
- * een knowledge base (een berg regels, mogelijke vragen en gaandeweg feiten)
- * blijft zoeken, regels toepassen en vragen kiezen totdat alle goals opgelost
- * zijn. Gebruik Solver::backwardChain(state) tot deze geen vragen meer teruggeeft.
+ * The Solver object is an implementation of forward and backward chaining. It
+ * takes a KnowledgeState (rules, derived facts, possible questions) and
+ * produces either a conclusion (ThruthState) or a question that can be asked
+ * (AskedQuestion).
+ *
+ * Usage for backward chaining:
+ *   Keep calling backwardChain until it no longer returns AskedQuestions. Then
+ *   use the KnowledgeState to query the value of each fact you initially added
+ *   to your goal stack (i.e. KnowledgeDomain::$goals)
+ *
+ * Usage for forward chaining:
+ *   Same as backward chaining, but call forwardChain() instead.
  */
 class Solver
 {
@@ -834,7 +878,7 @@ class Solver
 	 * @param KnowledgeState $knowledge begin-state
 	 * @return AskedQuestion | null
 	 */
-	public function backwardChain(KnowledgeDomain $domain, KnowledgeState $state)
+	public function backwardChain(KnowledgeDomain $domain, KnowledgeState $state): ?AskedQuestion
 	{
 		// herhaal zo lang er goals op de goal stack zitten
 		while (!$state->goalStack->isEmpty())
@@ -916,6 +960,8 @@ class Solver
 				$this->log('Removing %s from the goal stack; the stack is now %s', [$removed_goal, $state->goalStack], LOG_LEVEL_VERBOSE);
 			}
 		}
+
+		return null;
 	}
 
 	/**
@@ -930,7 +976,7 @@ class Solver
 	 * @param string goal naam van het fact dat wordt afgeleid
 	 * @return TruthState | AskedQuestion
 	 */
-	public function solve(KnowledgeDomain $domain, KnowledgeState $state, $goal_name)
+	public function solve(KnowledgeDomain $domain, KnowledgeState $state, string $goal_name)
 	{
 		// First make sure that if goal_name is a variable, we resolve it to a
 		// value (a real goal name).
@@ -988,7 +1034,9 @@ class Solver
 				$maybes[] = $rule_result;
 		}
 
-		// If this problem can be solved by a rule, use it!
+		// If trying to apply rules yielded unknowns, stop here. Note: If you
+		// want to prioritize questions over trying to apply rules, move this
+		// after the next if-statement about $relevant_questions.
 		if (count($maybes) > 0)
 			return new Maybe(null, $maybes);
 
@@ -1010,7 +1058,7 @@ class Solver
 		return new Maybe();
 	}
 
-	public function forwardChain(KnowledgeDomain $domain, KnowledgeState $state)
+	public function forwardChain(KnowledgeDomain $domain, KnowledgeState $state): ?AskedQuestion
 	{
 		$rules = clone $domain->rules;
 
@@ -1049,9 +1097,12 @@ class Solver
 			// None of the rules changed the state: stop trying.
 			break;
 		}
+
+		return null; // Necessary because otherwise it returns 'none', whatever
+		             // PHP determines that to be. Blame PHP.
 	}
 
-	public function step(KnowledgeState $state)
+	public function step(KnowledgeState $state): ?AskedQuestion
 	{
 		switch ($state->algorithm)
 		{
@@ -1066,11 +1117,9 @@ class Solver
 		}
 	}
 
-	protected function log($format, array $arguments = [], $level = LOG_LEVEL_INFO)
+	protected function log(string $format, array $arguments = [], $level = LOG_LEVEL_INFO): void
 	{
-		if (!$this->log)
-			return;
-
-		$this->log->write($format, $arguments, $level);
+		if ($this->log)
+			$this->log->write($format, $arguments, $level);
 	}
 }

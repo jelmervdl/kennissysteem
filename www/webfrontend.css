@@ -453,15 +453,15 @@ code.numbered pre:before {
 	color: rgba(0, 0, 0, 0.4);
 }
 
-.reason .question,
-.reason .answer,
-.explanation .rule-description {
+.reason .question-ref,
+.reason .answer-ref,
+.explanation .rule-ref {
 	font-style: italic;
 }
 
-.explanation .question,
-.explanation .answer,
-.explanation .rule-description {
+.explanation .question-ref,
+.explanation .answer-ref,
+.explanation .rule-ref {
 	background: #ffc;
 }
 

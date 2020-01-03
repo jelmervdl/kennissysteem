@@ -7,7 +7,11 @@
 	<?php foreach ($domain->goals as $goal): ?>
 		<?php $real_goal_name = $state->resolve($goal->name); ?>
 		<?php if ($goal->hasAnswers() && (($answer = $goal->answer($state)) || $state->value($real_goal_name) != STATE_UNDEFINED)): ?>
-			<dt><?=$state->substitute_variables($goal->description, ['Template', 'html'])?></dt>
+			<?php if (!is_null($goal->description)): ?>
+				<dt><?=$state->substitute_variables($goal->description, ['Template', 'html'])?></dt>
+			<?php else: ?>
+				<dt><!-- goal has no description --></dt>
+			<?php endif ?>
 			<dd>
 				<details>
 					<summary><?php
