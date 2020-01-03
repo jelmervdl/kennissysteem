@@ -179,15 +179,15 @@ class CallbackMapIterator extends IteratorIterator
 
 class Map implements ArrayAccess, IteratorAggregate
 {
-	private $default_value;
-
 	private $data = array();
 
-	public function __construct($default_value = null)
+	public function __construct(...$sources)
 	{
-		$this->default_value = $default_value;
+		foreach ($sources as $source)
+			foreach ($source as $key => $value)
+				$this[$key] = $value;
 	}
-	
+
 	public function offsetExists($key)
 	{
 		if (!is_scalar($key))
@@ -219,6 +219,8 @@ class Map implements ArrayAccess, IteratorAggregate
 		if (!is_scalar($key))
 			throw new InvalidArgumentException('$key can only be of a scalar type');
 
+		$this->validate($key, $value);
+
 		return $this->data[$key] = $value;
 	}
 
@@ -227,16 +229,25 @@ class Map implements ArrayAccess, IteratorAggregate
 		return new ArrayIterator($this->data);
 	}
 
+	public function extend(...$sources)
+	{
+		return new self($this, ...$sources);
+	}
+
 	public function data()
 	{
 		return $this->data;
 	}
 
+	protected function validate($key, $value)
+	{
+		// Override this function to validate all data that gets added.
+	}
+
 	protected function makeDefaultValue($key)
 	{
-		return is_callable($this->default_value)
-			? call_user_func($this->default_value, $key)
-			: $this->default_value;
+		// Override this function to make a default value
+		throw new InvalidArgumentException("Key $key does not exist");
 	}
 }
 

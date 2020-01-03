@@ -132,7 +132,7 @@ class KnowledgeBaseReader
 
 				case 'fact':
 					list($name, $value) = $this->parseFact($childNode);
-					$kb->apply([$name => $value]);
+					$kb->facts[$name] = $value;
 					break;
 
 				case 'title':
@@ -439,7 +439,7 @@ class KnowledgeBaseReader
 
 				$name = $node->getAttribute('name');
 				$value = $this->parseText($node);
-				return array($name, $value);
+				return [$name, $value];
 							
 			default:
 				$this->logError("KnowledgeBaseReader::parseFact: "

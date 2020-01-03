@@ -24,9 +24,11 @@ class FactStatistics
 	{
 		$this->name = $name;
 
-		$this->values = new Map(function() {
-			return new FactValueStatistics;
-		});
+		$this->values = new class() extends Map {
+			protected function makeDefaultValue($key) {
+				return new FactValueStatistics();
+			}
+		};
 	}
 }
 
@@ -52,9 +54,11 @@ class FactValueStatistics
 	}
 }
 
-$stats = new Map(function($fact_name) {
-	return new FactStatistics($fact_name);
-});
+$stats = new class() extends Map {
+	protected function makeDefaultValue($key) {
+		return new FactStatistics($key);
+	}
+};
 
 foreach ($state->rules as $rule)
 {

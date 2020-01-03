@@ -509,7 +509,11 @@ class Maybe extends TruthState
 
 	private function divideAmong(float $percentage, array $factors): Map
 	{
-		$effects = new Map(0.0);
+		$effects = new class() extends Map {
+			protected function makeDefaultValue($key) {
+				return 0.0;
+			}
+		};
 
 		// Only count factors that can change (raw fact names and Maybes)
 		$factors = array_filter($factors, function($factor) {
@@ -645,6 +649,22 @@ class PredefinedConstant implements Reason
 	}
 }
 
+class FactMap extends Map
+{
+	protected function validate($key, $value)
+	{
+		if (!is_string($key))
+			throw new InvalidArgumentException('Stored facts can only be strings');
+
+		if (KnowledgeState::is_variable($key))
+			throw new InvalidArgumentException('Stored facts cannot have a variable as name');
+
+		if (!($value instanceof KnowledgeItem))
+			throw new InvalidArgumentException('Stored fact value has to be a KnowledgeItem');
+	}
+}
+
+
 /**
  * KnowledgeState represents the knowledge base at a certain moment: asked
  * questions are removed, facts are added, current goal stack, etc.
@@ -659,10 +679,10 @@ class KnowledgeState
 
 	public function __construct()
 	{
-		$this->facts = array(
-			'undefined' => new KnowledgeItem(STATE_UNDEFINED,
-				new PredefinedConstant('undefined is a built-in fact that is always undefined.'))
-		);
+		$this->facts = new FactMap();
+
+		$this->facts['undefined'] = new KnowledgeItem(STATE_UNDEFINED,
+				new PredefinedConstant('undefined is a built-in fact that is always undefined.'));
 
 		$this->questions = new Set();
 
@@ -673,9 +693,10 @@ class KnowledgeState
 	{
 		$state = new static();
 
-		$state->facts = array_merge($state->facts, $domain->facts);
-
 		$state->questions = clone $domain->questions;
+
+		foreach ($domain->facts as $name => $value)
+			$state->facts[$name] = new KnowledgeItem($value, new PredefinedConstant("The value for $name was predefined in the knowledge base"));
 
 		foreach ($domain->goals as $goal)
 		{
