@@ -139,7 +139,7 @@ function iterator_map(Iterator $it, Callable $callback)
  * Filter anything iterable (array, iterator, stack, list, etc) using a callback.
  * Does not preserve keys.
  */
-function filter($iterable, Callable $callback)
+function filter(iterable $iterable, callable $callback): array
 {
 	$filtered = [];
 
@@ -181,14 +181,14 @@ class Map implements ArrayAccess, IteratorAggregate
 {
 	private $data = array();
 
-	public function __construct(...$sources)
+	public function __construct(iterable ...$sources)
 	{
 		foreach ($sources as $source)
 			foreach ($source as $key => $value)
 				$this[$key] = $value;
 	}
 
-	public function offsetExists($key)
+	public function offsetExists($key): bool
 	{
 		if (!is_scalar($key))
 			throw new InvalidArgumentException('$key can only be of a scalar type');
@@ -196,7 +196,7 @@ class Map implements ArrayAccess, IteratorAggregate
 		return isset($this->data[$key]);
 	}
 
-	public function offsetUnset($key)
+	public function offsetUnset($key): void
 	{
 		if (!is_scalar($key))
 			throw new InvalidArgumentException('$key can only be of a scalar type');
@@ -224,22 +224,22 @@ class Map implements ArrayAccess, IteratorAggregate
 		return $this->data[$key] = $value;
 	}
 
-	public function getIterator()
+	public function getIterator(): iterable
 	{
 		return new ArrayIterator($this->data);
 	}
 
-	public function extend(...$sources)
+	public function extend(iterable ...$sources): self
 	{
 		return new self($this, ...$sources);
 	}
 
-	public function data()
+	public function data(): array
 	{
 		return $this->data;
 	}
 
-	protected function validate($key, $value)
+	protected function validate($key, $value): void
 	{
 		// Override this function to validate all data that gets added.
 	}
@@ -260,18 +260,18 @@ class Set implements IteratorAggregate, Countable
 		$this->values = array();
 	}
 
-	public function contains($value)
+	public function contains($value): bool
 	{
 		return in_array($value, $this->values);
 	}
 
-	public function push($value)
+	public function push($value): void
 	{
 		if (!$this->contains($value))
 			$this->values[] = $value;
 	}
 
-	public function pushAll($values)
+	public function pushAll($values): void
 	{
 		foreach ($values as $value)
 			$this->push($value);
@@ -286,22 +286,22 @@ class Set implements IteratorAggregate, Countable
 			: false;
 	}
 
-	public function getIterator()
+	public function getIterator(): iterable
 	{
 		return new ArrayIterator($this->values);
 	}
 
-	public function map(Callable $callback)
+	public function map(callable $callback): iterable
 	{
 		return new CallbackMapIterator($this->getIterator(), $callback);
 	}
 
-	public function count()
+	public function count(): int
 	{
 		return count($this->values);
 	}
 
-	public function isEmpty()
+	public function isEmpty(): bool
 	{
 		return $this->count() === 0;
 	}

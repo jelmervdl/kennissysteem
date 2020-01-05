@@ -95,7 +95,7 @@ class AskedQuestion
 
 	public $skippable;
 
-	public function __construct(Question $question, $skippable)
+	public function __construct(Question $question, bool $skippable)
 	{
 		$this->question = $question;
 
@@ -651,7 +651,7 @@ class PredefinedConstant implements Reason
 
 class FactMap extends Map
 {
-	protected function validate($key, $value)
+	protected function validate($key, $value): void
 	{
 		if (!is_string($key))
 			throw new InvalidArgumentException('Stored facts can only be strings');
