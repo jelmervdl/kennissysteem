@@ -5,26 +5,26 @@ include '../solver.php';
 include '../reader.php';
 include '../formatter.php';
 
-function _encode($data)
+function _encode(mixed $data): string
 {
 	return base64_encode(gzcompress(serialize($data)));
 }
 
-function _decode($data)
+function _decode(string $data): mixed
 {
 	return unserialize(gzuncompress(base64_decode($data)));
 }
 
 class WebLogger implements Logger
 {
-	public $messages = array(array());
+	public array $messages = array(array());
 
-	public function __wakeup()
+	public function __wakeup(): void
 	{
 		$this->messages[] = array();
 	}
 
-	public function write($format, $arguments, $level)
+	public function write(string $format, array $arguments, int $level): void
 	{
 		$arguments = array_map(function($arg) {
 			return '<tt>' . Template::html(to_debug_string($arg)) . '</tt>';
@@ -36,27 +36,27 @@ class WebLogger implements Logger
 
 class WebFrontend
 {
-	private $log;
+	private WebLogger $log;
 
-	private $solver;
+	private Solver $solver;
 
-	private $state;
+	private KnowledgeState $state;
 
-	private $kb_file;
+	private string $kb_file;
 
-	public function __construct($kb_file)
+	public function __construct(string $kb_file)
 	{
 		$this->kb_file = $kb_file;
 	}
 
-	public function main()
+	public function main(): void
 	{
 		$domain = null;
 
 		$state = null;
 
 		$log = $this->getLog();
-		
+
 		$solver = new Solver($log);
 
 		try
@@ -93,7 +93,7 @@ class WebFrontend
 				$page = new Template('templates/completed.phtml');
 			}
 		}
-		catch (Exception | Error $e)
+		catch (Exception $e)
 		{
 			$page = new Template('templates/exception.phtml');
 			$page->exception = $e;
@@ -106,13 +106,13 @@ class WebFrontend
 		echo $page->render();
 	}
 
-	private function getDomain()
+	private function getDomain(): KnowledgeDomain
 	{
 		$reader = new KnowledgeBaseReader();
 		return $reader->parse($this->kb_file);
 	}
 
-	private function getState($domain)
+	private function getState(KnowledgeDomain $domain): KnowledgeState
 	{
 		if (isset($_POST['state']))
 			return _decode($_POST['state']);
@@ -120,7 +120,7 @@ class WebFrontend
 			return $this->createNewState($domain);
 	}
 
-	private function createNewState($domain)
+	private function createNewState(KnowledgeDomain $domain): KnowledgeState
 	{
 		$state = KnowledgeState::initializeForDomain($domain);
 
@@ -135,7 +135,7 @@ class WebFrontend
 		return $state;
 	}
 
-	private function getLog()
+	private function getLog(): WebLogger
 	{
 		if (isset($_POST['log']))
 			return _decode($_POST['log']);

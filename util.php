@@ -12,7 +12,7 @@ function get_error_enum($errno)
 	foreach ($enums as $enum)
 		if (constant($enum) == $errno)
 			return $enum;
-	
+
 	return $errno;
 }
 
@@ -39,7 +39,7 @@ if (PHP_SAPI === 'cli')
 				$step['function'],
 				basename($step['file']), // should be relative path to $errfile
 				$step['line']);
-		
+
 		// stop colours
 		echo chr(27) . "[00m;\n";
 	});
@@ -52,7 +52,7 @@ if (PHP_SAPI === 'cli')
  * with the remaining missing arguments (an array in this example) and then will call
  * implode(':', supplied-array) eventually. Very handy in combination with array_map
  * and array_filter.
- * 
+ *
  * @param callable $function function
  * @param mixed $arg,... one or more arguments
  * @return callable
@@ -73,7 +73,7 @@ function compare($a, $b)
 {
     if ($a == $b)
         return 0;
-    
+
     return $a < $b ? -1 : 1;
 }
 
@@ -84,7 +84,7 @@ function array_filter_type($type, $array)
 	foreach ($array as $element)
 		if ($element instanceof $type)
 			$hits[] = $element;
-	
+
 	return $hits;
 }
 
@@ -97,7 +97,7 @@ function array_flatten($array)
 			$values = array_merge($values, array_flatten($item));
 		else
 			$values[] = $item;
-	
+
 	return $values;
 }
 
@@ -107,7 +107,7 @@ function array_map_method($method, $array)
 
 	foreach ($array as $key => $value)
 		$values[$key] = call_user_func(array($value, $method));
-	
+
 	return $values;
 }
 
@@ -116,7 +116,7 @@ function iterator_contains(Iterator $it, $needle)
 	foreach ($it as $el)
 		if ($el == $needle)
 			return true;
-	
+
 	return false;
 }
 
@@ -170,25 +170,34 @@ class CallbackMapIterator extends IteratorIterator
 
 		$this->callback = $callback;
 	}
-	
-	public function current()
+
+	public function current(): mixed
 	{
 		return call_user_func($this->callback, parent::current(), parent::key());
 	}
 }
 
+/**
+ * @template TKey
+ * @template TVal
+ * @implements ArrayAccess<TKey,TVal>
+ * @implements IteratorAggregate<TVal>
+ */
 class Map implements ArrayAccess, IteratorAggregate
 {
-	private $default_value;
+	private mixed $default_value;
 
-	private $data = array();
+	private array $data = array();
 
-	public function __construct($default_value = null)
+	/**
+	 * @param TVal | callable(string):TVal | null $default_value
+	 */
+	public function __construct(mixed $default_value = null)
 	{
 		$this->default_value = $default_value;
 	}
-	
-	public function offsetExists($key)
+
+	public function offsetExists(mixed $key): bool
 	{
 		if (!is_scalar($key))
 			throw new InvalidArgumentException('$key can only be of a scalar type');
@@ -196,7 +205,7 @@ class Map implements ArrayAccess, IteratorAggregate
 		return isset($this->data[$key]);
 	}
 
-	public function offsetUnset($key)
+	public function offsetUnset(mixed $key): void
 	{
 		if (!is_scalar($key))
 			throw new InvalidArgumentException('$key can only be of a scalar type');
@@ -204,35 +213,36 @@ class Map implements ArrayAccess, IteratorAggregate
 		unset($this->data[$key]);
 	}
 
-	public function offsetGet($key)
+	public function offsetGet(mixed $key): mixed
 	{
 		if (!is_scalar($key))
 			throw new InvalidArgumentException('$key can only be of a scalar type');
 
-		return isset($this->data[$key])
-			? $this->data[$key]
-			: $this->offsetSet($key, $this->makeDefaultValue($key));
+		if (!isset($this->data[$key]))
+			$this->offsetSet($key, $this->makeDefaultValue($key));
+
+		return $this->data[$key];
 	}
 
-	public function offsetSet($key, $value)
+	public function offsetSet(mixed $key, mixed $value): void
 	{
 		if (!is_scalar($key))
 			throw new InvalidArgumentException('$key can only be of a scalar type');
 
-		return $this->data[$key] = $value;
+		$this->data[$key] = $value;
 	}
 
-	public function getIterator()
+	public function getIterator(): ArrayIterator
 	{
 		return new ArrayIterator($this->data);
 	}
 
-	public function data()
+	public function data(): array
 	{
 		return $this->data;
 	}
 
-	protected function makeDefaultValue($key)
+	protected function makeDefaultValue(string $key): mixed
 	{
 		return is_callable($this->default_value)
 			? call_user_func($this->default_value, $key)
@@ -240,33 +250,50 @@ class Map implements ArrayAccess, IteratorAggregate
 	}
 }
 
+/**
+ * @template TVal
+ * @implements IteratorAggregate<int,TVal>
+ */
 class Set implements IteratorAggregate, Countable
 {
-	private $values;
+	private array $values;
 
 	public function __construct()
 	{
 		$this->values = array();
 	}
 
-	public function contains($value)
+	/**
+	 * @param TVal $value
+	 */
+	public function contains(mixed $value): bool
 	{
 		return in_array($value, $this->values);
 	}
 
-	public function push($value)
+	/**
+	 * @param TVal $value
+	 */
+	public function push(mixed $value): void
 	{
 		if (!$this->contains($value))
 			$this->values[] = $value;
 	}
 
-	public function pushAll($values)
+	/**
+	 * @param Traversable<TVal> $values
+	 */
+	public function pushAll(iterable $values): void
 	{
 		foreach ($values as $value)
 			$this->push($value);
 	}
 
-	public function remove($value)
+	/**
+	 * @param TVal $value
+	 * @return array<TVal> | false
+	 */
+	public function remove(mixed $value): array | bool
 	{
 		$index = array_search($value, $this->values);
 
@@ -275,22 +302,30 @@ class Set implements IteratorAggregate, Countable
 			: false;
 	}
 
-	public function getIterator()
+	/**
+	 * @return Traversable<TVal>
+	 */
+	public function getIterator(): Traversable
 	{
 		return new ArrayIterator($this->values);
 	}
 
-	public function map(Callable $callback)
+	/**
+	 * @template RVal
+	 * @param callable(TVal): RVal $callback
+	 * @return Traversable<RVal>
+	 */
+	public function map(Callable $callback): Traversable
 	{
 		return new CallbackMapIterator($this->getIterator(), $callback);
 	}
 
-	public function count()
+	public function count(): int
 	{
 		return count($this->values);
 	}
 
-	public function isEmpty()
+	public function isEmpty(): bool
 	{
 		return $this->count() === 0;
 	}
@@ -302,19 +337,19 @@ class Set implements IteratorAggregate, Countable
  */
 class Stack extends SplStack implements Serializable
 {
-	public function serialize()
+	public function serialize(): string
 	{
 		$items = iterator_to_array($this);
 		return serialize($items);
 	}
 
-	public function unserialize($data)
+	public function unserialize(string $data): void
 	{
 		foreach (unserialize($data) as $item)
 			$this->unshift($item);
 	}
 
-	public function __toString()
+	public function __toString(): string
 	{
 		return sprintf('[%s]', implode(', ', iterator_to_array($this)));
 	}
@@ -331,50 +366,50 @@ class Pair implements ArrayAccess
 
 	public $second;
 
-	public function __construct($first = null, $second = null)
+	public function __construct(mixed $first = null, mixed $second = null)
 	{
 		$this->first = $first;
 
 		$this->second = $second;
 	}
 
-	public function offsetExists($n)
+	public function offsetExists(mixed $n): bool
 	{
 		return $n == 0 || $n == 1;
 	}
 
-	public function offsetGet($n)
+	public function offsetGet(mixed $n): mixed
 	{
 		if ($n == 0)
 			return $this->first;
-		
+
 		elseif ($n == 1)
 			return $this->second;
-		
+
 		else
 			throw new Exception('Index out of bounds exception');
 	}
 
-	public function offsetSet($n, $value)
+	public function offsetSet(mixed $n, mixed $value): void
 	{
 		if ($n == 0)
 			$this->first = $value;
-		
+
 		elseif ($n == 1)
 			$this->second = $value;
-		
+
 		else
 			throw new Exception('Index out of bounds exception');
 	}
 
-	public function offsetUnset($n)
+	public function offsetUnset(mixed $n): void
 	{
 		if ($n == 0)
 			$this->first = null;
-		
+
 		elseif ($n == 1)
 			$this->second = null;
-		
+
 		else
 			throw new Exception('Index out of bounds exception');
 	}
@@ -390,23 +425,23 @@ class Template
 
 	private $__BLOCK__;
 
-	public function __construct($file, array $data = [])
+	public function __construct(string $file, array $data = [])
 	{
 		$this->__TEMPLATE__ = $file;
 		$this->__DATA__ = $data;
 	}
 
-	public function __set($key, $value)
+	public function __set(string $key, mixed $value)
 	{
 		$this->__DATA__[$key] = $value;
 	}
 
-	public function render()
+	public function render(): string
 	{
 		ob_start();
 		extract($this->__DATA__);
 		include $this->__TEMPLATE__;
-		
+
 		if ($this->__PARENT__) {
 			ob_end_clean();
 			return $this->__PARENT__->render();
@@ -415,7 +450,7 @@ class Template
 		}
 	}
 
-	protected function extends($template)
+	protected function extends(string $template): void
 	{
 		if ($this->__PARENT__)
 			throw new LogicException('Cannot call Template::extend twice from the same template');
@@ -423,7 +458,7 @@ class Template
 		$this->__PARENT__ = new Template(dirname($this->__TEMPLATE__) . '/' . $template, $this->__DATA__);
 	}
 
-	protected function begin($block_name)
+	protected function begin(string $block_name): void
 	{
 		if (!$this->__PARENT__)
 			throw new LogicException('You cannot begin a block while not extending a parent template');
@@ -435,7 +470,7 @@ class Template
 		ob_start();
 	}
 
-	protected function end()
+	protected function end(): void
 	{
 		if (!$this->__BLOCK__)
 			throw new LogicException('Calling Template::end while not in a block. Template::begin missing?');
@@ -444,22 +479,22 @@ class Template
 		$this->__BLOCK__ = null;
 	}
 
-	static public function html($data)
+	static public function html(string $data): string
 	{
 		return htmlspecialchars($data, ENT_COMPAT, 'utf-8');
 	}
 
-	static public function attr($data)
+	static public function attr(string $data): string
 	{
 		return htmlspecialchars($data, ENT_QUOTES, 'utf-8');
 	}
 
-	static public function id($data)
+	static public function id(string $data): string
 	{
 		return preg_replace('/[^a-z0-9_]/i', '_', $data);
 	}
 
-	static public function format_plain_text($text)
+	static public function format_plain_text(string $text): string
 	{
 		$plain_paragraphs = new ArrayIterator(preg_split("/\r?\n\r?\n/", $text));
 
@@ -471,7 +506,7 @@ class Template
 		return implode("\n", iterator_to_array($formatted_paragraphs));
 	}
 
-	static public function format_code($code, $line_no_offset = null)
+	static public function format_code(string $code, ?int $line_no_offset = null): string
 	{
 		static $line_no = 1;
 
@@ -488,7 +523,7 @@ class Template
 	}
 }
 
-function first_found_path(array $possible_paths)
+function first_found_path(array $possible_paths): mixed
 {
 	foreach ($possible_paths as $path)
 		if (file_exists($path))
@@ -497,7 +532,7 @@ function first_found_path(array $possible_paths)
 	return null;
 }
 
-function to_debug_string($value)
+function to_debug_string(mixed $value): string
 {
 	if ($value instanceof Traversable)
 		$value = iterator_to_array($value);
@@ -508,7 +543,7 @@ function to_debug_string($value)
 	return strval($value);
 }
 
-function dict_to_string($dict, $pair_format = '%s => %s', $dict_format = '[%s]')
+function dict_to_string(array $dict, string $pair_format = '%s => %s', string $dict_format = '[%s]'): string
 {
 	return sprintf($dict_format, implode(', ', array_map(function($key, $value) use ($pair_format) {
 		return sprintf($pair_format, $key, $value);
@@ -523,5 +558,5 @@ define('LOG_LEVEL_VERBOSE', 1);
 
 interface Logger
 {
-	public function write($format, $arguments, $level);
+	public function write(string $format, array $arguments, int $level);
 }

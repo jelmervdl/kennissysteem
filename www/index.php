@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'
 	exit;
 }
 
-function process_file($file, array &$errors = array())
+function process_file(array $file, array &$errors = array()): string | false
 {
 	if ($file['error'] != 0)
 		return "Er is een fout opgetreden bij het uploaden.";
@@ -44,7 +44,7 @@ function process_file($file, array &$errors = array())
 		$errors[] = "De knowledge-base kon niet worden opgeslagen op de server.";
 		return false;
 	}
-	
+
 	return $unique_name;
 }
 

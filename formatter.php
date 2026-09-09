@@ -4,12 +4,12 @@ class HTMLFormatter
 {
 	protected $state;
 
-	public function __construct(KnowledgeState $state = null)
+	public function __construct(?KnowledgeState $state = null)
 	{
 		$this->state = $state;
 	}
 
-	public function formatRule(Rule $rule)
+	public function formatRule(Rule $rule): string
 	{
 		return sprintf('
 			<table class="kb-rule" id="rule_%d">
@@ -34,7 +34,7 @@ class HTMLFormatter
 				$this->formatConsequence($rule->consequences));
 	}
 
-	public function formatConsequence(array $consequences)
+	public function formatConsequence(array $consequences): string
 	{
 		$rows = array();
 
@@ -45,7 +45,7 @@ class HTMLFormatter
 		return sprintf('<table class="kb-consequence">%s</table>', implode("\n", $rows));
 	}
 
-	public function formatCondition(Condition $condition)
+	public function formatCondition(Condition $condition): string
 	{
 		if ($condition instanceof WhenAllCondition)
 			return $this->formatWhenAllCondition($condition);
@@ -62,18 +62,18 @@ class HTMLFormatter
 		if ($condition instanceof FactCondition)
 			return $this->formatFactCondition($condition);
 
-			
+
 		return $this->formatUnknownCondition($condition);
 	}
 
-	protected function formatUnknownCondition(Condition $condition)
+	protected function formatUnknownCondition(Condition $condition): string
 	{
 		return sprintf('<pre class="evaluation-%s">%s</pre>',
 			$this->evaluatedValue($condition),
 			$this->escape(strval($condition)));
 	}
 
-	protected function formatWhenAllCondition(WhenAllCondition $condition)
+	protected function formatWhenAllCondition(WhenAllCondition $condition): string
 	{
 		return sprintf('<table class="kb-when-all-condition kb-condition evaluation-%s"><tr><th>AND</th><td><table>%s</table></td></tr></table>',
 			$this->evaluatedValue($condition),
@@ -83,7 +83,7 @@ class HTMLFormatter
 					iterator_to_array($condition->conditions))));
 	}
 
-	protected function formatWhenAnyCondition(WhenAnyCondition $condition)
+	protected function formatWhenAnyCondition(WhenAnyCondition $condition): string
 	{
 		return sprintf('<table class="kb-when-any-condition kb-condition evaluation-%s"><tr><th>OR</th><td><table>%s</table></td></tr></table>',
 			$this->evaluatedValue($condition),
@@ -93,7 +93,7 @@ class HTMLFormatter
 					iterator_to_array($condition->conditions))));
 	}
 
-	protected function formatWhenSomeCondition(WhenSomeCondition $condition)
+	protected function formatWhenSomeCondition(WhenSomeCondition $condition): string
 	{
 		return sprintf('<table class="kb-when-any-condition kb-condition evaluation-%s"><tr><th>%d OF</th><td><table>%s</table></td></tr></table>',
 			$this->evaluatedValue($condition),
@@ -104,14 +104,14 @@ class HTMLFormatter
 					iterator_to_array($condition->conditions))));
 	}
 
-	protected function formatNegationCondition(NegationCondition $condition)
+	protected function formatNegationCondition(NegationCondition $condition): string
 	{
 		return sprintf('<table class="kb-negation-condition kb-condition evaluation-%s"><tr><th>NOT</th><td>%s</td></tr></table>',
 			$this->evaluatedValue($condition),
 			$this->formatCondition($condition->condition));
 	}
 
-	protected function formatFactCondition(FactCondition $condition)
+	protected function formatFactCondition(FactCondition $condition): string
 	{
 		return sprintf('<table class="kb-fact-condition kb-condition evaluation-%s"><tr><td>%s</td><th>%s</th><td>%s</td></tr></table>',
 			$this->evaluatedValue($condition),
@@ -120,7 +120,7 @@ class HTMLFormatter
 			$this->escape($condition->value));
 	}
 
-	protected function formatTest($test)
+	protected function formatTest(string $test): string
 	{
 		$mapping = [
 			'gt' => '>',
@@ -133,7 +133,7 @@ class HTMLFormatter
 		return isset($mapping[$test]) ? $mapping[$test] : $test;
 	}
 
-	protected function evaluatedValue(Condition $condition)
+	protected function evaluatedValue(Condition $condition): string
 	{
 		if (!$this->state)
 			return 'unknown';
@@ -153,7 +153,7 @@ class HTMLFormatter
 			return 'undefined';
 	}
 
-	protected function escape($text)
+	protected function escape(string $text): string
 	{
 		return htmlspecialchars($text, ENT_COMPAT, 'UTF-8');
 	}

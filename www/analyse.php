@@ -16,11 +16,11 @@ $state = $reader->parse(first_found_path(array(
 
 class FactStatistics
 {
-	public $name;
+	public string $name;
 
-	public $values;
+	public Map $values;
 
-	public function __construct($name)
+	public function __construct(string $name)
 	{
 		$this->name = $name;
 
@@ -32,13 +32,13 @@ class FactStatistics
 
 class FactValueStatistics
 {
-	public $inferringRules;
+	public Set $inferringRules;
 
-	public $dependingRules;
+	public Set $dependingRules;
 
-	public $dependingGoals;
+	public Set $dependingGoals;
 
-	public $inferringQuestions;
+	public Set $inferringQuestions;
 
 	public function __construct()
 	{
@@ -60,13 +60,13 @@ foreach ($state->rules as $rule)
 {
 	$fact_conditions = array_filter_type('FactCondition',
 		array_flatten($rule->condition->asArray()));
-	
+
 	foreach ($fact_conditions as $condition)
 		$stats[$condition->name]
 			->values[$condition->value]
 			->dependingRules
 			->push($rule);
-	
+
 	foreach ($rule->consequences as $fact_name => $value)
 		$stats[$fact_name]
 			->values[$value]

@@ -19,9 +19,9 @@ class KnowledgeBaseReader
 	 * Leest een knowledge base in.
 	 *
 	 * @param string file bestandsnaam van knowledge.xml
-	 * @return KnowledgeState
+     * @return KnowledgeDomain
 	 */
-	public function parse($file)
+	public function parse(string $file): KnowledgeDomain
 	{
 		$doc = new DOMDocument();
 
@@ -33,10 +33,11 @@ class KnowledgeBaseReader
 		if (!file_exists($file))
 			throw new InvalidArgumentException('Cannot parse knowledge base: file does not exist');
 
-		$doc->load($file, LIBXML_NOCDATA & LIBXML_NOBLANKS);
+		if (!$doc->load($file, LIBXML_NOCDATA & LIBXML_NOBLANKS))
+			throw new InvalidArgumentException('Could not parse xml document');
 
 		if (!$doc->firstChild)
-			return $this->logError('Could not parse xml document', E_USER_WARNING);
+			throw new InvalidArgumentException('XML document appears to be empty');
 
 		$this->parseKnowledgeBase($doc->firstChild, $kb);
 
@@ -49,32 +50,17 @@ class KnowledgeBaseReader
 	 * @param string file bestandsnaam van knowledge.xml
 	 * @return object[]
 	 */
-	public function lint($file)
+	public function lint(string $kb_file): array
 	{
 		$errors = array();
 
-		$previous_assert_state = assert_options(ASSERT_ACTIVE);
-		assert_options(ASSERT_ACTIVE, true);
-
-		$previous_assert_mode = assert_options(ASSERT_BAIL);
-		assert_options(ASSERT_BAIL, false);
-		
-		set_error_handler(function($number, $message, $file, $line) use (&$errors) {
-			if (preg_match('/^assert\(\): (.+?)$/', $message, $match))
-				$message = html_entity_decode($match[1]);
-
+		set_error_handler(function($number, $message, $file, $line) use (&$errors, $kb_file) {
+			$message = str_replace($kb_file, 'xml file', $message);
 			$errors[] = (object) compact('number', 'message', 'file', 'line');
 		});
 
 		try {
-			$this->parse($file);
-		} catch (Error $e) {
-			$errors[] = (object) array(
-				'number' => $e->getCode(),
-				'message' => $e->getMessage(),
-				'file' => $e->getFile(),
-				'line' => $e->getLine()
-			);
+			$this->parse($kb_file);
 		} catch (Exception $e) {
 			$errors[] = (object) array(
 				'number' => $e->getCode(),
@@ -84,14 +70,12 @@ class KnowledgeBaseReader
 			);
 		}
 
-		assert_options(ASSERT_BAIL, $previous_assert_mode);
-		assert_options(ASSERT_ACTIVE, $previous_assert_state);
 		restore_error_handler();
 
 		return $errors;
 	}
 
-	private function parseKnowledgeBase($node, $kb)
+	private function parseKnowledgeBase(DOMElement $node, KnowledgeDomain $kb): void
 	{
 		if ($node->nodeName != "knowledge")
 			$this->logError('The document root node is not a <knowledge/> element', E_USER_WARNING);
@@ -112,17 +96,17 @@ class KnowledgeBaseReader
 					$rule = $this->parseRule($childNode);
 					$kb->rules->push($rule);
 					break;
-				
+
 				case 'question':
 					$question = $this->parseQuestion($childNode);
 					$kb->questions->push($question);
 					break;
-				
+
 				case 'goal':
 					$goal = $this->parseGoal($childNode);
 					$kb->goals->push($goal);
 					break;
-				
+
 				/*
 				case 'constraint':
 					$constraint = $this->parseConstraint($childNode);
@@ -138,7 +122,7 @@ class KnowledgeBaseReader
 				case 'title':
 					$kb->title = $this->parseText($childNode);
 					break;
-				
+
 				case 'description':
 					$kb->description = $this->parseText($childNode);
 					break;
@@ -152,7 +136,7 @@ class KnowledgeBaseReader
 		}
 	}
 
-	private function parseRule($node)
+	private function parseRule(DOMElement $node): Rule
 	{
 		$rule = new Rule;
 
@@ -168,15 +152,15 @@ class KnowledgeBaseReader
 				case 'description':
 					$rule->description = $this->parseText($childNode);
 					break;
-				
+
 				case 'if':
 					$rule->condition = $this->parseRuleCondition($childNode);
 					break;
-				
+
 				case 'then':
 					$rule->consequences = $this->parseConsequences($childNode);
 					break;
-				
+
 				default:
 					$this->logError("KnowledgeBaseReader::parseRule: "
 						. "Skipping unknown element {$childNode->nodeName}",
@@ -202,7 +186,7 @@ class KnowledgeBaseReader
 		return $rule;
 	}
 
-	private function parseQuestion($node)
+	private function parseQuestion(DOMElement $node): Question
 	{
 		$question = new Question;
 
@@ -218,11 +202,11 @@ class KnowledgeBaseReader
 				case 'description':
 					$question->description = $this->parseText($childNode);
 					break;
-				
+
 				case 'option':
 					$question->options[] = $this->parseOption($childNode);
 					break;
-				
+
 				default:
 					$this->logError("KnowledgeBaseReader::parseQuestion: "
 						. "Skipping unknown element '{$childNode->nodeName}'",
@@ -252,15 +236,13 @@ class KnowledgeBaseReader
 		foreach ($question->options as $option)
 			foreach (array_keys($option->consequences) as $inferred_fact)
 				$question->inferred_facts->push($inferred_fact);
-		
+
 		return $question;
 	}
 
-	private function parseGoal($node)
+	private function parseGoal(DOMElement $node): Goal
 	{
-		$goal = new Goal;
-
-		$goal->name = $node->getAttribute('name');
+		$goal = new Goal($node->getAttribute('name'));
 
 		foreach ($this->childElements($node) as $childNode)
 		{
@@ -269,11 +251,11 @@ class KnowledgeBaseReader
 				case 'description':
 					$goal->description = $this->parseText($childNode);
 					break;
-				
+
 				case 'answer':
 					$goal->answers->push($this->parseAnswer($childNode));
 					break;
-				
+
 				default:
 					$this->logError("KnowledgeBaseReader::parseGoal: "
 						. "Skipping unknown element '{$childNode->nodeName}'",
@@ -285,15 +267,15 @@ class KnowledgeBaseReader
 		return $goal;
 	}
 
-	private function parseConstraint($node)
+	private function parseConstraint(DOMElement $node): void
 	{
 		//
 	}
 
-	private function parseRuleCondition($node)
+	private function parseRuleCondition(DOMElement $node): Condition
 	{
 		$childNodes = iterator_to_array($this->childElements($node));
-		
+
 		if (count($childNodes) !== 1)
 			$this->logError("KnowledgeBaseReader::parseRuleCondition: "
 				. "'" . $node->nodeName . "' node on line " . $node->getLineNo()
@@ -303,10 +285,10 @@ class KnowledgeBaseReader
 		return $this->parseCondition(current($childNodes));
 	}
 
-	private function createContainer($containerClass, \DOMElement $node)
+	private function createContainer(string $containerClass, \DOMElement $node): object
 	{
 		// Look at the constructor of the container class to see which attributes
-		// are available, e.g. the threshold parameter for the <some> condition. 
+		// are available, e.g. the threshold parameter for the <some> condition.
 		$refl = new \ReflectionClass($containerClass);
 		$constructor = $refl->getConstructor();
 
@@ -331,11 +313,11 @@ class KnowledgeBaseReader
 		}
 		else
 			$values = [];
-		
+
 		return $refl->newInstanceArgs($values);
 	}
 
-	private function parseConditionSet($node, $containerClass)
+	private function parseConditionSet(DOMElement $node, string $containerClass): object
 	{
 		$container = $this->createContainer($containerClass, $node);
 
@@ -356,18 +338,18 @@ class KnowledgeBaseReader
 		return $container;
 	}
 
-	private function parseCondition($node)
+	private function parseCondition(DOMElement $node): Condition
 	{
 		switch ($node->nodeName)
 		{
 			case 'fact':
 				$condition = $this->parseFactCondition($node);
 				break;
-			
+
 			case 'not':
 				$condition = $this->parseNegationCondition($node);
 				break;
-			
+
 			case 'some':
 				$condition = $this->parseConditionSet($node, WhenSomeCondition::class);
 				break;
@@ -391,7 +373,7 @@ class KnowledgeBaseReader
 		return $condition;
 	}
 
-	private function parseFactCondition($node)
+	private function parseFactCondition(DOMElement $node): FactCondition
 	{
 		if (!$node->hasAttribute('name'))
 			$this->logError("KnowledgeBaseReader::parseFactCondition: "
@@ -408,13 +390,13 @@ class KnowledgeBaseReader
 		return new FactCondition($name, $value, $test);
 	}
 
-	private function parseNegationCondition($node)
+	private function parseNegationCondition(DOMElement $node): NegationCondition
 	{
 		$condition = $this->parseCondition($this->firstElement($node->firstChild));
 		return new NegationCondition($condition);
 	}
 
-	private function parseConsequences($node)
+	private function parseConsequences(DOMElement $node): array
 	{
 		$consequences = array();
 
@@ -427,7 +409,7 @@ class KnowledgeBaseReader
 		return $consequences;
 	}
 
-	private function parseFact($node)
+	private function parseFact(DOMElement $node): array
 	{
 		switch ($node->nodeName)
 		{
@@ -440,7 +422,7 @@ class KnowledgeBaseReader
 				$name = $node->getAttribute('name');
 				$value = $this->parseText($node);
 				return array($name, $value);
-							
+
 			default:
 				$this->logError("KnowledgeBaseReader::parseFact: "
 					. "Skipping unknown element '{$node->nodeName}'",
@@ -449,7 +431,7 @@ class KnowledgeBaseReader
 		}
 	}
 
-	private function parseOption($node)
+	private function parseOption(DOMElement $node): Option
 	{
 		$option = new Option;
 
@@ -460,11 +442,11 @@ class KnowledgeBaseReader
 				case 'description':
 					$option->description = $this->parseText($childNode);
 					break;
-				
+
 				case 'then':
 					$option->consequences = $this->parseConsequences($childNode);
 					break;
-				
+
 				default:
 					$this->logError("KnowledgeBaseReader::parseOption: "
 						. "Skipping unknown element '{$childNode->nodeName}'",
@@ -488,41 +470,41 @@ class KnowledgeBaseReader
 		return $option;
 	}
 
-	private function parseAnswer($node)
+	private function parseAnswer(DOMElement $node): Answer
 	{
 		$answer = new Answer;
 
 		$answer->value = $node->hasAttribute('value')
 			? $node->getAttribute('value')
 			: null;
-		
+
 		$answer->description = $this->parseText($node);
 
 		return $answer;
 	}
 
-	private function parseText(DOMNode $node)
+	private function parseText(DOMNode $node): string
 	{
 		return $node->firstChild ? trim($node->firstChild->data) : '';
 	}
 
-	private function firstElement($node)
+	private function firstElement(DOMNode $node): ?DOMElement
 	{
 		while ($node && $node->nodeType != XML_ELEMENT_NODE)
 			$node = $node->nextSibling;
-		
+
 		return $node;
 	}
 
-	private function childElements($node)
+	private function childElements(DOMNode $node): DOMElementIterator
 	{
-		assert($node instanceof DOMElement,
-			'$node is not an element that can have child nodes');
+		if (!(($node instanceof DOMElement)))
+			throw new InvalidArgumentException('$node is not an element that can have child nodes');
 
 		return new DOMElementIterator(new DOMNodeIterator($node->childNodes));
 	}
 
-	private function logError($message, $error_level)
+	private function logError(string $message, int $error_level): void
 	{
 		trigger_error($message, $error_level);
 	}
@@ -544,27 +526,27 @@ class DOMNodeIterator implements Iterator
 		$this->nodeList = $nodeList;
 	}
 
-	function rewind()
+	function rewind(): void
 	{
 		$this->position = 0;
 	}
 
-	function current()
+	function current(): DOMNode
 	{
 		return $this->nodeList->item($this->position);
 	}
 
-	function key()
+	function key(): int
 	{
 		return $this->position;
 	}
 
-	function next()
+	function next(): void
 	{
 		++$this->position;
 	}
 
-	function valid()
+	function valid(): bool
 	{
 		return $this->position < $this->nodeList->length;
 	}
@@ -575,17 +557,10 @@ class DOMNodeIterator implements Iterator
  */
 class DOMElementIterator extends FilterIterator
 {
-	public function accept()
+	public function accept(): bool
 	{
 		return self::current()->nodeType == XML_ELEMENT_NODE;
 	}
-}
-
-/**
- * PHP 5 compatibility
- */
-if (!class_exists('Error')) {
-	class Error extends Exception {}
 }
 
 /*
