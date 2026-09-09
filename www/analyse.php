@@ -83,10 +83,18 @@ foreach ($state->questions as $question)
 				->push($question);
 
 foreach ($state->goals as $goal)
-	foreach ($stats[$goal->name]->values as $possible_value)
-		$possible_value
-			->dependingGoals
-			->push($goal);
+	foreach ($goal->answers as $answer)
+		if (!$answer->value) {
+			foreach ($stats[$goal->name]->values as $possible_value)
+				$possible_value
+					->dependingGoals
+					->push($goal);
+		} else {
+			$stats[$goal->name]
+				->values[$answer->value]
+				->dependingGoals
+				->push($goal);
+		}
 
 $template = new Template('templates/analyse.phtml');
 $template->kb = $state;

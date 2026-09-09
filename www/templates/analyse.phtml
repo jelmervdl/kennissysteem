@@ -1,6 +1,6 @@
 <?php
-function red_if_zero($value) {
-	return sprintf($value > 0 ? '%d' : '<strong>%d</strong>', $value);
+function red_if(int $value, bool $cond): string {
+	return sprintf(!$cond ? '%d' : '<strong>%d</strong>', $value);
 }
 ?>
 <!DOCTYPE html>
@@ -35,18 +35,18 @@ function red_if_zero($value) {
 			<a href="index.php">Home</a>
 			<a href="webfrontend.php?kb=<?=urlencode($_GET['kb'])?>">Run <?=$this->html($kb->title)?></a>
 		</nav>
-        
+
         <header>
                 <h1>Analysis of <?=$this->html($kb->title)?></h1>
                 <p>Summary of all the facts, rules, questions in the knowledge base.</p>
         </header>
-		
+
 		<section id="summary">
 			<h2>Summary</h2>
 			<dl class="stats">
 				<dt>Number of rules:</dt>
 				<dd><a href="#rules"><?=count($kb->rules)?></a></dd>
-				
+
 				<dt>Number of questions:</dt>
 				<dd><?=count($kb->questions)?></dd>
 
@@ -54,7 +54,7 @@ function red_if_zero($value) {
 				<dd><a href="#goals"><?=count($kb->goals)?></a></dd>
 			</dl>
 		</section>
-		
+
 		<section id="domain">
 			<h2>Domain</h2>
 
@@ -93,13 +93,13 @@ function red_if_zero($value) {
 							<td><?=count($value_stats->inferringQuestions)?></td>
 							<td>
 								<span class="has-popover">
-									<span><?=red_if_zero(count($value_stats->dependingRules))?></span>
+									<span><?=red_if(count($value_stats->dependingRules), count($value_stats->dependingRules) + count($value_stats->dependingGoals) == 0)?></span>
 									<ul class="popover"><?php foreach ($value_stats->dependingRules as $rule): ?><li><a href="#rule_<?=$rule->line_number?>"><?=$this->html($rule)?></a></li><?php endforeach?></ul>
 								</span>
 							</td>
 							<td>
 								<span class="has-popover">
-									<span><?=red_if_zero(count($value_stats->dependingGoals))?></span>
+									<span><?=red_if(count($value_stats->dependingGoals), count($value_stats->dependingRules) + count($value_stats->dependingGoals) == 0)?></span>
 									<ul class="popover"><?php foreach ($value_stats->dependingGoals as $goal): ?><li><a href="#goal_<?=$this->id($goal->name)?>"><?=$this->html($goal->name)?></a></li><?php endforeach ?></ul>
 								</span>
 							</td>
@@ -114,7 +114,7 @@ function red_if_zero($value) {
 		<section id="goals">
 			<h2>Goals</h2>
 			<?php foreach ($kb->goals as $goal): ?>
-			<section id="goal_<?=$this->id($goal->name)?>">	
+			<section id="goal_<?=$this->id($goal->name)?>">
 				<h3>
 					<?=$goal->description ? $this->html($goal->description) : '<em>No description</em>' ?>
 					<small>(determined by: <a href="#var_<?=$this->id($goal->name)?>"><?=$this->html($goal->name)?></a>)</small>
